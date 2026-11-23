@@ -156,10 +156,6 @@ b.center{display:block}
 
 .answer-card{margin-top:14px;background:#fff;border:1px solid #f2e9f8;border-radius:22px;padding:14px;box-shadow:0 10px 24px rgba(170,140,200,.12)}
 .answer-label{display:block;font-size:.8rem;font-weight:900;color:#7d6e99;margin:0 0 8px 4px}
-.punct-row{display:flex;flex-wrap:wrap;gap:6px;padding:2px 2px 9px}
-.punct-row button{flex:0 0 auto;min-width:44px;height:44px;border-radius:13px;background:#fbf7ff;border:1px solid #efe6f5;font-size:1.05rem;font-weight:900;color:#6a5a86}
-.punct-row button:active{background:#f1e8fb}
-.punct-row button.wide{min-width:84px;font-size:.8rem}
 input.answer{width:100%;height:58px;border-radius:16px;border:2px solid #eadcf6;background:#fdfbff;padding:0 14px;font-family:inherit;font-size:1.15rem;font-weight:800;color:#3f3659;outline:none;letter-spacing:-.01em}
 input.answer::placeholder{font-weight:700;color:#c3b8d3;font-size:.95rem}
 input.answer:focus{border-color:#cba9ee;background:#fff;box-shadow:0 0 0 4px #f5ecff}
@@ -361,16 +357,6 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
 
     <div class="answer-card">
       <label class="answer-label" for="answerInput" id="answerLabel">여기에 써 보세요</label>
-      <div class="punct-row" id="punctRowPlay" role="toolbar" aria-label="문장부호 도우미">
-        <button type="button" data-ins=".">.</button>
-        <button type="button" data-ins=",">,</button>
-        <button type="button" data-ins="?">?</button>
-        <button type="button" data-ins="!">!</button>
-        <button type="button" data-ins="&quot;">"</button>
-        <button type="button" data-ins="'">'</button>
-        <button type="button" data-ins=" " class="wide">띄어쓰기 ␣</button>
-        <button type="button" data-del="1" class="wide">⌫ 지우기</button>
-      </div>
       <input class="answer" id="answerInput" type="text" inputmode="text" lang="ko"
              autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="next"
              placeholder="여기에 써 보세요" aria-label="받아쓰기 답">
@@ -415,16 +401,6 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
 
       <div class="answer-card">
         <label class="answer-label" for="testInput">여기에 써 보세요</label>
-        <div class="punct-row" id="punctRowTest" role="toolbar" aria-label="문장부호 도우미">
-          <button type="button" data-ins=".">.</button>
-          <button type="button" data-ins=",">,</button>
-          <button type="button" data-ins="?">?</button>
-          <button type="button" data-ins="!">!</button>
-          <button type="button" data-ins="&quot;">"</button>
-          <button type="button" data-ins="'">'</button>
-          <button type="button" data-ins=" " class="wide">띄어쓰기 ␣</button>
-          <button type="button" data-del="1" class="wide">⌫ 지우기</button>
-        </div>
         <input class="answer" id="testInput" type="text" inputmode="text" lang="ko"
                autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="next"
                placeholder="여기에 써 보세요" aria-label="받아쓰기 답">
@@ -1281,42 +1257,6 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
     };
   }
 
-  /* ---------- input helpers ---------- */
-  function insertAt(input, text) {
-    var start = typeof input.selectionStart === 'number' ? input.selectionStart : input.value.length;
-    var end = typeof input.selectionEnd === 'number' ? input.selectionEnd : start;
-    var v = input.value;
-    input.value = v.slice(0, start) + text + v.slice(end);
-    var pos = start + text.length;
-    try { input.setSelectionRange(pos, pos); } catch (e) {}
-    try { input.focus(); } catch (e) {}
-    try { input.dispatchEvent(new Event('input', { bubbles: true })); } catch (e) {}
-  }
-  function backspace(input) {
-    var start = typeof input.selectionStart === 'number' ? input.selectionStart : input.value.length;
-    var end = typeof input.selectionEnd === 'number' ? input.selectionEnd : start;
-    if (start !== end) {
-      input.value = input.value.slice(0, start) + input.value.slice(end);
-      try { input.setSelectionRange(start, start); } catch (e) {}
-    } else if (start > 0) {
-      input.value = input.value.slice(0, start - 1) + input.value.slice(end);
-      try { input.setSelectionRange(start - 1, start - 1); } catch (e) {}
-    }
-    try { input.focus(); } catch (e) {}
-    try { input.dispatchEvent(new Event('input', { bubbles: true })); } catch (e) {}
-  }
-  function bindPunctRow(rowId, inputId) {
-    var row = document.getElementById(rowId);
-    var input = document.getElementById(inputId);
-    if (!row || !input) return;
-    row.addEventListener('click', function (e) {
-      var b = e.target.closest ? e.target.closest('button') : null;
-      if (!b) return;
-      if (b.dataset.ins !== undefined && b.dataset.ins !== null) insertAt(input, b.dataset.ins);
-      else if (b.dataset.del) backspace(input);
-    });
-  }
-
   /* ---------- wiring ---------- */
   function init() {
     renderHome();
@@ -1383,8 +1323,6 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
     $('#answerInput').addEventListener('keydown', function (e) {
       if (e.key === 'Enter') { e.preventDefault(); checkPlay(); }
     });
-    bindPunctRow('punctRowPlay', 'answerInput');
-    bindPunctRow('punctRowTest', 'testInput');
 
     /* test */
     $('#testBack').addEventListener('click', function () {
