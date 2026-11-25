@@ -1446,8 +1446,8 @@ function abRender(){
   abBar.classList.toggle('has', list.length>0);
   abMyState();
   if(!list.length){ abPlayer.classList.remove('on'); abSel.innerHTML=''; return; }
-  const cur=abNowTab(), order=[cur, cur==='balloon'?'twisa':'balloon'];
-  const groupName={balloon:'🎈 풍선 탭', twisa:'🎵 퇴사할게여 탭'};
+  const cur=abNowTab(), order=[cur,'balloon','twisa','pretty'].filter((v,i,a)=>a.indexOf(v)===i);
+  const groupName={balloon:'🎈 풍선 탭', twisa:'🎵 퇴사할게여 탭', pretty:'✨ Pretty Girl 탭'};
   const frag=document.createDocumentFragment();
   order.forEach(tab=>{
     const mine=list.filter(t=>t.tab===tab); if(!mine.length) return;
