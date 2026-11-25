@@ -1046,6 +1046,14 @@ function ensure(){
   if(ctx.state!=='running' && ctx.state!=='closed'){ try{ ctx.resume(); }catch(e){} }
   return ctx;
 }
+/* 첫 건반을 눌렀을 때 컨텍스트 생성에 시간을 쓰지 않도록 미리 만들어 둔다(재생은 첫 터치에서 resume) */
+function primeAudio(){
+  if(ctx) return;
+  try{
+    ctx=new (window.AudioContext||window.webkitAudioContext)();
+    bus=ctx.createGain(); bus.gain.value=1; bus.connect(ctx.destination);
+  }catch(e){ ctx=null; bus=null; }
+}
 function tone(midi, when, dur, gainv){
   const ac=ensure(); const f=freq(midi);
   const g=ac.createGain(); g.connect(bus||ac.destination);
@@ -1837,6 +1845,8 @@ document.querySelectorAll('[data-help]').forEach(b=>{
   });
 });
 buildKeyboard();
+primeAudio();                          // 첫 건반 누름이 늦지 않게 오디오 준비
+
 document.body.classList.add('hasdock');
 showSongUI('balloon');
 resetView('balloon'); resetView('twisa'); resetView('pretty');
