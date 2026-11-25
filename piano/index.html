@@ -1171,6 +1171,7 @@ function primeAudio(){
     bus=ctx.createGain(); bus.gain.value=1; bus.connect(ctx.destination);
   }catch(e){ ctx=null; bus=null; }
 }
+let voices=[];                     // 지금 울리는(예약된) 소리 한 덩어리씩 — 정지에서 즉시 끊는다
 function tone(midi, when, dur, gainv){
   const ac=ensure(); const f=freq(midi);
   const g=ac.createGain(); g.connect(bus||ac.destination);
@@ -1180,11 +1181,40 @@ function tone(midi, when, dur, gainv){
   g.gain.exponentialRampToValueAtTime(Math.max(peak*0.5,0.03), when+0.09);
   g.gain.exponentialRampToValueAtTime(peak*0.32,when+Math.max(0.12,dur*0.55));
   g.gain.exponentialRampToValueAtTime(0.0006,when+dur+0.10);
+  const v={g:g, oscs:[], end:when+dur+0.45};
   [['triangle',1,1],['sine',2,0.40],['sine',3,0.14]].forEach(([type,mult,amp])=>{
     const o=ac.createOscillator(); const gg=ac.createGain();
     o.type=type; o.frequency.value=f*mult; gg.gain.value=amp;
     o.connect(gg); gg.connect(g); o.start(when); o.stop(when+dur+0.2);
+    v.oscs.push(o);
   });
+  voices.push(v);
+  if(voices.length>220){                     // 다 끝난 소리는 노드까지 떼어 내고 목록에서 뺀다
+    const keep=[];
+    for(let i=0;i<voices.length;i++){
+      const w=voices[i];
+      if(w.end>ac.currentTime-0.5){ keep.push(w); continue; }
+      for(let k=0;k<w.oscs.length;k++){ try{ w.oscs[k].disconnect(); }catch(e){} }
+      try{ w.g.disconnect(); }catch(e){}
+    }
+    voices=keep;
+  }
+}
+/* 미래 시각으로 예약해 둔 소리까지 지금 이 순간 0으로 끊는다 */
+function killVoices(){
+  if(!voices.length) return;
+  const now = ctx ? ctx.currentTime : 0;
+  const dead = voices; voices=[];
+  for(let i=0;i<dead.length;i++){
+    const v=dead[i];
+    try{ v.g.gain.cancelScheduledValues(now); v.g.gain.setValueAtTime(0, now); }catch(e){}
+    for(let k=0;k<v.oscs.length;k++){
+      const o=v.oscs[k];
+      try{ o.stop(now); }catch(e){}
+      try{ o.disconnect(); }catch(e){}
+    }
+    try{ v.g.disconnect(); }catch(e){}
+  }
 }
 /* ---------- 구간(절/괄호/D.C.) 배지 ---------- */
 function setView(song, vi, jump){
@@ -1234,6 +1264,7 @@ let playRaf=0;
 function stopAll(){
   if(playRaf){ cancelAnimationFrame(playRaf); playRaf=0; }
   timers.forEach(t=>clearTimeout(t)); timers=[];
+  killVoices();                      // 소리부터 즉시 끊는다(악보에 미리 예약된 음 포함)
   document.querySelectorAll('.note.hit').forEach(n=>n.classList.remove('hit'));
   document.querySelectorAll('.lyr.cur,.badge.cur').forEach(n=>n.classList.remove('cur'));
   document.querySelectorAll('.key.on').forEach(k=>k.classList.remove('on'));
