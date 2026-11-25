@@ -976,6 +976,8 @@ function stopAll(){
 }
 function playSong(song, btn){
   if(playing===song){ stopAll(); return; }
+  const _ab=document.getElementById('ab-audio');
+  if(_ab && !_ab.paused) _ab.pause();
   stopAll();
   const ac=ensure();
   const seq=PLAY[song]||[];
