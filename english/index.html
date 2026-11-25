@@ -67,10 +67,10 @@ img{-webkit-user-drag:none;user-select:none}
 .level[data-l="5"] .badge{background:linear-gradient(145deg,#f3e9ff,#e8dcff)}
 .level[data-l="6"] .badge{background:linear-gradient(145deg,#fff0e3,#ffe3cc)}
 .level .txt{flex:1;min-width:0}
-.level .lv{font-size:.68rem;font-weight:900;color:#b09ad6;letter-spacing:.4px}
-.level .ttl{font-size:.98rem;font-weight:900;letter-spacing:-.3px;margin-top:1px}
-.level .sub{font-size:.72rem;color:#9b95af;font-weight:600;margin-top:2px}
-.level .right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:none}
+.level .lv{display:block;font-size:.68rem;font-weight:900;color:#b09ad6;letter-spacing:.4px}
+.level .ttl{display:block;font-size:.95rem;font-weight:900;letter-spacing:-.3px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.level .sub{display:block;font-size:.72rem;color:#9b95af;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.level .right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:none;min-width:56px}
 .level .st{font-size:.86rem;letter-spacing:1.5px;color:#ded8ea}
 .level .st b{color:#ffb800}
 .level .go{font-size:.68rem;font-weight:900;color:#fff;background:#b6a7e0;border-radius:999px;padding:3px 9px}
@@ -99,6 +99,10 @@ img{-webkit-user-drag:none;user-select:none}
 
 .game{display:flex;flex-direction:column;gap:10px;margin-top:2px}
 .game.cols2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#scr-play.active{display:flex;flex-direction:column;min-height:100dvh}
+#scr-play .stage{flex:1;display:flex;flex-direction:column}
+#scr-play .game{flex:1;justify-content:center;align-content:center}
+#scr-result.active{display:flex;flex-direction:column;justify-content:center;min-height:100dvh}
 .qline{font-size:.72rem;color:#9b95af;font-weight:700;text-align:center}
 
 .opt{background:#fff;border-radius:18px;box-shadow:0 4px 13px rgba(120,105,150,.13);padding:10px;min-height:74px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:transform .12s,box-shadow .12s;border:2.5px solid transparent}
@@ -419,9 +423,21 @@ function roundAudioImage(w, pool){ return {mode:'audio-image', say:w.en, ko:w.ko
 function roundAudioWord(w, pool){ return {mode:'audio-word', say:w.en, ko:w.ko, options:shuffle([w].concat(pickN(pool.filter(function(x){return x.en!==w.en;}),3))).map(function(x){return {label:x.en, key:x.en};}), answer:w.en, word:w}; }
 function roundImageWord(w, pool){ return {mode:'image-word', say:w.en, ko:w.ko, word:w, options:shuffle([w].concat(pickN(pool.filter(function(x){return x.en!==w.en;}),3))).map(function(x){return {label:x.en, key:x.en};}), answer:w.en}; }
 function roundBuild(s){ return {mode:'build', say:s.w.join(' '), words:s.w, emoji:s.emoji, ko:s.ko}; }
+function tooClose(a, b){
+  var x = norm(a), y = norm(b);
+  if (!x || !y) return false;
+  if (x === y) return true;
+  if (x.indexOf(y) >= 0 || y.indexOf(x) >= 0) return true;
+  var xt = x.split(' '), yt = y.split(' ');
+  var hit = xt.filter(function(w){ return yt.indexOf(w) >= 0; }).length;
+  return hit / Math.max(xt.length, yt.length) >= 0.6;
+}
 function roundDialog(d){
   var wrongs = [];
-  shuffle(WRONG_ANS).forEach(function(a){ if (a !== d.a && wrongs.indexOf(a)<0 && wrongs.length<2) wrongs.push(a); });
+  shuffle(WRONG_ANS).forEach(function(a){ if (a !== d.a && !tooClose(a, d.a) && wrongs.indexOf(a)<0 && wrongs.length<2) wrongs.push(a); });
+  if (wrongs.length < 2) {
+    shuffle(WRONG_ANS).forEach(function(a){ if (a !== d.a && wrongs.indexOf(a)<0 && wrongs.length<2) wrongs.push(a); });
+  }
   var opts = shuffle([d.a].concat(wrongs));
   return {mode:'dialog', say:d.q, q:d.q, ko:d.ko, emotion:d.emotion||'surprise',
     options:opts.map(function(a){ return {label:a, key:a, sub:KO_ANS[a]||''}; }), answer:d.a};
@@ -444,7 +460,7 @@ var LEVELS = [
   {id:2, lv:'Lv.2', title:'사이트워드 1단계', sub:'I · see · like · can', emoji:'🅰️', build:function(){
       var rounds = [];
       pickN(DATA.sight,7).forEach(function(w){ rounds.push(roundAudioWord(w, DATA.sight)); });
-      var pairs = pickN(DATA.sight,4).map(function(w){ return {w:w.w, ko:w.ko}; });
+      var pairs = pickN(DATA.sight,4).map(function(w){ return {w:w.en, ko:w.ko}; });
       rounds.splice(3,0,{mode:'memory', pairs:pairs, say:'memory'});
       return rounds;
   }},
@@ -724,6 +740,7 @@ function renderBuild(r){
         }
       } else {
         r.tries++;
+        state.mistakes++;
         sfxBad();
         setPlayChar('sad');
         toast('다음 단어는 "' + r.words[placed] + '"', true);
