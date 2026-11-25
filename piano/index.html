@@ -81,8 +81,13 @@ body.pass2 .score text.lyrB{opacity:1;font-weight:700;}
 .ab-player.on{display:flex;}
 .ab-btn{border:0;border-radius:10px;background:#5e35b1;color:#fff;font-weight:900;font-size:13px;
   padding:7px 12px;cursor:pointer;min-width:42px;}
-.ab-name{font-size:11.5px;color:#6b7280;max-width:160px;overflow:hidden;text-overflow:ellipsis;
-  white-space:nowrap;}
+.ab-track{max-width:190px;min-width:0;flex:1 1 110px;border:1px solid #d1c4e9;border-radius:9px;
+  background:#f5f0ff;color:#4527a0;font-weight:800;font-size:11.5px;padding:5px 6px;cursor:pointer;}
+.ab-add{border:0;border-radius:9px;background:#ede7f6;color:#4527a0;font-weight:900;font-size:11.5px;
+  padding:6px 9px;cursor:pointer;white-space:nowrap;}
+.ab-add:hover{background:#e1d8f7;}
+.audiobar.has .ab-open{display:none;}
+.ab-save{font-weight:800;color:#b26500;}
 #ab-seek{flex:1 1 auto;min-width:70px;accent-color:#5e35b1;}
 .ab-time{font-size:11.5px;color:#6b7280;font-variant-numeric:tabular-nums;white-space:nowrap;}
 .seg.ab-speed{border-color:#d1c4e9;}
@@ -160,7 +165,8 @@ button.act.pracbtn.on{background:#ff8f00;color:#fff;box-shadow:0 3px 10px rgba(2
   .audiobar{flex:0 0 auto;margin:2px 8px 0;padding:3px 6px;border-radius:9px;gap:5px;}
   .ab-open{padding:3px 9px;font-size:10.5px;}
   .ab-btn{padding:3px 8px;font-size:11px;min-width:30px;}
-  .ab-name{display:none;}
+  .ab-track{flex:0 1 104px;max-width:104px;font-size:10px;padding:2px 4px;border-radius:7px;height:26px;}
+  .ab-add{padding:3px 6px;font-size:10.5px;border-radius:7px;}
   #ab-seek{height:20px;}
   .ab-time{font-size:10px;}
   .seg.ab-speed button{padding:2px 6px;font-size:10px;}
@@ -194,9 +200,9 @@ button.act.pracbtn.on{background:#ff8f00;color:#fff;box-shadow:0 3px 10px rgba(2
   header h1{font-size:17px;} .wrap{padding:10px 8px 16px;} .tab{font-size:12.5px;}
   .view-sub{font-size:11.5px;}
   .audiobar{padding:6px 8px;}
-  .ab-name{display:none;}
+  .ab-track{flex:1 1 88px;max-width:150px;}
   .ab-player{flex-wrap:wrap;row-gap:5px;}
-  #ab-seek{flex:1 1 100%;order:9;height:20px;}
+  #ab-seek{flex:1 1 76px;height:20px;}
   .seg.ab-speed{margin-left:auto;}
 }
 @media print{
@@ -217,20 +223,21 @@ button.act.pracbtn.on{background:#ff8f00;color:#fff;box-shadow:0 3px 10px rgba(2
 
 <div class="audiobar" id="audiobar">
   <button class="ab-open" id="ab-open">🎵 내 노래 넣기</button>
-  <input type="file" id="ab-file" accept="audio/*" hidden>
+  <input type="file" id="ab-file" accept="audio/*" multiple hidden>
   <div class="ab-player" id="ab-player">
     <button class="ab-btn" id="ab-play" title="재생/일시정지">▶</button>
-    <span class="ab-name" id="ab-name"></span>
+    <select class="ab-track" id="ab-track" aria-label="들을 곡 고르기"></select>
+    <button class="ab-add" id="ab-add" title="곡 더 넣기">+ 곡</button>
     <input type="range" id="ab-seek" min="0" max="1000" value="0" step="1" aria-label="재생 위치">
     <span class="ab-time" id="ab-time">0:00 / 0:00</span>
     <div class="seg ab-speed" data-ab-speed>
       <button data-sp="0.75">0.75x</button><button data-sp="0.85">0.85x</button><button class="on" data-sp="1">1.0x</button>
     </div>
-    <button class="ab-x" id="ab-x" title="닫기">✕</button>
+    <button class="ab-x" id="ab-x" title="이 곡 지우기">✕</button>
   </div>
   <audio id="ab-audio" preload="metadata"></audio>
 </div>
-<div class="ab-note">내 폰·PC에 있는 노래 파일(MP3·M4A·WAV)을 골라서 들을 수 있어요 · 파일은 이 기기 안에서만 열려요(서버로 안 보내요)</div>
+<div class="ab-note">내 폰·PC에 있는 노래 파일(MP3·M4A·WAV)을 <b>여러 곡 한 번에</b> 넣을 수 있어요 · 파일 이름에 <b>풍선</b>이나 <b>퇴사</b>가 있으면 그 탭에, 없으면 지금 보는 탭에 붙어요 · 넣은 곡은 이 기기에 저장돼서 다음에 열어도 그대로 있어요(서버로 안 보내요)<span class="ab-save" id="ab-save"></span></div>
 
 <div class="wrap">
   <section class="panel on" id="balloon">
@@ -1234,15 +1241,19 @@ document.addEventListener('pointermove',e=>{
   });
 });
 
-/* ---------- 내 노래 넣기 (오디오 플레이어) ---------- */
+/* ---------- 내 노래 넣기 (여러 곡 · 이 기기에 저장) ---------- */
 const abAudio=document.getElementById('ab-audio');
+const abBar=document.getElementById('audiobar');
 const abPlayer=document.getElementById('ab-player');
 const abSeek=document.getElementById('ab-seek');
 const abPlay=document.getElementById('ab-play');
 const abTime=document.getElementById('ab-time');
-const abName=document.getElementById('ab-name');
 const abFile=document.getElementById('ab-file');
-let abURL=null, abSeeking=false;
+const abSel=document.getElementById('ab-track');
+const abAddBtn=document.getElementById('ab-add');
+const abX=document.getElementById('ab-x');
+const AB_DB='piano_playground_audio_v1', AB_STORE='tracks';
+let abTracks=[], abCur=null, abURL=null, abSeeking=false, abMemOnly=false, abDB=null, abLastTab='balloon';
 function fmt(t){ if(!isFinite(t)||t<0) t=0; const m=Math.floor(t/60), s=Math.floor(t%60); return m+':'+(s<10?'0':'')+s; }
 function abUpdate(){
   const d=abAudio.duration||0, c=abAudio.currentTime||0;
@@ -1250,26 +1261,158 @@ function abUpdate(){
   abTime.textContent=fmt(c)+' / '+fmt(d);
   abPlay.textContent=abAudio.paused?'▶':'❚❚';
 }
-document.getElementById('ab-open').addEventListener('click',()=>abFile.click());
-abFile.addEventListener('change',()=>{
-  const f=abFile.files&&abFile.files[0]; if(!f) return;
-  if(abURL) URL.revokeObjectURL(abURL);
-  abURL=URL.createObjectURL(f);
-  abAudio.src=abURL;
-  abAudio.playbackRate=Number(document.querySelector('[data-ab-speed] button.on').dataset.sp)||1;
-  abName.textContent=f.name;
+function abSpeed(){ const b=document.querySelector('[data-ab-speed] button.on'); return Number((b&&b.dataset.sp)||1)||1; }
+function abNowTab(){
+  const t=document.querySelector('.tab.on'), id=t&&t.dataset.tab;
+  if(id==='balloon'||id==='twisa'){ abLastTab=id; return id; }
+  return abLastTab;
+}
+function abTabOfName(name, fallback){
+  const n=String(name||'');
+  if(n.indexOf('풍선')>=0) return 'balloon';
+  if(n.indexOf('퇴사')>=0) return 'twisa';
+  return fallback||'balloon';
+}
+function abLabel(name){
+  const n=String(name||'').replace(/\.[A-Za-z0-9]{2,5}$/,'').trim();
+  return n||'내 노래';
+}
+function abNote(){
+  const el=document.getElementById('ab-save'); if(!el) return;
+  el.textContent=abMemOnly?' · 이 브라우저에선 저장이 안 돼서 이번에만 들을 수 있어요':'';
+}
+function abOpenDB(){
+  return new Promise(res=>{
+    let done=false;
+    const finish=db=>{ if(done) return; done=true; res(db); };
+    try{
+      if(!('indexedDB' in window)||!window.indexedDB){ abMemOnly=true; return finish(null); }
+      const rq=indexedDB.open(AB_DB,1);
+      const to=setTimeout(()=>{ abMemOnly=true; finish(null); },3000);
+      rq.onupgradeneeded=()=>{ try{ const db=rq.result; if(!db.objectStoreNames.contains(AB_STORE)) db.createObjectStore(AB_STORE,{keyPath:'id'}); }catch(e){} };
+      rq.onsuccess=()=>{ clearTimeout(to); finish(rq.result); };
+      rq.onerror=()=>{ clearTimeout(to); abMemOnly=true; finish(null); };
+      rq.onblocked=()=>{ clearTimeout(to); abMemOnly=true; finish(null); };
+    }catch(e){ abMemOnly=true; finish(null); }
+  });
+}
+const abDBReady=abOpenDB().then(db=>{ abDB=db; abNote(); return db; });
+function abStore(mode){
+  try{
+    if(!abDB||!abDB.objectStoreNames.contains(AB_STORE)) return null;
+    return abDB.transaction(AB_STORE,mode).objectStore(AB_STORE);
+  }catch(e){ return null; }
+}
+function abPut(rec){
+  return new Promise(res=>{
+    const st=abStore('readwrite');
+    if(!st){ abMemOnly=true; abNote(); return res(false); }
+    try{
+      const rq=st.put({id:rec.id,name:rec.name,tab:rec.tab,size:rec.size,added:rec.added,blob:rec.blob});
+      rq.onsuccess=()=>res(true);
+      rq.onerror=()=>{ abMemOnly=true; abNote(); res(false); };
+    }catch(e){ abMemOnly=true; abNote(); res(false); }
+  });
+}
+function abDrop(id){
+  try{ const st=abStore('readwrite'); if(st) st.delete(id); }catch(e){}
+}
+function abAll(){
+  return new Promise(res=>{
+    const st=abStore('readonly'); if(!st) return res([]);
+    try{
+      const rq=st.getAll();
+      rq.onsuccess=()=>res(rq.result||[]);
+      rq.onerror=()=>res([]);
+    }catch(e){ res([]); }
+  });
+}
+function abList(){ return abTracks.slice().sort((a,b)=>(a.added||0)-(b.added||0)); }
+function abRender(){
+  const list=abList();
+  abBar.classList.toggle('has', list.length>0);
+  if(!list.length){ abPlayer.classList.remove('on'); abSel.innerHTML=''; return; }
+  const cur=abNowTab(), order=[cur, cur==='balloon'?'twisa':'balloon'];
+  const groupName={balloon:'🎈 풍선 탭', twisa:'🎵 퇴사할게여 탭'};
+  const frag=document.createDocumentFragment();
+  order.forEach(tab=>{
+    const mine=list.filter(t=>t.tab===tab); if(!mine.length) return;
+    const g=document.createElement('optgroup'); g.label=groupName[tab];
+    mine.forEach(t=>{
+      const o=document.createElement('option');
+      o.value=t.id; o.textContent=abLabel(t.name); o.title=t.name;
+      g.appendChild(o);
+    });
+    frag.appendChild(g);
+  });
+  abSel.innerHTML=''; abSel.appendChild(frag);
   abPlayer.classList.add('on');
+  if(abCur && list.some(t=>t.id===abCur)) abSel.value=abCur;
+}
+function abPick(id, autoplay){
+  const t=abTracks.find(x=>x.id===id); if(!t) return;
+  const wasPlaying=!!(abAudio.src && !abAudio.paused);
+  const play=(autoplay===true)?true:(autoplay===false?false:wasPlaying);
+  abAudio.pause();
+  if(abURL){ URL.revokeObjectURL(abURL); abURL=null; }
+  abURL=URL.createObjectURL(t.blob);
+  abAudio.src=abURL;
+  abAudio.load();
+  abAudio.playbackRate=abSpeed();
+  abCur=id; abSel.value=id;
+  abSeek.value='0'; abTime.textContent='0:00 / 0:00'; abPlay.textContent='▶';
   if(playing) stopAll();
-  abAudio.play().catch(()=>{});
-  abAudio.onloadedmetadata=abUpdate;
-  abUpdate();
+  const go=()=>{ abUpdate(); if(play) abAudio.play().catch(()=>{}); };
+  if(abAudio.readyState>=1) go();
+  else abAudio.addEventListener('loadedmetadata', function once(){ abAudio.removeEventListener('loadedmetadata', once); go(); });
+}
+function abSyncTab(){
+  const t=document.querySelector('.tab.on'), id=t&&t.dataset.tab;
+  if(id!=='balloon'&&id!=='twisa') return;
+  const mine=abTracks.filter(x=>x.tab===id); if(!mine.length) return;
+  if(!abAudio.paused) return;
+  if(abCur && mine.some(x=>x.id===abCur)) return;
+  abPick(mine[0].id, false);
+}
+function abAddFiles(files){
+  const arr=Array.prototype.slice.call(files||[]);
+  if(!arr.length) return Promise.resolve();
+  return abDBReady.then(async()=>{
+    const tab=abNowTab();
+    let focus=null, fresh=0;
+    for(const f of arr){
+      const nm=f.name||'';
+      const isAudio=/^audio\//i.test(f.type||'')||/\.(mp3|m4a|wav|ogg|oga|aac|flac|opus|webm|mp4)$/i.test(nm);
+      if(!isAudio) continue;
+      const same=abTracks.find(x=>x.name===nm && x.size===f.size);
+      if(same){ focus=focus||same.id; continue; }
+      const rec={id:'a'+Date.now().toString(36)+Math.random().toString(36).slice(2,7),
+                 name:nm, tab:abTabOfName(nm,tab), size:f.size, added:Date.now()+fresh, blob:f};
+      abTracks.push(rec); fresh++;
+      focus=focus||rec.id;
+      await abPut(rec);
+    }
+    abRender();
+    if(focus) abPick(focus, fresh>0);
+    if(fresh>1) pracToast('🎵 '+fresh+'곡을 넣었어요');
+  });
+}
+document.getElementById('ab-open').addEventListener('click',()=>abFile.click());
+abAddBtn.addEventListener('click',()=>abFile.click());
+abFile.addEventListener('change',()=>{
+  const files=Array.prototype.slice.call(abFile.files||[]);
+  try{ abFile.value=''; }catch(e){}
+  abAddFiles(files);
 });
+abSel.addEventListener('change',()=>{ abPick(abSel.value); });
 abPlay.addEventListener('click',()=>{
-  if(!abAudio.src) return;
-  if(abAudio.paused){ abAudio.play().catch(()=>{}); if(playing) stopAll(); }
+  if(!abAudio.src){ const l=abList(); if(l.length) abPick(l[0].id,true); return; }
+  if(abAudio.paused){ if(playing) stopAll(); abAudio.play().catch(()=>{}); }
   else abAudio.pause();
 });
 abAudio.addEventListener('timeupdate',abUpdate);
+abAudio.addEventListener('loadedmetadata',abUpdate);
+abAudio.addEventListener('durationchange',abUpdate);
 abAudio.addEventListener('play',abUpdate);
 abAudio.addEventListener('pause',abUpdate);
 abAudio.addEventListener('ended',abUpdate);
@@ -1282,12 +1425,34 @@ document.querySelectorAll('[data-ab-speed] button').forEach(b=>{
     abAudio.playbackRate=Number(b.dataset.sp)||1;
   });
 });
-document.getElementById('ab-x').addEventListener('click',()=>{
-  abAudio.pause(); abAudio.removeAttribute('src'); abAudio.load();
+abX.addEventListener('click',()=>{
+  const t=abTracks.find(x=>x.id===abCur);
+  if(!t){ abPlayer.classList.remove('on'); return; }
+  if(!confirm('「'+abLabel(t.name)+'」 곡을 목록에서 지울까요?\n폰에 있는 원래 파일은 그대로 있어요.')) return;
+  abTracks=abTracks.filter(x=>x.id!==t.id);
+  abDrop(t.id);
+  abAudio.pause();
   if(abURL){ URL.revokeObjectURL(abURL); abURL=null; }
-  abFile.value=''; abName.textContent=''; abSeek.value='0'; abTime.textContent='0:00 / 0:00';
-  abPlayer.classList.remove('on'); abPlay.textContent='▶';
-  document.querySelectorAll('[data-ab-speed] button').forEach(x=>x.classList.toggle('on',x.dataset.sp==='1'));
+  abAudio.removeAttribute('src'); abAudio.load();
+  abCur=null; abPlay.textContent='▶'; abSeek.value='0'; abTime.textContent='0:00 / 0:00';
+  abRender();
+  const rest=abList(); if(!rest.length) return;
+  const mine=rest.filter(x=>x.tab===abNowTab());
+  abPick((mine[0]||rest[0]).id, false);
+});
+abDBReady.then(async()=>{
+  const rows=await abAll();
+  if(rows&&rows.length){
+    rows.slice().sort((a,b)=>(a.added||0)-(b.added||0)).forEach(r=>{
+      if(!r||!r.id||!r.blob) return;
+      abTracks.push({id:r.id, name:r.name||'내 노래', tab:(r.tab==='twisa'?'twisa':'balloon'),
+                     size:r.size||0, added:r.added||0, blob:r.blob});
+    });
+    abRender();
+    const mine=abTracks.filter(x=>x.tab===abNowTab());
+    abPick((mine[0]||abTracks[0]).id, false);
+  }
+  abNote();
 });
 
 /* ---------- 탭/버튼 ---------- */
@@ -1301,6 +1466,7 @@ document.querySelectorAll('.tab').forEach(t=>{
     const id=t.dataset.tab;
     if(PLAY[id]){ pracGoTo(id, firstNoteIdx(id), false); }
     else { clearPracMarks(); updatePracUI(); document.body.classList.remove('pass2'); }
+    abSyncTab();
     const wp=document.querySelector('.wrap'); if(wp) wp.scrollTop=0;
     window.scrollTo({top:0,behavior:'auto'});
   });
