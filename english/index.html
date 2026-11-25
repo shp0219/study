@@ -94,14 +94,14 @@ img{-webkit-user-drag:none;user-select:none}
 .hero .pchar.pop{animation:pop .5s ease}
 @keyframes pop{0%{transform:scale(.9)}45%{transform:scale(1.08) translateY(-4px)}100%{transform:scale(1)}}
 .hero .bubble{margin-bottom:4px}
-.replay{position:absolute;right:8px;top:8px;font-size:.72rem;font-weight:900;color:#7d6bb0;background:#f4f0ff;border-radius:999px;padding:4px 8px}
+.replay{align-self:flex-end;margin-top:5px;font-size:.72rem;font-weight:900;color:#7d6bb0;background:#f4f0ff;border-radius:999px;padding:4px 9px;flex:none}
 .replay:active{transform:scale(.95)}
 
 .game{display:flex;flex-direction:column;gap:10px;margin-top:2px}
 .game.cols2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 #scr-play.active{display:flex;flex-direction:column;min-height:100dvh}
 #scr-play .stage{flex:1;display:flex;flex-direction:column}
-#scr-play .game{flex:1;justify-content:center;align-content:center}
+#scr-play .game{margin-top:auto;margin-bottom:auto}
 #scr-result.active{display:flex;flex-direction:column;justify-content:center;min-height:100dvh}
 .qline{font-size:.72rem;color:#9b95af;font-weight:700;text-align:center}
 
