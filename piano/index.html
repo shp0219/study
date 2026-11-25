@@ -1460,7 +1460,7 @@ function abSongToggle(song){
   const mine=abMyList(song);
   if(!mine.length){
     abPickTab=song;
-    pracToast((song==='balloon'?'🎈 풍선':'🎵 퇴사할게여')+'에 넣을 내 노래 파일을 골라 주세요');
+    pracToast(({balloon:'🎈 풍선', twisa:'🎵 퇴사할게여', pretty:'✨ Pretty Girl'}[song]||'이 곡')+'에 넣을 내 노래 파일을 골라 주세요');
     try{ abFile.click(); }catch(e){}
     return;
   }
@@ -1520,7 +1520,7 @@ function abPick(id, autoplay){
 }
 function abSyncTab(){
   const t=document.querySelector('.tab.on'), id=t&&t.dataset.tab;
-  if(id!=='balloon'&&id!=='twisa') return;
+  if(id!=='balloon'&&id!=='twisa'&&id!=='pretty') return;
   const mine=abTracks.filter(x=>x.tab===id); if(!mine.length) return;
   if(!abAudio.paused) return;
   if(abCur && mine.some(x=>x.id===abCur)) return;
