@@ -65,7 +65,9 @@
   .fgroup{margin-top:10px}
   .fgroup[hidden]{display:none}
   .flabel{font-size:11px;font-weight:800;color:#9aa3b4;letter-spacing:.4px;margin:0 0 5px 2px}
-  .chips{display:flex;gap:7px;overflow-x:auto;padding:1px 2px 3px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .chips{display:flex;gap:7px;overflow-x:auto;padding:1px 2px 3px;scrollbar-width:none;-webkit-overflow-scrolling:touch;
+    -webkit-mask-image:linear-gradient(to right,#000 calc(100% - 18px),transparent 100%);
+            mask-image:linear-gradient(to right,#000 calc(100% - 18px),transparent 100%)}
   .chips::-webkit-scrollbar{display:none}
   .chip{flex:0 0 auto;appearance:none;border:1.5px solid #e2e6f0;background:#fff;color:#46506a;
     border-radius:999px;min-height:36px;padding:0 13px;font:inherit;font-size:13px;font-weight:800;
@@ -146,7 +148,10 @@
   .empty.on{display:block}
   .empty .big{font-size:30px;margin-bottom:8px}
   .empty p{margin:4px 0;font-size:13.5px}
-  footer{margin-top:26px;color:#98a2b3;font-size:11.5px;line-height:1.7;text-align:center;letter-spacing:-.1px;padding:0 4px}
+  footer{margin-top:26px;color:#98a2b3;font-size:11.5px;line-height:1.7;text-align:center;letter-spacing:-.1px;
+    padding:0 4px 64px}
+  footer .tip{display:inline-block;margin-bottom:8px;padding:8px 12px;border-radius:12px;background:#fff;
+    border:1px solid var(--line);color:#6b7488;font-size:11.5px;line-height:1.55}
   footer b{color:#6b7488}
 
   /* ── 영상 재생 시트 ── */
@@ -236,6 +241,7 @@
   </div>
 
   <footer>
+    <span class="tip">📱 폰 홈 화면에 추가하면 앱처럼 바로 열려요 · Chrome <b>⋮</b> → <b>홈 화면에 추가</b></span><br>
     <b>알파블록스</b> 111편 · <b>넘버블록스</b> 180편 (공식 유튜브 채널 전체 회차)<br>
     영상은 유튜브에서 재생되고, 광고가 붙을 수 있어요. 함께 볼 때는 YouTube Kids를 권해요.<br>
     학습 내용은 BBC·NCETM 교육과정과 공식 활동지를 참고해 한국어로 풀어 썼어요.
