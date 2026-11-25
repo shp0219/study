@@ -197,7 +197,8 @@ body.hasdock{padding-bottom:158px;}
   .ab-x{padding:3px 7px;font-size:11px;}
   .wrap{flex:1 1 auto;min-height:0;width:100%;margin:0;overflow-y:auto;overflow-x:hidden;
     padding:0 6px;max-width:none;border-radius:0;box-shadow:none;}
-  .viewbar{position:static;padding:0 2px;margin:0 0 1px;border-bottom:0;flex:0 0 auto;}
+  .viewbar{position:sticky;top:0;z-index:6;padding:0 2px;margin:0 0 1px;
+    background:#fff;border-bottom:0;flex:0 0 auto;}
   .view-chip{font-size:10.5px;padding:2px 9px;}
   .view-sub{font-size:10.5px;}
   .view-step{font-size:10px;}
@@ -1239,7 +1240,8 @@ function landScrollTo(blk){
   const wrap=document.querySelector('.wrap'); if(!wrap||!blk) return;
   const wr=wrap.getBoundingClientRect(), br=blk.getBoundingClientRect();
   const vb=document.querySelector('.panel.on .viewbar');
-  const off=vb?vb.getBoundingClientRect().height:0;
+  let off=0;
+  if(vb){ off=Math.max(0, vb.getBoundingClientRect().bottom - wr.top); }
   const avail=wrap.clientHeight-off-2;
   let target;
   if(br.height<=avail) target=wrap.scrollTop+(br.top-wr.top)-off-1;
@@ -1253,7 +1255,9 @@ function scrollBlockIntoView(blk){
   const dockHidden=!dockEl||dockEl.classList.contains('hidden');
   const dockTop=dockHidden?window.innerHeight:dockEl.getBoundingClientRect().top;
   const vb=document.querySelector('.panel.on .viewbar');
-  const topLim=(vb?Math.max(6, vb.getBoundingClientRect().height+4):6), botLim=dockTop-6;
+  let topLim=6;
+  if(vb){ const vbr=vb.getBoundingClientRect(); const b=Math.max(0, vbr.bottom); if(b>4 && b<dockTop-120) topLim=Math.max(6,b+4); }
+  const botLim=dockTop-6;
   const r=blk.getBoundingClientRect();
   if(r.height<=botLim-topLim){
     if(r.top<topLim-1 || r.bottom>botLim+1){
