@@ -1066,17 +1066,16 @@ function setView(song, vi, jump){
   const V=VIEWS[song]||[]; const v=V[vi]; if(!v) return;
   const changed = curView[song]!==vi;
   curView[song]=vi;
+  document.body.classList.toggle('pass2', !!v.pass2);
+  if(!changed) return false;          // 같은 구간이면 DOM 손대지 않음(누를 때 지연 방지)
   document.querySelectorAll('[data-view="'+song+'"]').forEach(e=>e.textContent=v.label);
   document.querySelectorAll('[data-viewsub="'+song+'"]').forEach(e=>e.textContent=v.sub||'');
   document.querySelectorAll('[data-viewstep="'+song+'"]').forEach(e=>e.textContent=(vi+1)+' / '+V.length);
-  if(changed){
-    document.querySelectorAll('[data-viewbar="'+song+'"]').forEach(e=>{
-      e.classList.remove('flash'); void e.offsetWidth; e.classList.add('flash');
-      clearTimeout(e._ft); e._ft=setTimeout(()=>e.classList.remove('flash'),700);
-    });
-    document.body.classList.toggle('pass2', !!v.pass2);
-    if(jump) jumpToView(song, vi);
-  }
+  document.querySelectorAll('[data-viewbar="'+song+'"]').forEach(e=>{
+    e.classList.remove('flash'); void e.offsetWidth; e.classList.add('flash');
+    clearTimeout(e._ft); e._ft=setTimeout(()=>e.classList.remove('flash'),700);
+  });
+  if(jump) jumpToView(song, vi);
   return changed;
 }
 function songVisible(song){
@@ -1178,8 +1177,9 @@ function scrollToNote(panel, n){
   }
 }
 function flashKey(midi){
-  const k=document.querySelector('.key[data-midi="'+midi+'"]');
-  if(k){ k.classList.add('on'); setTimeout(()=>k.classList.remove('on'), 240); }
+  const ks=keyEls(midi); if(!ks.length) return;
+  for(let i=0;i<ks.length;i++) ks[i].classList.add('on');
+  setTimeout(()=>{ for(let i=0;i<ks.length;i++) ks[i].classList.remove('on'); }, 240);
 }
 function tapNote(el){
   const p=el.getAttribute('data-p'); if(!p) return;
@@ -1239,38 +1239,74 @@ function buildKeyboard(){
     d.innerHTML='<div class="sol">'+k.sol+'</div>';
     kb.appendChild(d);
   });
+  prcCache.key.clear();                  // 건반이 새로 그려졌으니 캐시·가이드 참조를 비운다
+  if(typeof pracMarks!=='undefined') pracMarks.keys=[];
 }
 /* ---------- 따라 치기 (건반 연주 ↔ 악보 커서 연동) ---------- */
 const prac={on:true,song:'balloon',i:0};
+/* ---------- 누름 반응 캐시: 매번 querySelectorAll·전체 순회하지 않고 O(1)로 찾는다 ---------- */
+const prcCache={key:new Map(), idx:new Map(), badge:new Map(), ui:null};
+function keyEls(m){
+  let a=prcCache.key.get(m);
+  if(!a){ a=Array.prototype.slice.call(document.querySelectorAll('.key[data-midi="'+m+'"]')); prcCache.key.set(m,a); }
+  return a;
+}
 function pracSeq(song){ return PLAY[song]||[]; }
+function pracIndex(song){
+  let ix=prcCache.idx.get(song); if(ix) return ix;
+  const s=pracSeq(song);
+  const attack=new Int32Array(s.length), pos=new Int32Array(s.length), els=new Array(s.length);
+  let a=0,p=0;
+  for(let k=0;k<s.length;k++){
+    const e=s[k];
+    if(e.p!=='R'){ p++; if(!e.tied) a++; }
+    attack[k]=a; pos[k]=p;
+  }
+  ix={attack:attack,pos:pos,total:a,els:els,list:null};
+  prcCache.idx.set(song,ix);
+  return ix;
+}
 function firstNoteIdx(song){ const s=pracSeq(song); for(let k=0;k<s.length;k++){ if(s[k].p!=='R') return k; } return -1; }
 function nextNoteIdx(song,from){ const s=pracSeq(song); for(let k=from+1;k<s.length;k++){ if(s[k].p!=='R'&&!s[k].tied) return k; } return -1; }
-function pracTotal(song){ return pracSeq(song).filter(n=>n.p!=='R'&&!n.tied).length; }
-function pracAttackPos(song,i){ const s=pracSeq(song); let c=0; for(let k=0;k<=i&&k<s.length;k++){ if(s[k].p!=='R'&&!s[k].tied) c++; } return c; }
-function pracPos(song,i){ const s=pracSeq(song); let c=0; for(let k=0;k<=i&&k<s.length;k++){ if(s[k].p!=='R') c++; } return c; }
+function pracTotal(song){ return pracIndex(song).total; }
+function pracAttackPos(song,i){ const ix=pracIndex(song); return i<0?0:(ix.attack[Math.min(i,ix.attack.length-1)]||0); }
+function pracPos(song,i){ const ix=pracIndex(song); return i<0?0:(ix.pos[Math.min(i,ix.pos.length-1)]||0); }
 function pracNoteEl(song,i){
+  const ix=pracIndex(song); const e=pracSeq(song)[i]; if(!e||e.p==='R') return null;
+  let el=ix.els[i];
+  if(el!==undefined) return el;
   const panel=document.getElementById(song); if(!panel) return null;
-  const s=pracSeq(song); const e=s[i];
-  if(e && e.n!==null && e.n!==undefined){
-    const el=panel.querySelector('.note[data-n="'+e.n+'"]'); if(el) return el;
-  }
-  const k=pracPos(song,i)-1; if(k<0) return null;
-  const list=panel.querySelectorAll('.note');
-  return list[k]||null;
+  if(e.n!==null && e.n!==undefined) el=panel.querySelector('.note[data-n="'+e.n+'"]');
+  if(!el){ if(!ix.list) ix.list=Array.prototype.slice.call(panel.querySelectorAll('.note')); el=ix.list[ix.pos[i]-1]||null; }
+  ix.els[i]=el;
+  return el;
 }
 function pracTarget(){ if(!prac.on||prac.i<0) return null; return pracSeq(prac.song)[prac.i]||null; }
+/* 지금 칠 음표·배지·건반만 기억해 두고 그 셋만 되돌린다 (문서 전체 조회 없음) */
+const pracMarks={note:null,badge:null,keys:[]};
 function clearPracMarks(){
-  document.querySelectorAll('.prac-cur').forEach(e=>e.classList.remove('prac-cur'));
-  document.querySelectorAll('.key.guide').forEach(e=>e.classList.remove('guide'));
+  if(pracMarks.note){ pracMarks.note.classList.remove('prac-cur'); pracMarks.note=null; }
+  if(pracMarks.badge){ pracMarks.badge.classList.remove('prac-cur'); pracMarks.badge=null; }
+  const ks=pracMarks.keys;
+  for(let i=0;i<ks.length;i++) ks[i].classList.remove('guide');
+  pracMarks.keys=[];
+}
+function pracUI(){
+  if(!prcCache.ui){
+    prcCache.ui={btns:Array.prototype.slice.call(document.querySelectorAll('[data-prac]')),
+                 stats:Array.prototype.slice.call(document.querySelectorAll('[data-pracstatus]'))};
+  }
+  return prcCache.ui;
 }
 function updatePracUI(){
-  document.querySelectorAll('[data-prac]').forEach(b=>{
+  const ui=pracUI();
+  ui.btns.forEach(b=>{
     const isOn=(b.dataset.prac===prac.song)&&prac.on;
     b.classList.toggle('on',isOn);
     b.textContent=isOn?'🎹 따라 치기 ✓':'🎹 따라 치기';
     b.setAttribute('aria-pressed',isOn?'true':'false');
   });
-  document.querySelectorAll('[data-pracstatus]').forEach(el=>{
+  ui.stats.forEach(el=>{
     el.classList.remove('done');
     if(el.dataset.pracstatus!==prac.song){ el.textContent=''; return; }
     if(!prac.on){ el.textContent='따라 치기 꺼짐'; return; }
@@ -1278,26 +1314,35 @@ function updatePracUI(){
     el.textContent='♪ '+pracAttackPos(prac.song,prac.i)+' / '+pracTotal(prac.song);
   });
 }
+/* 계이름 배지는 음표와 data-n 이 같다 → 전체 .badge 순회 대신 한 번에 찾는다 */
 function pracMarkBadge(noteEl,cls){
-  const svg=noteEl.closest('svg'); if(!svg) return;
-  const x=parseFloat(noteEl.getAttribute('data-x')); if(isNaN(x)) return;
-  let best=null, bd=1e9;
-  svg.querySelectorAll('.badge').forEach(b=>{
-    const r=b.querySelector('rect'); if(!r) return;
-    const bx=parseFloat(r.getAttribute('x'))+(parseFloat(r.getAttribute('width'))||0)/2;
-    const d=Math.abs(bx-x); if(d<bd){ bd=d; best=b; }
-  });
-  if(best&&bd<10) best.classList.add(cls);
+  const svg=noteEl.ownerSVGElement||(noteEl.closest?noteEl.closest('svg'):null); if(!svg) return null;
+  const n=noteEl.getAttribute('data-n'); if(n===null||n===undefined) return null;
+  let has=prcCache.badge.get(svg);
+  if(has===undefined){ has=!!svg.querySelector('.badge'); prcCache.badge.set(svg,has); }
+  if(!has) return null;                       // 풍선 악보처럼 배지가 없는 SVG
+  const b=svg.querySelector('.badge[data-n="'+n+'"]');
+  if(b) b.classList.add(cls||'prac-cur');
+  return b;
 }
 function renderPrac(scroll){
   clearPracMarks(); updatePracUI();
   const t=pracTarget(); if(!t) return;
   if(t.v!==undefined) setView(prac.song, t.v, !!scroll);
   const el=pracNoteEl(prac.song,prac.i); if(!el) return;
-  el.classList.add('prac-cur'); pracMarkBadge(el,'prac-cur');
+  el.classList.add('prac-cur'); pracMarks.note=el;
+  pracMarks.badge=pracMarkBadge(el,'prac-cur');
   const midi=midiOf(t.p);
-  document.querySelectorAll('.key[data-midi="'+midi+'"]').forEach(k=>k.classList.add('guide'));
-  if(scroll) scrollToCursor(el);
+  const ks=keyEls(midi);
+  for(let i=0;i<ks.length;i++) ks[i].classList.add('guide');
+  pracMarks.keys=ks.slice();
+  if(scroll) afterPaint(()=>scrollToCursor(el));
+}
+/* 스크롤·강제 레이아웃은 하이라이트가 그려진 다음 프레임으로 미룬다 */
+let scrollRaf=0;
+function afterPaint(fn){
+  if(scrollRaf) cancelAnimationFrame(scrollRaf);
+  scrollRaf=requestAnimationFrame(()=>{ scrollRaf=0; try{ fn(); }catch(e){} });
 }
 function inLand(){
   return window.matchMedia('(orientation:landscape) and (max-height:560px)').matches;
@@ -1362,11 +1407,11 @@ function practicePress(midi){
   if(!prac.on) return;
   const t=pracTarget(); if(!t) return;
   if(midiOf(t.p)!==midi){
-    const g=document.querySelector('.key.guide');
-    if(g){ g.classList.add('nudge'); setTimeout(()=>{const gg=document.querySelector('.key.guide'); if(gg) gg.classList.remove('nudge');},430); }
+    const g=pracMarks.keys[0]||document.querySelector('.key.guide');
+    if(g){ g.classList.add('nudge'); setTimeout(()=>{ if(g.isConnected) g.classList.remove('nudge'); },430); }
     return;
   }
-  markPracOk(pracNoteEl(prac.song,prac.i));
+  markPracOk(pracMarks.note||pracNoteEl(prac.song,prac.i));
   const nx=nextNoteIdx(prac.song,prac.i);
   if(nx<0){ prac.i=-1; clearPracMarks(); updatePracUI(); pracToast('🎉 끝까지 다 쳤어요! ↺ 처음부터 다시 해 봐요'); return; }
   prac.i=nx; renderPrac(true);
@@ -1385,21 +1430,29 @@ function pracToast(msg){
   clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'), 4200);
 }
 let activePointers=new Map();
-function keyAt(x,y){ const el=document.elementFromPoint(x,y); if(!el) return null; const k=el.closest?el.closest('.key'):null; return k; }
+/* 손가락이 닿은 요소에서 바로 건반을 찾는다 (elementFromPoint 의 강제 레이아웃 회피) */
+function keyAt(x,y,src){
+  if(src&&src.closest){ const k=src.closest('.key'); if(k) return k; }
+  const el=document.elementFromPoint(x,y); if(!el) return null;
+  return el.closest?el.closest('.key'):null;
+}
 function press(el){
   if(!el) return;
-  const p=el.dataset.p, m=Number(el.dataset.midi);
-  const ac=ensure();
+  const m=Number(el.dataset.midi);
+  el.classList.add('on');                     // ① 건반 불빛이 가장 먼저
+  const ac=ensure();                          // ② 소리는 그 다음
   tone(m, ac.currentTime+0.002, 0.9, 0.26);
-  el.classList.add('on');
 }
 function release(el){ if(el) el.classList.remove('on'); }
 document.addEventListener('pointerdown',e=>{
-  const k=keyAt(e.clientX,e.clientY); if(!k) return;
-  e.preventDefault(); ensure();
+  const k=keyAt(e.clientX,e.clientY,e.target); if(!k) return;
+  e.preventDefault();
   const wasOn=k.classList.contains('on');
-  activePointers.set(e.pointerId,k); press(k);
-  if(!wasOn) practicePress(Number(k.dataset.midi));
+  activePointers.set(e.pointerId,k);
+  k.classList.add('on');                      // ① 건반 불빛
+  if(!wasOn) practicePress(Number(k.dataset.midi));   // ② 악보 음표·배지·건반 ▼ 하이라이트
+  const ac=ensure();                          // ③ 소리
+  tone(Number(k.dataset.midi), ac.currentTime+0.002, 0.9, 0.26);
 },{passive:false});
 document.addEventListener('pointermove',e=>{
   if(!activePointers.has(e.pointerId)) return;
