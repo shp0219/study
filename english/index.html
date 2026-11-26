@@ -32,6 +32,7 @@ img{-webkit-user-drag:none;user-select:none}
 .brand small{display:block;font-size:.68rem;font-weight:700;color:#9a94ad;letter-spacing:0}
 .iconbtn{width:44px;height:44px;border-radius:50%;background:#fff;box-shadow:0 3px 10px rgba(120,105,150,.14);font-size:1.15rem;display:grid;place-items:center;flex:none}
 .iconbtn:active{transform:scale(.94)}
+.iconbtn.on{background:#e8fff0;box-shadow:inset 0 0 0 2.5px #7fd6a4}
 .tally{display:flex;align-items:center;gap:6px;background:#fff;border-radius:999px;padding:6px 12px;font-weight:800;font-size:.82rem;box-shadow:0 3px 10px rgba(120,105,150,.12);color:#8a6a00}
 .tally .star{color:#ffb800}
 
@@ -210,6 +211,7 @@ img{-webkit-user-drag:none;user-select:none}
       <button id="btn-exit" class="iconbtn" aria-label="그만 놀기">←</button>
       <div class="levelchip" id="play-level">Lv.1</div>
       <div class="dots" id="dots"></div>
+      <button id="btn-slow" class="iconbtn" aria-label="천천히 말하기">🐢</button>
       <button id="btn-sfx2" class="iconbtn" aria-label="효과음">🔔</button>
     </div>
 
@@ -367,12 +369,12 @@ function speak(text, slow){
     var u = new SpeechSynthesisUtterance(text);
     u.lang = 'en-US';
     var v = enVoice(); if (v) u.voice = v;
-    u.rate = slow ? 0.62 : 0.92;
+    u.rate = slow ? 0.6 : 0.88;
     u.pitch = 1.08;
     window.speechSynthesis.speak(u);
   } catch(e){}
 }
-var slowMode = false;
+var slowMode = (store.slow === true);
 
 /* ---------- screens ---------- */
 function show(name){
@@ -411,6 +413,13 @@ function paintHome(){
   document.getElementById('tally').textContent = totalStars();
   document.getElementById('btn-sfx').textContent = store.sfx ? '🔔' : '🔕';
   document.getElementById('btn-sfx2').textContent = store.sfx ? '🔔' : '🔕';
+  updateSlowBtn();
+}
+function updateSlowBtn(){
+  var b = document.getElementById('btn-slow');
+  if (!b) return;
+  b.classList.toggle('on', slowMode);
+  b.setAttribute('aria-label', slowMode ? '보통 속도로 말하기' : '천천히 말하기');
 }
 
 /* ---------- level definitions ---------- */
@@ -914,6 +923,15 @@ function toggleSfx(){
 }
 document.getElementById('btn-sfx').addEventListener('click', toggleSfx);
 document.getElementById('btn-sfx2').addEventListener('click', toggleSfx);
+document.getElementById('btn-slow').addEventListener('click', function(){
+  slowMode = !slowMode;
+  store.slow = slowMode; saveStore();
+  updateSlowBtn();
+  sfxTap();
+  var r = state.rounds[state.idx];
+  toast(slowMode ? '천천히 말해요 🐢' : '보통 속도로 말해요', true);
+  if (r) setTimeout(function(){ speak(r.mode === 'build' ? r.say : (r.mode === 'dialog' ? r.q : (r.mode === 'speak' ? r.phrase : r.say)), slowMode); }, 200);
+});
 document.getElementById('btn-again').addEventListener('click', function(){ sfxTap(); startLevel(state.level); });
 document.getElementById('btn-next').addEventListener('click', function(){
   sfxTap();
