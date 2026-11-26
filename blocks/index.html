@@ -463,7 +463,7 @@
     var extraSpk = q.askEn ? '<button class="mini" style="margin-top:10px" data-read="' + esc(q.askEn + '. ' + q.opts.join(', ')) + '" data-lang="en-US">🔊 영어로 듣기</button>' : '';
     return '<div class="wrap qz">' +
       '<div class="qbar"><button class="back" data-go="#/p/' + key + '/' + i + '">←</button>' +
-      '<span class="pbar"><i style="width:' + Math.round(st.qi / qs.length * 100) + '%"></i></span>' +
+      '<span class="pbar"><i style="width:' + Math.round((st.qi + 1) / qs.length * 100) + '%"></i></span>' +
       '<span class="num">' + (st.qi + 1) + ' / ' + qs.length + '</span></div>' +
       '<div class="qcard"><span class="qtype">' + qTypeLabel(q) + '</span>' + askKo + extraSpk +
       '<div class="vis">' + qVisual(q, e.qid) + '</div>' +
