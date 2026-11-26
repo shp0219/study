@@ -209,6 +209,8 @@ img{-webkit-user-drag:none;user-select:none}
 .res .tx{min-width:0;flex:1}
 .res .t{display:block;font-size:.9rem;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .res .m{display:block;font-size:.7rem;font-weight:800;color:#a2947e;margin-top:2px}
+.browsehome{width:100%;margin-top:12px;border-radius:14px;padding:12px;font-size:.86rem;font-weight:900;
+  background:#fff6e5;color:#b0741b;box-shadow:inset 0 0 0 2px #ffe2ad}
 
 /* ---------- 토스트 ---------- */
 #toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);background:#3d3327e8;color:#fff;
@@ -276,7 +278,7 @@ img{-webkit-user-drag:none;user-select:none}
     </div>
 
     <div class="player"><iframe id="ytPlayer" src="" title="Read Aloud 영상"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allow="accelerometer; autoplay; clipboard-write; compute-pressure; encrypted-media; gyroscope; picture-in-picture"
       referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
     <a class="ytlink" id="ytLink" href="#" target="_blank" rel="noopener">▶ 유튜브에서 크게 보기</a>
 
@@ -331,6 +333,7 @@ img{-webkit-user-drag:none;user-select:none}
       <p>영어 제목 일부만 넣어도 돼요. 예) biscuit, kitty, faces</p>
       <input id="omniSearch" type="search" placeholder="책 제목 입력" autocomplete="off">
       <div class="results" id="omniResults"></div>
+      <button class="browsehome" id="browseHome">🏠 브랜드에서 골라 보기</button>
     </div>
   </section>
 </div>
@@ -827,6 +830,7 @@ function renderOmni(){
   });
 }
 $('#omniSearch').oninput=renderOmni;
+$('#browseHome').onclick=()=>show('home');
 
 /* ---------- 시작 ---------- */
 renderHome();
