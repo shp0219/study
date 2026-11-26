@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#fff8ec">
+<meta name="format-detection" content="telephone=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="영어 원서 놀이터">
+<title>유니혀니의 영어 원서 읽어주기 놀이터</title>
+<style>
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;min-height:100%}
+body{
+  margin:0;min-height:100dvh;color:#3d3327;font-size:17px;
+  font-family:'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  background:linear-gradient(170deg,#fff9ee 0%,#eef6ff 46%,#f1fbf5 100%) fixed;
+  -webkit-tap-highlight-color:transparent;word-break:keep-all;overflow-x:hidden;
+}
+button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button:disabled{opacity:.45}
+img{-webkit-user-drag:none;user-select:none}
+.hidden{display:none!important}
+.app{max-width:560px;margin:0 auto;position:relative}
+.screen{display:none;padding:14px 16px calc(30px + env(safe-area-inset-bottom))}
+.screen.active{display:block;animation:fadeUp .26s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+
+/* ---------- 공통 상단 바 ---------- */
+.bar{display:flex;align-items:center;gap:10px;padding:2px 0 12px;position:sticky;top:0;z-index:12;
+  background:linear-gradient(#fff9eef5,#fff9eed9 70%,#fff9ee00);backdrop-filter:blur(6px)}
+.backbtn{width:46px;height:46px;flex:none;border-radius:16px;background:#fff;box-shadow:0 3px 10px rgba(150,120,80,.16);
+  font-size:1.25rem;font-weight:900;display:grid;place-items:center;color:#8a6a3a}
+.backbtn:active{transform:scale(.94)}
+.bar .bt{flex:1;min-width:0}
+.bar h2{margin:0;font-size:1.06rem;font-weight:900;letter-spacing:-.4px;line-height:1.28;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .meta{margin:3px 0 0;font-size:.76rem;font-weight:700;color:#9b8f7d;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.homebtn{width:46px;height:46px;flex:none;border-radius:16px;background:#fff6e5;color:#c98a1a;font-size:1.2rem;
+  box-shadow:inset 0 0 0 2px #ffe2ad;display:grid;place-items:center;font-weight:900}
+
+/* ---------- 첫 화면 ---------- */
+.hero{text-align:center;padding:6px 4px 16px}
+.hero .shelf{font-size:2.5rem;line-height:1;filter:drop-shadow(0 4px 5px rgba(160,120,60,.18))}
+.hero h1{margin:8px 0 0;font-size:1.44rem;font-weight:900;letter-spacing:-.9px;line-height:1.3;color:#4a3a22}
+.hero h1 em{font-style:normal;color:#e07a1f}
+.hero p{margin:7px 0 0;font-size:.85rem;font-weight:700;color:#9a8a72;line-height:1.5}
+
+.bigbtn{display:flex;align-items:center;gap:13px;width:100%;text-align:left;border-radius:22px;padding:14px 16px;margin-bottom:11px;
+  box-shadow:0 6px 18px rgba(150,120,80,.16);border:2.5px solid #fff9;transition:transform .12s}
+.bigbtn:active{transform:scale(.985)}
+.bigbtn .ico{font-size:2rem;flex:none;line-height:1}
+.bigbtn .tx{flex:1;min-width:0}
+.bigbtn b{display:block;font-size:1.1rem;font-weight:900;letter-spacing:-.5px;line-height:1.25}
+.bigbtn small{display:block;margin-top:3px;font-size:.76rem;font-weight:700;opacity:.8;line-height:1.35}
+.bigbtn .arw{font-size:1.4rem;font-weight:900;opacity:.5;flex:none}
+.bigbtn.photo{background:linear-gradient(135deg,#ffe9bf,#ffd493);color:#7a4a05}
+.bigbtn.star{background:linear-gradient(135deg,#e2f7d8,#c7eeb6);color:#2c5a1c}
+
+.seclabel{display:flex;align-items:center;gap:8px;margin:18px 2px 10px}
+.seclabel b{font-size:.98rem;font-weight:900;letter-spacing:-.3px;color:#5a4a33}
+.seclabel span{font-size:.74rem;font-weight:800;color:#a99a83}
+
+.brand{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border-radius:20px;padding:12px 14px;margin-bottom:10px;
+  background:linear-gradient(135deg,var(--c1),var(--c2));box-shadow:0 4px 14px rgba(150,120,80,.13);
+  border:2px solid #ffffffb0;transition:transform .12s}
+.brand:active{transform:scale(.985)}
+.brand .em{width:52px;height:52px;flex:none;border-radius:16px;background:#ffffffb8;display:grid;place-items:center;font-size:1.65rem}
+.brand .tx{flex:1;min-width:0}
+.brand .nm{display:block;font-size:1.02rem;font-weight:900;letter-spacing:-.45px;line-height:1.22}
+.brand .sb{display:block;font-size:.74rem;font-weight:800;color:#6b5c45;opacity:.85;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand .go{font-size:1.35rem;font-weight:900;color:#8a7a63;opacity:.55;flex:none}
+.foot{margin:18px 2px 0;text-align:center;font-size:.72rem;font-weight:700;color:#b0a28c;line-height:1.6}
+
+/* ---------- 브랜드 화면 ---------- */
+.tabs{display:flex;gap:8px;margin-bottom:10px}
+.tab{flex:1;border-radius:15px;padding:11px 4px;font-size:.92rem;font-weight:900;background:#fff;
+  color:#8d8271;box-shadow:0 3px 9px rgba(150,120,80,.11);letter-spacing:-.3px}
+.tab.on{background:var(--accent,#e07a1f);color:#fff;box-shadow:0 5px 14px rgba(224,122,31,.32)}
+.tab .cnt{display:block;font-size:.66rem;font-weight:800;opacity:.85;margin-top:1px}
+.levels{display:flex;gap:7px;overflow-x:auto;padding:2px 2px 10px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.levels::-webkit-scrollbar{display:none}
+.lchip{flex:none;border-radius:999px;padding:8px 14px;font-size:.84rem;font-weight:900;background:#fff;color:#8d8271;
+  box-shadow:0 2px 7px rgba(150,120,80,.12);white-space:nowrap}
+.lchip.on{background:#5b4a33;color:#fff}
+.searchrow{display:flex;gap:8px;margin:2px 0 8px}
+.searchrow input{flex:1;min-width:0;border:2px solid #ffe1b3;border-radius:15px;padding:12px 14px;font-size:.92rem;font-weight:700;
+  background:#fff;color:#4a3a22;font-family:inherit}
+.searchrow input:focus{outline:none;border-color:#ffbe57}
+.listinfo{font-size:.76rem;font-weight:800;color:#a2947e;margin:2px 2px 8px}
+.booklist{list-style:none;margin:0;padding:0}
+.bitem{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:#fff;border-radius:18px;padding:9px 11px;margin-bottom:8px;
+  box-shadow:0 3px 11px rgba(150,120,80,.10);transition:transform .12s}
+.bitem:active{transform:scale(.985)}
+.bitem .thumb{width:56px;height:56px;flex:none;border-radius:13px;background:#f4ede1;position:relative;overflow:hidden}
+.bitem .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.bitem .thumb.noimg::after{content:'📕';position:absolute;inset:0;display:grid;place-items:center;font-size:1.3rem}
+.bitem .tx{flex:1;min-width:0}
+.bitem .t{display:block;font-size:.98rem;font-weight:900;letter-spacing:-.35px;line-height:1.24;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.bitem .m{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px}
+.bitem .lv{font-size:.7rem;font-weight:800;color:#8e806b;background:#f6f0e6;border-radius:7px;padding:2px 7px}
+.bitem .bd{font-size:.68rem;font-weight:900;color:#2f7d32;background:#e8f7e4;border-radius:7px;padding:2px 7px}
+.bitem .du{font-size:.68rem;font-weight:800;color:#a2947e}
+.bitem .star{font-size:.95rem}
+.starcard{display:flex;align-items:center;gap:13px;width:100%;text-align:left;background:#fff;border-radius:20px;padding:11px 13px;margin-bottom:10px;
+  box-shadow:0 4px 14px rgba(150,120,80,.13);border:2px solid #fff}
+.starcard:active{transform:scale(.985)}
+.starcard .thumb{width:74px;height:74px;flex:none;border-radius:15px;background:#f4ede1 center/cover no-repeat}
+.starcard .tx{flex:1;min-width:0}
+.starcard .t{display:block;font-size:1.06rem;font-weight:900;letter-spacing:-.4px;line-height:1.24}
+.starcard .m{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.starcard .m span{font-size:.7rem;font-weight:800;color:#8e806b;background:#f6f0e6;border-radius:7px;padding:2px 7px}
+.starcard .m span.bd{color:#2f7d32;background:#e8f7e4}
+.starcard .ok{flex:none;font-size:.74rem;font-weight:900;color:#fff;background:#e07a1f;border-radius:999px;padding:7px 11px}
+.empty{padding:24px 10px;text-align:center;font-size:.88rem;font-weight:800;color:#a2947e;line-height:1.6}
+
+/* ---------- 책 화면 ---------- */
+.player{position:relative;width:100%;aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:#000;
+  box-shadow:0 6px 18px rgba(60,50,30,.2)}
+.player iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.ytlink{display:flex;align-items:center;justify-content:center;gap:7px;margin:9px 0 4px;font-size:.82rem;font-weight:900;color:#c0392b;
+  text-decoration:none;background:#fff;border-radius:13px;padding:10px;box-shadow:0 2px 8px rgba(150,120,80,.12)}
+.bookhead{margin:14px 2px 8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.bookhead b{font-size:1rem;font-weight:900;letter-spacing:-.35px}
+.bookhead .cnt{font-size:.74rem;font-weight:800;color:#a2947e}
+.readctrl{display:flex;gap:8px;margin:0 0 10px}
+.readctrl button{flex:1;border-radius:14px;padding:11px 6px;font-size:.86rem;font-weight:900;letter-spacing:-.3px}
+#playAll{background:#e8f7e4;color:#2f7d32;box-shadow:inset 0 0 0 2px #bfe3b2}
+#playAll.playing{background:#2f7d32;color:#fff;box-shadow:0 4px 12px rgba(47,125,50,.32)}
+#koToggle{background:#fff2dc;color:#a5651a;box-shadow:inset 0 0 0 2px #ffd89b}
+#koToggle.on{background:#e07a1f;color:#fff;box-shadow:0 4px 12px rgba(224,122,31,.3)}
+
+.sents{list-style:none;margin:0;padding:0}
+.sent{background:#fff;border-radius:18px;padding:12px 13px;margin-bottom:9px;box-shadow:0 3px 11px rgba(150,120,80,.1);
+  display:flex;gap:10px}
+.sent .num{width:27px;height:27px;flex:none;border-radius:50%;background:#fff1d6;color:#b0741b;font-size:.8rem;font-weight:900;
+  display:grid;place-items:center;margin-top:2px}
+.sent .body{flex:1;min-width:0}
+.sent .en{margin:0;font-size:1.1rem;font-weight:800;line-height:1.45;letter-spacing:-.2px;color:#33281a;
+  font-family:'Georgia','Times New Roman',serif}
+.sent .ko{margin:6px 0 0;font-size:.85rem;font-weight:700;color:#8a7a5f;line-height:1.45}
+.sent .btns{display:flex;gap:7px;margin-top:9px}
+.sent .btns button{border-radius:12px;padding:8px 12px;font-size:.82rem;font-weight:900;background:#eef4ff;color:#2b56a8}
+.sent .btns button.slow{background:#f3ecff;color:#6a3fb0}
+.sent .btns button:active{transform:scale(.95)}
+.words{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.wchip{border-radius:999px;padding:7px 12px;font-size:.84rem;font-weight:900;background:#fdf3e2;color:#8a5a12;
+  box-shadow:inset 0 0 0 1.5px #f6dfb8}
+.wchip .wm{font-weight:800;color:#8f8471;font-size:.78rem}
+.wchip.open{background:#ffe6bd;box-shadow:inset 0 0 0 2px #f0bf6e}
+.caution{margin:12px 2px 0;font-size:.74rem;font-weight:700;color:#a2947e;line-height:1.55;background:#fffaf0;
+  border-radius:12px;padding:10px 12px}
+
+/* ---------- 페이지 사진 읽기 ---------- */
+.ocrbox{margin-top:16px;background:#fff;border-radius:18px;padding:14px;box-shadow:0 3px 12px rgba(150,120,80,.1)}
+.ocrbox h3{margin:0 0 5px;font-size:.98rem;font-weight:900;letter-spacing:-.3px;color:#4a3a22}
+.ocrbox p.hint{margin:0 0 11px;font-size:.78rem;font-weight:700;color:#a2947e;line-height:1.5}
+.ocrbtns{display:flex;gap:8px}
+.ocrbtns button{flex:1;border-radius:15px;padding:14px 8px;font-size:.9rem;font-weight:900;letter-spacing:-.3px}
+.ocrbtns .cam{background:linear-gradient(135deg,#ffe9bf,#ffd493);color:#7a4a05}
+.ocrbtns .pick{background:#eef4ff;color:#2b56a8}
+.ocrstat{margin:10px 0 0;font-size:.8rem;font-weight:800;color:#8a7a5f;line-height:1.5}
+.ocrstat.err{color:#c0392b}
+.bar-progress{height:8px;border-radius:99px;background:#f1e9dc;overflow:hidden;margin-top:8px}
+.bar-progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffc86b,#ff9f43);transition:width .2s}
+.ocrsent{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.ocrline{display:flex;gap:9px;align-items:flex-start;background:#fffdf7;border-radius:14px;padding:11px 12px;
+  box-shadow:inset 0 0 0 1.5px #f4e9d6}
+.ocrline .tx{flex:1;min-width:0;margin:0;font-size:1rem;font-weight:800;line-height:1.42;color:#33281a;
+  font-family:'Georgia','Times New Roman',serif}
+.ocrline .spk{flex:none;display:flex;flex-direction:column;gap:5px}
+.ocrline .spk button{width:38px;height:34px;border-radius:11px;background:#eef4ff;color:#2b56a8;font-size:.95rem;font-weight:900}
+.ocrline .spk button.slow{background:#f3ecff;color:#6a3fb0}
+.preview{margin-top:12px}
+.preview img{width:100%;border-radius:14px;display:block;box-shadow:0 3px 12px rgba(150,120,80,.16)}
+
+/* ---------- 표지로 찾기 화면 ---------- */
+.findhead{text-align:center;padding:2px 4px 14px}
+.findhead .big{font-size:2.2rem;line-height:1}
+.findhead h2{margin:7px 0 0;font-size:1.22rem;font-weight:900;letter-spacing:-.6px;color:#4a3a22}
+.findhead p{margin:6px 0 0;font-size:.82rem;font-weight:700;color:#9a8a72;line-height:1.5}
+.cambox{background:#fff;border-radius:22px;padding:16px;box-shadow:0 5px 16px rgba(150,120,80,.13);text-align:center}
+.cambox .cam{width:100%;border-radius:18px;padding:20px 10px;font-size:1.05rem;font-weight:900;letter-spacing:-.4px;
+  background:linear-gradient(135deg,#ffe9bf,#ffd493);color:#7a4a05;box-shadow:0 4px 12px rgba(224,150,30,.25)}
+.cambox .cam:active{transform:scale(.985)}
+.cambox .or{display:flex;align-items:center;gap:10px;margin:12px 0;color:#c3b6a0;font-size:.74rem;font-weight:800}
+.cambox .or:before,.cambox .or:after{content:'';flex:1;height:1.5px;background:#f0e7d8}
+.cambox .pick{width:100%;border-radius:16px;padding:14px 10px;font-size:.94rem;font-weight:900;background:#eef4ff;color:#2b56a8}
+.candwrap{margin-top:14px}
+.candtitle{font-size:.86rem;font-weight:900;color:#5a4a33;margin:0 2px 8px}
+.cand{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:#fff;border-radius:18px;padding:10px 12px;margin-bottom:9px;
+  box-shadow:0 4px 13px rgba(150,120,80,.13);border:2.5px solid #fff}
+.cand.top{border-color:#ffce7a;box-shadow:0 6px 18px rgba(224,150,30,.22)}
+.cand .thumb{width:62px;height:62px;flex:none;border-radius:14px;background:#f4ede1 center/cover no-repeat}
+.cand .tx{flex:1;min-width:0}
+.cand .t{display:block;font-size:1rem;font-weight:900;letter-spacing:-.35px;line-height:1.25}
+.cand .m{display:block;font-size:.74rem;font-weight:800;color:#9a8a72;margin-top:4px}
+.cand .ok{flex:none;font-size:.74rem;font-weight:900;color:#fff;background:#e07a1f;border-radius:999px;padding:6px 11px}
+.fallback{margin-top:18px;background:#fff;border-radius:18px;padding:14px;box-shadow:0 3px 12px rgba(150,120,80,.1)}
+.fallback h3{margin:0 0 4px;font-size:.92rem;font-weight:900;letter-spacing:-.3px}
+.fallback p{margin:0 0 10px;font-size:.76rem;font-weight:700;color:#a2947e;line-height:1.5}
+.fallback input{width:100%;border:2px solid #ffe1b3;border-radius:14px;padding:12px 13px;font-size:.92rem;font-weight:700;font-family:inherit;color:#4a3a22}
+.fallback input:focus{outline:none;border-color:#ffbe57}
+.results{margin-top:10px;display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow:auto}
+.res{display:flex;align-items:center;gap:10px;text-align:left;background:#fffdf7;border-radius:14px;padding:9px 11px;box-shadow:inset 0 0 0 1.5px #f4e9d6}
+.res .thumb{width:44px;height:44px;flex:none;border-radius:11px;background:#f4ede1 center/cover no-repeat}
+.res .tx{min-width:0;flex:1}
+.res .t{display:block;font-size:.9rem;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.res .m{display:block;font-size:.7rem;font-weight:800;color:#a2947e;margin-top:2px}
+
+/* ---------- 토스트 ---------- */
+#toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);background:#3d3327e8;color:#fff;
+  font-size:.84rem;font-weight:800;padding:11px 18px;border-radius:999px;opacity:0;pointer-events:none;
+  transition:opacity .22s,transform .22s;z-index:60;max-width:88vw;text-align:center;line-height:1.4}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ══════════ 첫 화면 ══════════ -->
+  <section id="home" class="screen active">
+    <div class="hero">
+      <div class="shelf">📚</div>
+      <h1>유니혀니의<br><em>영어 원서 읽어주기</em> 놀이터</h1>
+      <p>표지를 찍으면 책을 찾아 주고,<br>Read Aloud 영상과 함께 읽어 줘요!</p>
+    </div>
+    <button class="bigbtn photo" id="btnPhoto">
+      <span class="ico">📷</span>
+      <span class="tx"><b>책 표지 사진 찍어 찾기</b><small>카메라로 표지를 비추면 책을 찾아 줘요</small></span>
+      <span class="arw">›</span>
+    </button>
+    <button class="bigbtn star" id="btnStar">
+      <span class="ico">⭐</span>
+      <span class="tx"><b>우리 집 책 5권 바로 보기</b><small>Shapes in Nature · Hello, Butterfly · Making Faces · Peg the Chick · Play, Kitty!</small></span>
+      <span class="arw">›</span>
+    </button>
+    <div class="seclabel"><b>브랜드에서 골라 보기</b><span id="totalCnt"></span></div>
+    <div id="brandCards"></div>
+    <p class="foot">Read Aloud 영상 <b id="footVid"></b>편 · 문장·해석 <b id="footSent"></b>권<br>영상은 유튜브에서 재생돼요</p>
+  </section>
+
+  <!-- ══════════ 우리 집 책 5권 ══════════ -->
+  <section id="star" class="screen">
+    <div class="bar">
+      <button class="backbtn" id="starBack" aria-label="뒤로">←</button>
+      <div class="bt"><h2>⭐ 우리 집 책 5권</h2><p class="meta">가윤이·강현이 책장에 있는 책이에요</p></div>
+      <button class="homebtn" id="starHome" aria-label="처음으로">🏠</button>
+    </div>
+    <div id="starList"></div>
+    <p class="foot">누르면 Read Aloud 영상과 문장·해석이 나와요 📖</p>
+  </section>
+
+  <!-- ══════════ 브랜드 화면 ══════════ -->
+  <section id="brand" class="screen">
+    <div class="bar">
+      <button class="backbtn" id="brandBack" aria-label="뒤로">←</button>
+      <div class="bt"><h2 id="brandTitle"></h2><p class="meta" id="brandMeta"></p></div>
+      <button class="homebtn" id="brandHome" aria-label="처음으로">🏠</button>
+    </div>
+    <div class="tabs" id="diffTabs"></div>
+    <div class="levels" id="levelChips"></div>
+    <div class="searchrow"><input id="brandSearch" type="search" placeholder="🔍 제목으로 찾기 (영어)" autocomplete="off"></div>
+    <div class="listinfo" id="listInfo"></div>
+    <ul class="booklist" id="bookList"></ul>
+  </section>
+
+  <!-- ══════════ 책 화면 ══════════ -->
+  <section id="book" class="screen">
+    <div class="bar">
+      <button class="backbtn" id="bookBack" aria-label="뒤로">←</button>
+      <div class="bt"><h2 id="bookTitle"></h2><p class="meta" id="bookMeta"></p></div>
+      <button class="homebtn" id="bookHome" aria-label="처음으로">🏠</button>
+    </div>
+
+    <div class="player"><iframe id="ytPlayer" src="" title="Read Aloud 영상"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+    <a class="ytlink" id="ytLink" href="#" target="_blank" rel="noopener">▶ 유튜브에서 크게 보기</a>
+
+    <div class="bookhead" id="sentHead"><b>📖 문장 따라 읽기</b><span class="cnt" id="sentCnt"></span></div>
+    <div class="readctrl" id="readCtrl">
+      <button id="playAll">🔊 전체 이어 듣기</button>
+      <button id="koToggle">한국어 해석 보기</button>
+    </div>
+    <ol class="sents" id="sentList"></ol>
+    <p class="caution hidden" id="sentCaution"></p>
+
+    <div class="ocrbox" id="pageBox">
+      <h3>📷 펼친 페이지 사진으로 문장 읽기</h3>
+      <p class="hint" id="pageHint">책을 펼쳐 사진을 찍으면 영어 문장을 읽어서 소리로 들려줘요.</p>
+      <div class="ocrbtns">
+        <button class="cam" id="pageCam">📷 사진 찍기</button>
+        <button class="pick" id="pagePick">🖼️ 사진 고르기</button>
+      </div>
+      <input type="file" id="pageCamInput" accept="image/*" capture="environment" hidden>
+      <input type="file" id="pagePickInput" accept="image/*" hidden>
+      <p class="ocrstat hidden" id="pageStat"></p>
+      <div class="bar-progress hidden" id="pageProg"><i></i></div>
+      <div class="ocrsent" id="pageSent"></div>
+    </div>
+  </section>
+
+  <!-- ══════════ 표지로 찾기 화면 ══════════ -->
+  <section id="find" class="screen">
+    <div class="bar">
+      <button class="backbtn" id="findBack" aria-label="뒤로">←</button>
+      <div class="bt"><h2>표지 사진으로 책 찾기</h2><p class="meta">카메라로 표지 제목을 읽어요</p></div>
+      <button class="homebtn" id="findHome" aria-label="처음으로">🏠</button>
+    </div>
+    <div class="findhead">
+      <div class="big">📷📖</div>
+      <h2>표지를 사진으로 찍어 주세요</h2>
+      <p>제목이 크게 보이게, 빛 반사 없이 찍으면<br>더 잘 찾아요.</p>
+    </div>
+    <div class="cambox">
+      <button class="cam" id="findCam">📷 사진 찍기</button>
+      <div class="or">또는</div>
+      <button class="pick" id="findPick">🖼️ 앨범에서 사진 고르기</button>
+      <input type="file" id="findCamInput" accept="image/*" capture="environment" hidden>
+      <input type="file" id="findPickInput" accept="image/*" hidden>
+      <p class="ocrstat hidden" id="findStat"></p>
+      <div class="bar-progress hidden" id="findProg"><i></i></div>
+      <div class="preview hidden" id="findPreview"></div>
+    </div>
+    <div class="candwrap" id="candWrap"></div>
+    <div class="fallback">
+      <h3>찾지 못했어요? 제목으로 찾아보세요</h3>
+      <p>영어 제목 일부만 넣어도 돼요. 예) biscuit, kitty, faces</p>
+      <input id="omniSearch" type="search" placeholder="책 제목 입력" autocomplete="off">
+      <div class="results" id="omniResults"></div>
+    </div>
+  </section>
+</div>
+<div id="toast"></div>
+
+<script>
+const BOOKS=[{"i":0,"t":"Big","b":"raz","d":"초급","l":"Level aa","v":"ZXYMjjQ70Ig","ch":"Mrs. Tuyet Trang","du":"0:38","ds":38,"p":0,"n":8},{"i":1,"t":"The Backyard","b":"raz","d":"초급","l":"Level aa","v":"sA9F3P3_ljw","ch":"Sally","du":"0:23","ds":23,"p":0,"n":0},{"i":2,"t":"The Coast","b":"raz","d":"초급","l":"Level aa","v":"oVKrWARMSj8","ch":"Mrs. Tuyet Trang","du":"0:53","ds":53,"p":0,"n":8},{"i":3,"t":"Five","b":"raz","d":"초급","l":"Level aa","v":"-lnZGk76OHk","ch":"Mrs. Tuyet Trang","du":"1:03","ds":63,"p":0,"n":0},{"i":4,"t":"Eleven","b":"raz","d":"초급","l":"Level aa","v":"Zlkgz_qvth0","ch":"Mrs. Tuyet Trang","du":"1:37","ds":97,"p":0,"n":0},{"i":5,"t":"Eight","b":"raz","d":"초급","l":"Level aa","v":"4MOiYCMTUyY","ch":"MsXiaWei","du":"1:39","ds":99,"p":0,"n":0},{"i":6,"t":"The Book","b":"raz","d":"초급","l":"Level aa","v":"QtQSNzcQH2w","ch":"Con Tự Học","du":"0:38","ds":38,"p":0,"n":0},{"i":7,"t":"Shapes in Nature","b":"raz","d":"초급","l":"Level A","v":"eEhA8uGBj3E","ch":"amba baa2","du":"3:43","ds":223,"p":1,"n":12},{"i":8,"t":"Hello, Butterfly","b":"raz","d":"초급","l":"Level A","v":"d2VjbgEJQkw","ch":"Lauren Dombeck","du":"0:45","ds":45,"p":1,"n":8},{"i":9,"t":"My Dog","b":"raz","d":"초급","l":"Level A","v":"KkFaHiP3vMY","ch":"Bầu Trời Đầy Sao - Starry Sky","du":"0:43","ds":43,"p":0,"n":10},{"i":10,"t":"My Hair","b":"raz","d":"초급","l":"Level A","v":"VRfxOioj9bE","ch":"Bầu Trời Đầy Sao - Starry Sky","du":"0:38","ds":38,"p":0,"n":0},{"i":11,"t":"The Forest","b":"raz","d":"초급","l":"Level A","v":"6_k4tlzxtR8","ch":"Bầu Trời Đầy Sao - Starry Sky","du":"0:36","ds":36,"p":0,"n":0},{"i":12,"t":"What Lives Here?","b":"raz","d":"초급","l":"Level A","v":"_lXiM7zzutE","ch":"Bầu Trời Đầy Sao - Starry Sky","du":"0:42","ds":42,"p":0,"n":9},{"i":13,"t":"Carlos Counts Kittens","b":"raz","d":"초급","l":"Level A","v":"vZTukUV0egU","ch":"Diana's Reading Books","du":"2:58","ds":178,"p":0,"n":0},{"i":14,"t":"I Go","b":"raz","d":"초급","l":"Level A","v":"TkDfaMk1YNM","ch":"Wendy","du":"4:00","ds":240,"p":0,"n":0},{"i":15,"t":"He Runs","b":"raz","d":"초급","l":"Level A","v":"w-Huowbrq20","ch":"Love2Learn by - Shivani","du":"2:51","ds":171,"p":0,"n":0},{"i":16,"t":"Applesauce","b":"raz","d":"초급","l":"Level B","v":"v3ajz7_ufzI","ch":"Bầu Trời Đầy Sao - Starry Sky","du":"0:39","ds":39,"p":0,"n":0},{"i":17,"t":"This Turtle","b":"raz","d":"초급","l":"Level B","v":"IKbo-0mizSY","ch":"Love2Learn by - Shivani","du":"2:10","ds":130,"p":0,"n":0},{"i":18,"t":"On the Farm","b":"raz","d":"초급","l":"Level B","v":"dFzrdO8G4zY","ch":"Love2Learn by - Shivani","du":"2:19","ds":139,"p":0,"n":0},{"i":19,"t":"Will It Come?","b":"raz","d":"초급","l":"Level B","v":"nC2P0gzNWSY","ch":"Love2Learn by - Shivani","du":"2:31","ds":151,"p":0,"n":0},{"i":20,"t":"After School","b":"raz","d":"초급","l":"Level B","v":"5eWP4m8iVl4","ch":"Dzun's English Corner","du":"1:13","ds":73,"p":0,"n":0},{"i":21,"t":"It Is Spring","b":"raz","d":"초급","l":"Level B","v":"8jJBH8fw9kY","ch":"Khang Pham","du":"1:14","ds":74,"p":0,"n":0},{"i":22,"t":"The Picnic","b":"raz","d":"초급","l":"Level B","v":"NGa3wRPStxs","ch":"Darrell Alary","du":"1:04","ds":64,"p":0,"n":0},{"i":23,"t":"We Make Cookies","b":"raz","d":"초급","l":"Level B","v":"eixPo0ZyiO4","ch":"Darrell Alary","du":"1:44","ds":104,"p":0,"n":0},{"i":24,"t":"How Many Legs?","b":"raz","d":"초급","l":"Level B","v":"-9YOHVP3CvA","ch":"Darrell Alary","du":"1:47","ds":107,"p":0,"n":0},{"i":25,"t":"There Is a Mouse in the House","b":"raz","d":"초급","l":"Level C","v":"3v97WnBAKWk","ch":"Thủy Linh Phạm","du":"1:02","ds":62,"p":0,"n":0},{"i":26,"t":"I Looked Everywhere","b":"raz","d":"초급","l":"Level C","v":"rmK6UJxrme0","ch":"Darrell Alary","du":"1:14","ds":74,"p":0,"n":0},{"i":27,"t":"When Is Nighttime?","b":"raz","d":"초급","l":"Level C","v":"V-Mp_bAyr1o","ch":"Darrell Alary","du":"1:40","ds":100,"p":0,"n":0},{"i":28,"t":"Going Away","b":"raz","d":"초급","l":"Level C","v":"nhMFgVKm1RY","ch":"Darrell Alary","du":"1:53","ds":113,"p":0,"n":0},{"i":29,"t":"A Place Called Home","b":"raz","d":"초급","l":"Level C","v":"HQyobusxjoQ","ch":"Darrell Alary","du":"2:29","ds":149,"p":0,"n":0},{"i":30,"t":"Welcome Back, Animals","b":"raz","d":"초급","l":"Level C","v":"PM0Urss9noY","ch":"Storytime with Ann Marie","du":"2:26","ds":146,"p":0,"n":0},{"i":31,"t":"My Friend Jack","b":"raz","d":"초급","l":"Level D","v":"NWGFXi7N6IU","ch":"Christina McGowan","du":"0:41","ds":41,"p":0,"n":0},{"i":32,"t":"We Will Help","b":"raz","d":"초급","l":"Level D","v":"e-46jw7UnB8","ch":"Amanda Caddel","du":"0:46","ds":46,"p":0,"n":0},{"i":33,"t":"Animal Tongues","b":"raz","d":"초급","l":"Level D","v":"psiya0k3Ygw","ch":"lunalovemm2","du":"0:56","ds":56,"p":0,"n":0},{"i":34,"t":"At the Library","b":"raz","d":"초급","l":"Level D","v":"16ow6fNmiBM","ch":"Khang Pham","du":"1:45","ds":105,"p":0,"n":7},{"i":35,"t":"The Team","b":"raz","d":"초급","l":"Level D","v":"d9K24WC2pPA","ch":"Darrell Alary","du":"1:28","ds":88,"p":0,"n":0},{"i":36,"t":"The Mitten","b":"raz","d":"초급","l":"Level D","v":"o3xaBksxIZM","ch":"Darrell Alary","du":"1:41","ds":101,"p":0,"n":0},{"i":37,"t":"The Busy Pond","b":"raz","d":"초급","l":"Level D","v":"qDEbFfKWDaU","ch":"Darrell Alary","du":"1:48","ds":108,"p":0,"n":0},{"i":38,"t":"Community Helpers","b":"raz","d":"초급","l":"Level D","v":"E2FjP_5hjzM","ch":"Darrell Alary","du":"1:45","ds":105,"p":0,"n":0},{"i":39,"t":"Country Places","b":"raz","d":"초급","l":"Level D","v":"4HJXauAhfXk","ch":"Darrell Alary","du":"2:31","ds":151,"p":0,"n":0},{"i":40,"t":"Rules in Public","b":"raz","d":"초급","l":"Level D","v":"j8jK2qbrtvI","ch":"Desiree Hall","du":"1:19","ds":79,"p":0,"n":0},{"i":41,"t":"The Vet","b":"raz","d":"중급","l":"Level E","v":"1M3hW1eJ21w","ch":"Darrell Alary","du":"2:03","ds":123,"p":0,"n":0},{"i":42,"t":"Jobs for James","b":"raz","d":"중급","l":"Level F","v":"8dRyFEOLXFA","ch":"Teacher J Reads","du":"1:57","ds":117,"p":0,"n":0},{"i":43,"t":"Following the Map","b":"raz","d":"중급","l":"Level F","v":"oQh9hFD5vP0","ch":"Teacher J Reads","du":"1:59","ds":119,"p":0,"n":0},{"i":44,"t":"Scaredy Crow","b":"raz","d":"중급","l":"Level F","v":"jAsC5X715ck","ch":"Teacher J Reads","du":"2:05","ds":125,"p":0,"n":0},{"i":45,"t":"The Three Little Pigs","b":"raz","d":"중급","l":"Level F","v":"z-kCi0-M4xA","ch":"Teacher J Reads","du":"2:07","ds":127,"p":0,"n":0},{"i":46,"t":"Four Friends","b":"raz","d":"중급","l":"Level F","v":"5NDuXC47GXw","ch":"Teacher J Reads","du":"2:11","ds":131,"p":0,"n":0},{"i":47,"t":"Are You Okay?","b":"raz","d":"중급","l":"Level F","v":"5P0uCofqSyc","ch":"Teacher J Reads","du":"2:14","ds":134,"p":0,"n":0},{"i":48,"t":"Best of Friends","b":"raz","d":"중급","l":"Level F","v":"Eu8BIt9rakE","ch":"Riley English","du":"1:44","ds":104,"p":0,"n":0},{"i":49,"t":"At the Movies","b":"raz","d":"중급","l":"Level F","v":"B8zjH8OJtO8","ch":"Lean English With Elsa","du":"1:57","ds":117,"p":0,"n":0},{"i":50,"t":"Signs Are Everywhere","b":"raz","d":"중급","l":"Level G","v":"g9HjfrzF9Dg","ch":"Triple A English 👏","du":"5:46","ds":346,"p":0,"n":0},{"i":51,"t":"Places People Live","b":"raz","d":"중급","l":"Level G","v":"knNbz6EFVrs","ch":"Triple A English 👏","du":"5:02","ds":302,"p":0,"n":0},{"i":52,"t":"My Day","b":"raz","d":"중급","l":"Level G","v":"Z9ptAtMMfy8","ch":"Triple A English 👏","du":"4:49","ds":289,"p":0,"n":0},{"i":53,"t":"Animal Eyes","b":"raz","d":"중급","l":"Level G","v":"Eqwf2IifWFc","ch":"Triple A English 👏","du":"5:02","ds":302,"p":0,"n":0},{"i":54,"t":"Gordon Finds His Way","b":"raz","d":"중급","l":"Level G","v":"mUAf2nyB9Nc","ch":"Triple A English 👏","du":"5:22","ds":322,"p":0,"n":0},{"i":55,"t":"Maria Joins the Team","b":"raz","d":"중급","l":"Level G","v":"cZrsDX4e-mQ","ch":"Triple A English 👏","du":"5:32","ds":332,"p":0,"n":0},{"i":56,"t":"Beanie and the Missing Bear","b":"raz","d":"중급","l":"Level G","v":"DcJVpmqarHs","ch":"Triple A English 👏","du":"4:43","ds":283,"p":0,"n":0},{"i":57,"t":"Bonk's Loose Tooth","b":"raz","d":"중급","l":"Level G","v":"ipEgZs3-nac","ch":"Triple A English 👏","du":"6:42","ds":402,"p":0,"n":0},{"i":58,"t":"Bonk's Bad Dream","b":"raz","d":"중급","l":"Level G","v":"gKSP7novmlI","ch":"Triple A English 👏","du":"4:59","ds":299,"p":0,"n":0},{"i":59,"t":"The Drum","b":"raz","d":"중급","l":"Level H","v":"jWe-UgbP8sI","ch":"Teacher J Reads","du":"2:34","ds":154,"p":0,"n":0},{"i":60,"t":"Animals, Animals","b":"raz","d":"중급","l":"Level H","v":"-48WnO96EHc","ch":"Teacher J Reads","du":"2:42","ds":162,"p":0,"n":0},{"i":61,"t":"The Empty Pot","b":"raz","d":"중급","l":"Level H","v":"3Zi3vZltJdc","ch":"Teacher J Reads","du":"2:45","ds":165,"p":0,"n":0},{"i":62,"t":"Terell's Taste Buds","b":"raz","d":"중급","l":"Level H","v":"mRfqnfjWTCQ","ch":"Teacher J Reads","du":"2:45","ds":165,"p":0,"n":0},{"i":63,"t":"The Goat and the Singing Wolf","b":"raz","d":"중급","l":"Level H","v":"ejWFfqQdchg","ch":"Teacher J Reads","du":"2:44","ds":164,"p":0,"n":0},{"i":64,"t":"Pocket Parks","b":"raz","d":"중급","l":"Level H","v":"sNO_uTKD4Us","ch":"Teacher J Reads","du":"3:22","ds":202,"p":0,"n":0},{"i":65,"t":"The Butterfly Life Cycle","b":"raz","d":"중급","l":"Level H","v":"T-aMoLkFzdg","ch":"Teacher J Reads","du":"3:09","ds":189,"p":0,"n":0},{"i":66,"t":"The Very Big Potato","b":"raz","d":"중급","l":"Level H","v":"etzwXpkSazk","ch":"Storytime with Salwa & Arkan","du":"3:04","ds":184,"p":0,"n":0},{"i":67,"t":"The Lion and the Mouse","b":"raz","d":"중급","l":"Level I","v":"sFeWSs6EFl8","ch":"Teacher J Reads","du":"2:55","ds":175,"p":0,"n":0},{"i":68,"t":"Monster Music","b":"raz","d":"중급","l":"Level I","v":"wCghbcyLMzA","ch":"Teacher J Reads","du":"2:59","ds":179,"p":0,"n":0},{"i":69,"t":"Alistair's Night","b":"raz","d":"중급","l":"Level I","v":"txoEm53eDI8","ch":"Teacher J Reads","du":"3:08","ds":188,"p":0,"n":0},{"i":70,"t":"Birds","b":"raz","d":"중급","l":"Level I","v":"8mR-EWXCjh8","ch":"Teacher J Reads","du":"3:10","ds":190,"p":0,"n":0},{"i":71,"t":"Little Red Riding Hood","b":"raz","d":"중급","l":"Level I","v":"qpCSHWkCJaE","ch":"Teacher J Reads","du":"3:21","ds":201,"p":0,"n":0},{"i":72,"t":"Uzzle, the Football Star","b":"raz","d":"중급","l":"Level J","v":"sJOFFZiveyA","ch":"Bắp Stories","du":"4:24","ds":264,"p":0,"n":0},{"i":73,"t":"Animal Skeletons","b":"raz","d":"중급","l":"Level J","v":"C9-_h3NLztw","ch":"Riley English","du":"3:46","ds":226,"p":0,"n":0},{"i":74,"t":"I'd Like to Be","b":"raz","d":"중급","l":"Level K","v":"eFBCIyW1hZQ","ch":"Jillian Shanks","du":"2:37","ds":157,"p":0,"n":0},{"i":75,"t":"Catching Santa","b":"raz","d":"중급","l":"Level L","v":"MZbEyZguCv8","ch":"Riley English","du":"5:54","ds":354,"p":0,"n":0},{"i":76,"t":"Ancient Egypt","b":"raz","d":"중급","l":"Level L","v":"Z2A_4xTSk0k","ch":"Riley English","du":"6:39","ds":399,"p":0,"n":0},{"i":77,"t":"Brad Needs a Budget","b":"raz","d":"중급","l":"Level M","v":"xu1pHywkx6c","ch":"Riley English","du":"5:14","ds":314,"p":0,"n":0},{"i":78,"t":"Asthma","b":"raz","d":"고급","l":"Level N","v":"CXemwqOZLfw","ch":"Riley English","du":"6:18","ds":378,"p":0,"n":0},{"i":79,"t":"Crows Share a Pie","b":"raz","d":"고급","l":"Level N","v":"PQ9L_hIPYxo","ch":"phương khanh nguyễn","du":"5:27","ds":327,"p":0,"n":0},{"i":80,"t":"Alia and the Furniture Troll","b":"raz","d":"고급","l":"Level P","v":"RNsHdZgSWRQ","ch":"Riley English","du":"8:30","ds":510,"p":0,"n":0},{"i":81,"t":"The Hollow","b":"raz","d":"고급","l":"Level Q","v":"hkas1S-CJso","ch":"Riley English","du":"9:27","ds":567,"p":0,"n":0},{"i":82,"t":"Alaska","b":"raz","d":"고급","l":"Level R","v":"3qd58TAxKKM","ch":"Riley English","du":"14:33","ds":873,"p":0,"n":0},{"i":83,"t":"Blue Whales: Giant Mammals","b":"raz","d":"고급","l":"Level R","v":"PEzz6nS05ic","ch":"Riley English","du":"17:37","ds":1057,"p":0,"n":0},{"i":84,"t":"Cali and Wanda Lou","b":"raz","d":"고급","l":"Level T","v":"juBKcujTmbQ","ch":"Riley English","du":"13:31","ds":811,"p":0,"n":0},{"i":85,"t":"A Crafty Escape","b":"raz","d":"고급","l":"Level U","v":"2r1SvoDXaos","ch":"Riley English","du":"18:12","ds":1092,"p":0,"n":0},{"i":86,"t":"All About Chocolate","b":"raz","d":"고급","l":"Level U","v":"_TSSEhSrqLg","ch":"Educational Channel Varieties","du":"17:31","ds":1051,"p":0,"n":0},{"i":87,"t":"Adventure in Bear Valley","b":"raz","d":"고급","l":"Level W","v":"E6yku11MMYQ","ch":"Riley English","du":"18:14","ds":1094,"p":0,"n":0},{"i":88,"t":"The Amazing Amazon","b":"raz","d":"고급","l":"Level X","v":"QLTpxwD3FwQ","ch":"Riley English","du":"25:21","ds":1521,"p":0,"n":0},{"i":89,"t":"9/11: A Dark Day","b":"raz","d":"고급","l":"Level Y","v":"hh80SNwVncQ","ch":"Riley English","du":"27:23","ds":1643,"p":0,"n":0},{"i":90,"t":"Alien Collective III: Transition","b":"raz","d":"고급","l":"Level Z","v":"x4yhOCLWLKM","ch":"Riley English","du":"22:01","ds":1321,"p":0,"n":0},{"i":91,"t":"A Good Trick","b":"ort","d":"초급","l":"Stage 1","v":"iluIOlyAyt0","ch":"Jenny Li","du":"0:23","ds":23,"p":0,"n":4},{"i":92,"t":"Floppy Floppy","b":"ort","d":"초급","l":"Stage 1","v":"xYwU-NWhcbc","ch":"Jenny Li","du":"0:34","ds":34,"p":0,"n":0},{"i":93,"t":"Six in a Bed","b":"ort","d":"초급","l":"Stage 1","v":"707PAdR6VPw","ch":"Jenny Li","du":"0:37","ds":37,"p":0,"n":0},{"i":94,"t":"Get On","b":"ort","d":"초급","l":"Stage 1","v":"jRqpt5IRHlE","ch":"Jenny Li","du":"0:44","ds":44,"p":0,"n":0},{"i":95,"t":"Who Is It?","b":"ort","d":"초급","l":"Stage 1","v":"Hp4mKHAsQuA","ch":"WISDOM SMKA","du":"1:10","ds":70,"p":0,"n":0},{"i":96,"t":"At the Park","b":"ort","d":"초급","l":"Stage 1","v":"zqqvYJn8w3U","ch":"Arsal Reading Club","du":"0:28","ds":28,"p":0,"n":0},{"i":97,"t":"Tip Top","b":"ort","d":"초급","l":"Stage 1","v":"YLEbIhcfMxY","ch":"superturtlelibrary","du":"1:27","ds":87,"p":0,"n":0},{"i":98,"t":"The Red Hen","b":"ort","d":"초급","l":"Stage 1","v":"jLM8srTnVUg","ch":"superturtlelibrary","du":"1:29","ds":89,"p":0,"n":0},{"i":99,"t":"The Big Red Bus","b":"ort","d":"초급","l":"Stage 1","v":"s5XUR0CSV8A","ch":"superturtlelibrary","du":"1:04","ds":64,"p":0,"n":0},{"i":100,"t":"Making Faces","b":"ort","d":"초급","l":"Stage 1+","v":"J-S2LVz4b5o","ch":"Library At Home","du":"0:50","ds":50,"p":1,"n":5},{"i":101,"t":"Reds and Blues","b":"ort","d":"초급","l":"Stage 1+","v":"0fG6-YVSp5k","ch":"Library At Home","du":"0:40","ds":40,"p":0,"n":7},{"i":102,"t":"Good Old Mum","b":"ort","d":"초급","l":"Stage 1+","v":"KhX2585jVyU","ch":"Library At Home","du":"0:52","ds":52,"p":0,"n":6},{"i":103,"t":"The Journey","b":"ort","d":"초급","l":"Stage 1+","v":"IXIrpdXc2Jw","ch":"Library At Home","du":"0:56","ds":56,"p":0,"n":0},{"i":104,"t":"Can You See Me?","b":"ort","d":"초급","l":"Stage 1+","v":"lgV6mD2ZNVo","ch":"Library At Home","du":"0:59","ds":59,"p":0,"n":0},{"i":105,"t":"Look After Me","b":"ort","d":"초급","l":"Stage 1+","v":"sQlMUHs1yJA","ch":"Library At Home","du":"1:00","ds":60,"p":0,"n":0},{"i":106,"t":"The Pet Shop","b":"ort","d":"초급","l":"Stage 1+","v":"UQN1894uRm4","ch":"Library At Home","du":"1:00","ds":60,"p":0,"n":0},{"i":107,"t":"Shopping","b":"ort","d":"초급","l":"Stage 1+","v":"tQ5auYdtdoY","ch":"Library At Home","du":"1:01","ds":61,"p":0,"n":0},{"i":108,"t":"What Dogs Like","b":"ort","d":"초급","l":"Stage 1+","v":"RDY5ZZIMuxE","ch":"Library At Home","du":"1:01","ds":61,"p":0,"n":0},{"i":109,"t":"In the Tent","b":"ort","d":"초급","l":"Stage 1+","v":"7LOypkWE1Dc","ch":"Library At Home","du":"1:03","ds":63,"p":0,"n":0},{"i":110,"t":"See Me Skip","b":"ort","d":"초급","l":"Stage 1+","v":"OSkJ2Tx7yXk","ch":"Library At Home","du":"1:03","ds":63,"p":0,"n":0},{"i":111,"t":"Top Dog","b":"ort","d":"초급","l":"Stage 1+","v":"eWeKhZtmiVo","ch":"Library At Home","du":"1:04","ds":64,"p":0,"n":0},{"i":112,"t":"The Caterpillar","b":"ort","d":"초급","l":"Stage 1+","v":"8FCqE26-E0c","ch":"Library At Home","du":"1:03","ds":63,"p":0,"n":0},{"i":113,"t":"Stuck!","b":"ort","d":"초급","l":"Stage 1+","v":"h0cyr8KbhK0","ch":"Library At Home","du":"1:05","ds":65,"p":0,"n":0},{"i":114,"t":"The Bag in the Bin","b":"ort","d":"초급","l":"Stage 1+","v":"HNyu9a6SNo4","ch":"Library At Home","du":"1:10","ds":70,"p":0,"n":0},{"i":115,"t":"Floppy's Bone","b":"ort","d":"초급","l":"Stage 1+","v":"P4WUMM7CLvU","ch":"Library At Home","du":"1:19","ds":79,"p":0,"n":0},{"i":116,"t":"The Sandcastle","b":"ort","d":"초급","l":"Stage 1+","v":"8HTVGdF1F1Q","ch":"Library At Home","du":"1:20","ds":80,"p":0,"n":0},{"i":117,"t":"One Wheel","b":"ort","d":"초급","l":"Stage 1+","v":"bYvvfGhqibE","ch":"Library At Home","du":"1:21","ds":81,"p":0,"n":0},{"i":118,"t":"Presents for Dad","b":"ort","d":"초급","l":"Stage 1+","v":"EUMZ42mrOag","ch":"Food Science Mama","du":"0:51","ds":51,"p":0,"n":0},{"i":119,"t":"Go on, Mum!","b":"ort","d":"초급","l":"Stage 1+","v":"nhGfaW82bb4","ch":"Food Science Mama","du":"0:51","ds":51,"p":0,"n":0},{"i":120,"t":"Top Cat (Songbirds)","b":"ort","d":"초급","l":"Stage 1+","v":"m1DPdPBsCNM","ch":"Claire Chen","du":"0:31","ds":31,"p":0,"n":0},{"i":121,"t":"Bob Bug (Songbirds)","b":"ort","d":"초급","l":"Stage 1+","v":"ACxRtvubGLk","ch":"Claire Chen","du":"0:42","ds":42,"p":0,"n":0},{"i":122,"t":"New Trainers","b":"ort","d":"초급","l":"Stage 2","v":"TmAXsd7itwc","ch":"HappyHeartswithM","du":"1:00","ds":60,"p":0,"n":0},{"i":123,"t":"Poor Floppy","b":"ort","d":"초급","l":"Stage 2","v":"ScRHye0qjI4","ch":"HappyHeartswithM","du":"1:29","ds":89,"p":0,"n":0},{"i":124,"t":"In a Bit","b":"ort","d":"초급","l":"Stage 2","v":"wWu3IzysiBE","ch":"HappyHeartswithM","du":"1:32","ds":92,"p":0,"n":0},{"i":125,"t":"What a Bad Dog!","b":"ort","d":"초급","l":"Stage 2","v":"eenQESYc5xo","ch":"HappyHeartswithM","du":"1:58","ds":118,"p":0,"n":0},{"i":126,"t":"The Go-Kart","b":"ort","d":"초급","l":"Stage 2","v":"1u15siRk9yA","ch":"HappyHeartswithM","du":"2:02","ds":122,"p":0,"n":0},{"i":127,"t":"Up and Down","b":"ort","d":"초급","l":"Stage 2","v":"ztFOItNS40Q","ch":"Library At Home","du":"1:36","ds":96,"p":0,"n":0},{"i":128,"t":"Floppy the Hero","b":"ort","d":"초급","l":"Stage 2","v":"XaFmIF5shEU","ch":"Library At Home","du":"1:39","ds":99,"p":0,"n":0},{"i":129,"t":"New Trees","b":"ort","d":"초급","l":"Stage 2","v":"QIiR2zSogOU","ch":"Library At Home","du":"1:41","ds":101,"p":0,"n":0},{"i":130,"t":"Leek Hotpot","b":"ort","d":"초급","l":"Stage 2","v":"t0d0NSz394o","ch":"KidsTale","du":"2:23","ds":143,"p":0,"n":0},{"i":131,"t":"The Toys Party","b":"ort","d":"초급","l":"Stage 2","v":"FFgz18ODmrk","ch":"Arsal Reading Club","du":"1:08","ds":68,"p":0,"n":0},{"i":132,"t":"The Foggy Day","b":"ort","d":"초급","l":"Stage 2","v":"2_Tnysw_Z8k","ch":"JK Eng","du":"2:29","ds":149,"p":0,"n":0},{"i":133,"t":"The Little Dragon","b":"ort","d":"초급","l":"Stage 2","v":"lewP-gOJ5e4","ch":"Library At Home","du":"1:48","ds":108,"p":0,"n":0},{"i":134,"t":"Spots!","b":"ort","d":"초급","l":"Stage 2","v":"dgLJ5r5bcPc","ch":"★Story time with Hajira","du":"1:39","ds":99,"p":0,"n":0},{"i":135,"t":"A Robin's Eggs","b":"ort","d":"초급","l":"Stage 2","v":"CPKkHI9JhYM","ch":"Arsal Reading Club","du":"2:15","ds":135,"p":0,"n":0},{"i":136,"t":"The Spaceship","b":"ort","d":"초급","l":"Stage 2","v":"K4Za3FOG27c","ch":"Let’s Enjoy Reading","du":"2:16","ds":136,"p":0,"n":0},{"i":137,"t":"A New Dog","b":"ort","d":"초급","l":"Stage 2","v":"a4F6UyoNnto","ch":"MKI Kids vids","du":"3:47","ds":227,"p":0,"n":0},{"i":138,"t":"Nobody Wanted to Play","b":"ort","d":"초급","l":"Stage 3","v":"abxS8shFvWc","ch":"MKI Kids vids","du":"3:56","ds":236,"p":0,"n":0},{"i":139,"t":"Book Week","b":"ort","d":"초급","l":"Stage 3","v":"I3Q0cb90f4c","ch":"Library At Home","du":"1:39","ds":99,"p":0,"n":0},{"i":140,"t":"The Ice Rink","b":"ort","d":"초급","l":"Stage 3","v":"hA85wDpSV-M","ch":"Library At Home","du":"1:45","ds":105,"p":0,"n":0},{"i":141,"t":"At the Pool","b":"ort","d":"초급","l":"Stage 3","v":"pPYzLgqdMIo","ch":"Library At Home","du":"1:47","ds":107,"p":0,"n":0},{"i":142,"t":"Sniff","b":"ort","d":"초급","l":"Stage 3","v":"AhXaIt6Ni9s","ch":"Library At Home","du":"2:04","ds":124,"p":0,"n":0},{"i":143,"t":"Midge in Hospital","b":"ort","d":"초급","l":"Stage 3","v":"w3cG4lVlbro","ch":"Eric Toh's Learning Space","du":"1:45","ds":105,"p":0,"n":0},{"i":144,"t":"Kipper's Idea","b":"ort","d":"초급","l":"Stage 3","v":"lJdO_kljYzQ","ch":"Library At Home","du":"1:45","ds":105,"p":0,"n":0},{"i":145,"t":"The Cold Day","b":"ort","d":"초급","l":"Stage 3","v":"VN3snNADtCg","ch":"SumLook 故事閱讀教室, SumLook 廚房, SumLook 音樂分享","du":"3:29","ds":209,"p":0,"n":0},{"i":146,"t":"The Egg Hunt","b":"ort","d":"초급","l":"Stage 3","v":"RgdjPEYSXVg","ch":"English with Teacher Amy","du":"2:16","ds":136,"p":0,"n":0},{"i":147,"t":"The Jumble Sale","b":"ort","d":"초급","l":"Stage 3","v":"-OCsSVj4ecU","ch":"JK Eng","du":"2:24","ds":144,"p":0,"n":0},{"i":148,"t":"Poor Old Rabbit","b":"ort","d":"초급","l":"Stage 3","v":"pk4jBJaOc_g","ch":"Take A Look Inside","du":"2:09","ds":129,"p":0,"n":0},{"i":149,"t":"The Enormous Picture","b":"ort","d":"초급","l":"Stage 3","v":"7GfHpxpCghc","ch":"Mommy Reading","du":"2:25","ds":145,"p":0,"n":0},{"i":150,"t":"Toads in the Road","b":"ort","d":"초급","l":"Stage 3","v":"A9z4l1BzMHM","ch":"Teacher Golf Phonics","du":"2:26","ds":146,"p":0,"n":0},{"i":151,"t":"Floppy and the Bone","b":"ort","d":"초급","l":"Stage 3","v":"h0O-psnat4Y","ch":"Take A Look Inside","du":"3:18","ds":198,"p":0,"n":0},{"i":152,"t":"On the Sand","b":"ort","d":"초급","l":"Stage 3","v":"zY_PavHdJDE","ch":"MKI Kids vids","du":"4:03","ds":243,"p":0,"n":0},{"i":153,"t":"Secret of the Sands","b":"ort","d":"초급","l":"Stage 3","v":"BjIamHLERP0","ch":"Let’s Enjoy Reading","du":"5:08","ds":308,"p":0,"n":0},{"i":154,"t":"The Sing Song","b":"ort","d":"초급","l":"Stage 3","v":"yi-8alncggE","ch":"Hiro Saja","du":"4:53","ds":293,"p":0,"n":0},{"i":155,"t":"Adam Goes Shopping","b":"ort","d":"중급","l":"Stage 4","v":"e33iChxGr5c","ch":"Eric Toh's Learning Space","du":"1:32","ds":92,"p":0,"n":0},{"i":156,"t":"Dragon Danger","b":"ort","d":"중급","l":"Stage 4","v":"Okl6qtgeP1Q","ch":"Fun Reading","du":"1:35","ds":95,"p":0,"n":0},{"i":157,"t":"Come In!","b":"ort","d":"중급","l":"Stage 4","v":"fHVC6RrK51k","ch":"★Story time with Hajira","du":"2:11","ds":131,"p":0,"n":0},{"i":158,"t":"House for Sale","b":"ort","d":"중급","l":"Stage 4","v":"dhenXGjGCF8","ch":"MKI Kids vids","du":"1:42","ds":102,"p":0,"n":0},{"i":159,"t":"The New House","b":"ort","d":"중급","l":"Stage 4","v":"sj1jfCQebpE","ch":"MKI Kids vids","du":"1:48","ds":108,"p":0,"n":0},{"i":160,"t":"The Secret Room","b":"ort","d":"중급","l":"Stage 4","v":"xoDZEeXpu8s","ch":"MKI Kids vids","du":"3:02","ds":182,"p":0,"n":0},{"i":161,"t":"Long Legs","b":"ort","d":"중급","l":"Stage 4","v":"bCvzzyroang","ch":"Mommy Reading","du":"2:30","ds":150,"p":0,"n":0},{"i":162,"t":"No Tricks, Gran","b":"ort","d":"중급","l":"Stage 4","v":"EpMeelXmfD8","ch":"Teacher Golf Phonics","du":"2:09","ds":129,"p":0,"n":0},{"i":163,"t":"The Storm","b":"ort","d":"중급","l":"Stage 4","v":"EOKzQg7KYMI","ch":"Little kitty","du":"3:01","ds":181,"p":0,"n":0},{"i":164,"t":"Crunch!","b":"ort","d":"중급","l":"Stage 4","v":"hiwPQnp3aK0","ch":"★Story time with Hajira","du":"3:10","ds":190,"p":0,"n":0},{"i":165,"t":"The Wedding","b":"ort","d":"중급","l":"Stage 4","v":"IN_JsP0flAU","ch":"★Story time with Hajira","du":"3:30","ds":210,"p":0,"n":0},{"i":166,"t":"Quick! Quick!","b":"ort","d":"중급","l":"Stage 4","v":"x7ELbgrr-Z0","ch":"Gitte","du":"2:07","ds":127,"p":0,"n":0},{"i":167,"t":"Everyone Got Wet","b":"ort","d":"중급","l":"Stage 4","v":"SABWZwCu4ew","ch":"The E-Library","du":"3:13","ds":193,"p":0,"n":0},{"i":168,"t":"The Scarf","b":"ort","d":"중급","l":"Stage 4","v":"UbeHBNUsRJ4","ch":"The E-Library","du":"3:22","ds":202,"p":0,"n":0},{"i":169,"t":"The Dragon Dance","b":"ort","d":"중급","l":"Stage 4","v":"dF5UnjtwMDA","ch":"Lumi's Wonderland","du":"2:14","ds":134,"p":0,"n":0},{"i":170,"t":"The Play","b":"ort","d":"중급","l":"Stage 4","v":"54q4kqAMfWs","ch":"MKI Kids vids","du":"4:37","ds":277,"p":0,"n":0},{"i":171,"t":"Nobody Got Wet","b":"ort","d":"중급","l":"Stage 4","v":"XDZ0u_WnGUY","ch":"SumLook 故事閱讀教室, SumLook 廚房, SumLook 音樂分享","du":"4:50","ds":290,"p":0,"n":0},{"i":172,"t":"Trapped!","b":"ort","d":"중급","l":"Stage 4","v":"LiV9MBY5Pmk","ch":"Learn English with Teacher Jacky!😁","du":"4:15","ds":255,"p":0,"n":0},{"i":173,"t":"The Bigfoot Mystery","b":"ort","d":"중급","l":"Stage 4","v":"Igdw6AuO04U","ch":"Let’s Enjoy Reading","du":"5:22","ds":322,"p":0,"n":0},{"i":174,"t":"Dad's Run","b":"ort","d":"중급","l":"Stage 5","v":"SQHZAHiLm3A","ch":"AudioSloth Station KIDS","du":"3:01","ds":181,"p":0,"n":0},{"i":175,"t":"The Whatsit","b":"ort","d":"중급","l":"Stage 5","v":"yQAcPdAmeQU","ch":"Dimple's Joy Of Story Telling for Children","du":"7:25","ds":445,"p":0,"n":0},{"i":176,"t":"The Adventure Park","b":"ort","d":"중급","l":"Stage 5","v":"zFHHs43zYrA","ch":"Learn English with Teacher Jacky!😁","du":"3:18","ds":198,"p":0,"n":0},{"i":177,"t":"Pirate Adventure","b":"ort","d":"중급","l":"Stage 5","v":"tIMA6puOPrA","ch":"Sam's Library","du":"4:04","ds":244,"p":0,"n":0},{"i":178,"t":"The Magic Key","b":"ort","d":"중급","l":"Stage 5","v":"NjCme93FfNg","ch":"MKI Kids vids","du":"4:29","ds":269,"p":0,"n":0},{"i":179,"t":"Highland Games","b":"ort","d":"중급","l":"Stage 5","v":"buvqxEvNkd4","ch":"Arsal Reading Club","du":"4:04","ds":244,"p":0,"n":0},{"i":180,"t":"Rats!","b":"ort","d":"중급","l":"Stage 5","v":"N22q3DYBaQE","ch":"Arsal Reading Club","du":"4:48","ds":288,"p":0,"n":0},{"i":181,"t":"A Pet Called Cucumber","b":"ort","d":"중급","l":"Stage 5","v":"26PSvOy7kq4","ch":"Arsal Reading Club","du":"4:51","ds":291,"p":0,"n":0},{"i":182,"t":"Bush Fire!","b":"ort","d":"중급","l":"Stage 5","v":"IJ097_HcVUM","ch":"Arsal Reading Club","du":"5:08","ds":308,"p":0,"n":0},{"i":183,"t":"Two Left Feet","b":"ort","d":"중급","l":"Stage 5","v":"a-9ncRXZ-Kg","ch":"Arsal Reading Club","du":"5:11","ds":311,"p":0,"n":0},{"i":184,"t":"Drawing Adventure","b":"ort","d":"중급","l":"Stage 5","v":"bZ61la8QSzY","ch":"Special-Jay","du":"2:37","ds":157,"p":0,"n":0},{"i":185,"t":"The Gale","b":"ort","d":"중급","l":"Stage 5","v":"8UK27wu9Ulo","ch":"★Story time with Hajira","du":"4:32","ds":272,"p":0,"n":0},{"i":186,"t":"Kipper and the Trolls","b":"ort","d":"중급","l":"Stage 5","v":"T5IFhvMKCWs","ch":"The E-Library","du":"4:48","ds":288,"p":0,"n":0},{"i":187,"t":"Village in the Snow","b":"ort","d":"중급","l":"Stage 5","v":"kntjBy4Rx04","ch":"MKI Kids vids","du":"5:45","ds":345,"p":0,"n":0},{"i":188,"t":"Underground Adventure","b":"ort","d":"중급","l":"Stage 5","v":"mDaLKJsQLrU","ch":"Be a light for all","du":"3:47","ds":227,"p":0,"n":0},{"i":189,"t":"Mum to the Rescue","b":"ort","d":"중급","l":"Stage 5","v":"Da-OAZe7Uas","ch":"AudioSloth Station KIDS","du":"2:44","ds":164,"p":0,"n":0},{"i":190,"t":"A Monster Mistake","b":"ort","d":"중급","l":"Stage 5","v":"lkGBpEFqKDQ","ch":"Learn English Weekly","du":"3:18","ds":198,"p":0,"n":0},{"i":191,"t":"May Morning","b":"ort","d":"중급","l":"Stage 5","v":"MxjSWtRYTMY","ch":"Arsal Reading Club","du":"4:58","ds":298,"p":0,"n":0},{"i":192,"t":"Kipper and the Giant","b":"ort","d":"중급","l":"Stage 6","v":"PCLrpw8kO0k","ch":"HappyHeartswithM","du":"5:36","ds":336,"p":0,"n":0},{"i":193,"t":"In the Garden","b":"ort","d":"중급","l":"Stage 6","v":"FCTghKriXco","ch":"HappyHeartswithM","du":"5:05","ds":305,"p":0,"n":0},{"i":194,"t":"The Outing","b":"ort","d":"중급","l":"Stage 6","v":"xYpY2uLpTCU","ch":"Arsal Reading Club","du":"6:36","ds":396,"p":0,"n":0},{"i":195,"t":"Land of the Dinosaurs","b":"ort","d":"중급","l":"Stage 6","v":"_loxFq5nw8w","ch":"Arsal Reading Club","du":"6:11","ds":371,"p":0,"n":0},{"i":196,"t":"On the Stage","b":"ort","d":"중급","l":"Stage 6","v":"9kcArClS--Q","ch":"Arsal Reading Club","du":"5:12","ds":312,"p":0,"n":0},{"i":197,"t":"Paris Adventure","b":"ort","d":"중급","l":"Stage 6","v":"MQJfG5T2rK0","ch":"Arsal Reading Club","du":"5:26","ds":326,"p":0,"n":0},{"i":198,"t":"Olympic Adventure","b":"ort","d":"중급","l":"Stage 6","v":"6TdYZSSXckk","ch":"Henry Show","du":"3:53","ds":233,"p":0,"n":0},{"i":199,"t":"Rotten Apples","b":"ort","d":"중급","l":"Stage 6","v":"EOBYJ_Qs9CI","ch":"PlotQuester","du":"6:17","ds":377,"p":0,"n":0},{"i":200,"t":"A Fright in the Night","b":"ort","d":"중급","l":"Stage 6","v":"uhpysmsv40o","ch":"PlotQuester","du":"7:43","ds":463,"p":0,"n":0},{"i":201,"t":"The Laughing Princess","b":"ort","d":"중급","l":"Stage 6","v":"wrD9OMfxT6w","ch":"SumLook 故事閱讀教室, SumLook 廚房, SumLook 音樂分享","du":"8:41","ds":521,"p":0,"n":0},{"i":202,"t":"The Treasure Chest","b":"ort","d":"중급","l":"Stage 6","v":"EKZxxEBF34M","ch":"Arsal Reading Club","du":"9:04","ds":544,"p":0,"n":0},{"i":203,"t":"Mirror Island","b":"ort","d":"중급","l":"Stage 6","v":"xb1PWIXFAM8","ch":"English With Maily ","du":"4:19","ds":259,"p":0,"n":0},{"i":204,"t":"The Lost Voice","b":"ort","d":"중급","l":"Stage 6","v":"bpwV3y6zed8","ch":"Fun Reading","du":"3:24","ds":204,"p":0,"n":0},{"i":205,"t":"Lost in the Jungle","b":"ort","d":"고급","l":"Stage 7","v":"SuTS6ONEXsE","ch":"Fun Reading","du":"6:01","ds":361,"p":0,"n":0},{"i":206,"t":"The Bully","b":"ort","d":"고급","l":"Stage 7","v":"1qYA1aZIXe0","ch":"Fun Reading","du":"6:18","ds":378,"p":0,"n":0},{"i":207,"t":"Submarine Adventure","b":"ort","d":"고급","l":"Stage 7","v":"q2-F8r6w4fA","ch":"Fun Reading","du":"6:23","ds":383,"p":0,"n":0},{"i":208,"t":"Australian Adventure","b":"ort","d":"고급","l":"Stage 7","v":"A0vutptIP0M","ch":"Fun Reading","du":"6:23","ds":383,"p":0,"n":0},{"i":209,"t":"The Power Cut","b":"ort","d":"고급","l":"Stage 7","v":"rOYDzEyvbRs","ch":"Fun Reading","du":"7:26","ds":446,"p":0,"n":0},{"i":210,"t":"The Lost Key","b":"ort","d":"고급","l":"Stage 7","v":"mf1qwsBWhTY","ch":"ZYF & Urdu Academy","du":"6:56","ds":416,"p":0,"n":0},{"i":211,"t":"Roman Adventure","b":"ort","d":"고급","l":"Stage 7","v":"UVi1Nqu3Scw","ch":"MsXiaWei","du":"7:16","ds":436,"p":0,"n":0},{"i":212,"t":"The Jigsaw Puzzle","b":"ort","d":"고급","l":"Stage 7","v":"Mia8oPR2SIY","ch":"Be a light for all","du":"7:04","ds":424,"p":0,"n":0},{"i":213,"t":"Chinese Adventure","b":"ort","d":"고급","l":"Stage 7","v":"wup4AlmthS0","ch":"Henry Show","du":"6:53","ds":413,"p":0,"n":0},{"i":214,"t":"The Broken Roof","b":"ort","d":"고급","l":"Stage 7","v":"HXarih6TQzc","ch":"MKI Kids vids","du":"9:09","ds":549,"p":0,"n":0},{"i":215,"t":"The Secret Pop Star","b":"ort","d":"고급","l":"Stage 8","v":"eE4sy3_HwD0","ch":"English With Maily ","du":"7:46","ds":466,"p":0,"n":0},{"i":216,"t":"The Flying Carpet","b":"ort","d":"고급","l":"Stage 8","v":"1Vf5grFs8qI","ch":"Learning English by Reading","du":"7:08","ds":428,"p":0,"n":0},{"i":217,"t":"A Good Turn","b":"ort","d":"고급","l":"Stage 8","v":"tBmLCR7aKzk","ch":"Learning English by Reading","du":"8:22","ds":502,"p":0,"n":0},{"i":218,"t":"The Ogre's Dinner","b":"ort","d":"고급","l":"Stage 8","v":"xVt5lmWzZyY","ch":"Learning English by Reading","du":"8:35","ds":515,"p":0,"n":0},{"i":219,"t":"A Day in London","b":"ort","d":"고급","l":"Stage 8","v":"D0n_STGl2Y4","ch":"MKI Kids vids","du":"8:01","ds":481,"p":0,"n":0},{"i":220,"t":"The Rainbow Machine","b":"ort","d":"고급","l":"Stage 8","v":"c4ze2snU_Hw","ch":"MKI Kids vids","du":"8:02","ds":482,"p":0,"n":0},{"i":221,"t":"Egyptian Adventure","b":"ort","d":"고급","l":"Stage 8","v":"qUegCI6sRbE","ch":"MKI Kids vids","du":"8:39","ds":519,"p":0,"n":0},{"i":222,"t":"Flood","b":"ort","d":"고급","l":"Stage 8","v":"Q8I3WiJ7g9w","ch":"The E-Library","du":"10:33","ds":633,"p":0,"n":0},{"i":223,"t":"Storm Castle","b":"ort","d":"고급","l":"Stage 9","v":"3Zg9OTzH13k","ch":"Fun Reading","du":"8:51","ds":531,"p":0,"n":0},{"i":224,"t":"Dutch Adventure","b":"ort","d":"고급","l":"Stage 9","v":"WAsuyqqXfG0","ch":"Fun Reading","du":"9:22","ds":562,"p":0,"n":0},{"i":225,"t":"Survival Adventure","b":"ort","d":"고급","l":"Stage 9","v":"fJJv2YaXpaY","ch":"Fun Reading","du":"9:38","ds":578,"p":0,"n":0},{"i":226,"t":"The Litter Queen","b":"ort","d":"고급","l":"Stage 9","v":"JqPDQPKevxw","ch":"MKI Kids vids","du":"10:13","ds":613,"p":0,"n":0},{"i":227,"t":"Green Island","b":"ort","d":"고급","l":"Stage 9","v":"wWviIE7KoCc","ch":"MKI Kids vids","du":"10:48","ds":648,"p":0,"n":0},{"i":228,"t":"The Hunt for Gold","b":"ort","d":"고급","l":"Stage 9","v":"BbRhC26BcLY","ch":"The English District","du":"10:28","ds":628,"p":0,"n":0},{"i":229,"t":"Victorian Adventure","b":"ort","d":"고급","l":"Stage 9","v":"Vm6hGsd8_4s","ch":"The English District","du":"9:02","ds":542,"p":0,"n":0},{"i":230,"t":"Peg the Chick and the Balloon","b":"icr","d":"초급","l":"My Very First (Set 2 Book 1)","v":"vJ_kMon5aeY","ch":"Online English Cafe","du":"0:49","ds":49,"p":1,"n":8},{"i":231,"t":"Tug the Pup","b":"icr","d":"초급","l":"My Very First (Set 1 Book 3)","v":"OHBg7f50Ymw","ch":"The Best Read Aloud Books, etc.","du":"0:54","ds":54,"p":0,"n":6},{"i":232,"t":"Tug the Pup Is Brave","b":"icr","d":"초급","l":"My Very First (Set 2 Book 7)","v":"qO8HOJ8VF_o","ch":"Online English Cafe","du":"0:53","ds":53,"p":0,"n":0},{"i":233,"t":"Buddies","b":"icr","d":"초급","l":"My Very First (Set 1 Book 9)","v":"2RFZkdhzWnc","ch":"Online English Cafe","du":"1:04","ds":64,"p":0,"n":0},{"i":234,"t":"Flat Tire","b":"icr","d":"초급","l":"My Very First (Set 3 Book 1)","v":"W1f3lxZOvM8","ch":"Online English Cafe","du":"1:07","ds":67,"p":0,"n":0},{"i":235,"t":"The Lost Crab","b":"icr","d":"초급","l":"My Very First (Set 2 Book 9)","v":"HOEiheMLyns","ch":"Online English Cafe","du":"1:11","ds":71,"p":0,"n":0},{"i":236,"t":"Achoo!","b":"icr","d":"초급","l":"My Very First (Set 3 Book 6)","v":"MbyQF8DRq74","ch":"Online English Cafe","du":"1:31","ds":91,"p":0,"n":0},{"i":237,"t":"The First Day of Spring","b":"icr","d":"초급","l":"My Very First (Set 3 Book 7)","v":"HimmJqyXpt4","ch":"Online English Cafe","du":"1:50","ds":110,"p":0,"n":0},{"i":238,"t":"Big Pig","b":"icr","d":"초급","l":"My Very First","v":"BHQw9ZH0ku4","ch":"Vamos a La Biblio","du":"0:34","ds":34,"p":0,"n":0},{"i":239,"t":"Biscuit","b":"icr","d":"초급","l":"My Very First","v":"pdfrPq7Lsa8","ch":"Reading Pioneers Academy","du":"4:16","ds":256,"p":0,"n":14},{"i":240,"t":"Biscuit Goes to School","b":"icr","d":"초급","l":"My Very First","v":"h5ELq5hEfzE","ch":"Reading is","du":"2:04","ds":124,"p":0,"n":0},{"i":241,"t":"Biscuit and the Little Pup","b":"icr","d":"초급","l":"My Very First","v":"Pc1JdM4StWY","ch":"Storybook Adventures","du":"2:09","ds":129,"p":0,"n":0},{"i":242,"t":"Biscuit and the Lost Teddy Bear","b":"icr","d":"초급","l":"My Very First","v":"Duxunruic9s","ch":"Reading is","du":"2:23","ds":143,"p":0,"n":0},{"i":243,"t":"Happy Birthday, Biscuit!","b":"icr","d":"초급","l":"My Very First","v":"-U4LyF4o0qw","ch":"Reading is","du":"2:27","ds":147,"p":0,"n":0},{"i":244,"t":"Biscuit's Big Friend","b":"icr","d":"초급","l":"My Very First","v":"FVDIOtV21ug","ch":"Reading is","du":"3:06","ds":186,"p":0,"n":0},{"i":245,"t":"Bathtime for Biscuit","b":"icr","d":"초급","l":"My Very First","v":"eaG0J8v4ol0","ch":"Magical Little Minds - Read Along Storytime","du":"2:24","ds":144,"p":0,"n":0},{"i":246,"t":"Pete the Cat: Pete's Big Lunch","b":"icr","d":"초급","l":"My Very First","v":"hm74SbW4FjA","ch":"LolliPop Animated Book","du":"2:38","ds":158,"p":0,"n":12},{"i":247,"t":"Pete the Kitty: Ready, Set, Go-Cart!","b":"icr","d":"초급","l":"My First","v":"m49cpK8-318","ch":"Bookworm Storytime Read Aloud Books for Kids","du":"3:13","ds":193,"p":0,"n":8},{"i":248,"t":"Little Critter: Just for You","b":"icr","d":"초급","l":"My First","v":"KBx1scO1S80","ch":"Oceanhouse Media","du":"3:01","ds":181,"p":0,"n":7},{"i":249,"t":"Little Critter: The New Baby","b":"icr","d":"초급","l":"My First","v":"anfDyqZdJj4","ch":"Oceanhouse Media","du":"3:05","ds":185,"p":0,"n":0},{"i":250,"t":"Little Critter: All by Myself","b":"icr","d":"초급","l":"My First","v":"86F-da-MLxw","ch":"Oceanhouse Media","du":"4:18","ds":258,"p":0,"n":0},{"i":251,"t":"Mittens","b":"icr","d":"초급","l":"My First","v":"sSV1PFRy7Zg","ch":"Nita Reads","du":"3:02","ds":182,"p":0,"n":0},{"i":252,"t":"Danny and the Dinosaur","b":"icr","d":"초급","l":"Level 1","v":"03BFw_KJ5Kg","ch":"HungryWolf Reads","du":"5:54","ds":354,"p":0,"n":0},{"i":253,"t":"Fancy Nancy","b":"icr","d":"초급","l":"Level 1","v":"n81IWEaF6aQ","ch":"StoryTown","du":"3:21","ds":201,"p":0,"n":0},{"i":254,"t":"Splat the Cat","b":"icr","d":"초급","l":"Level 1","v":"Hz0olZWiRfA","ch":"READ ALOUD KIDS BOOK TIME","du":"3:32","ds":212,"p":0,"n":0},{"i":255,"t":"The Berenstain Bears: We Love Soccer!","b":"icr","d":"초급","l":"Level 1","v":"k7Du8QpFUF4","ch":"iReadTube","du":"3:12","ds":192,"p":0,"n":0},{"i":256,"t":"Mac and Cheese","b":"icr","d":"초급","l":"Level 1","v":"5BYfMV4qIUc","ch":"Munchkin Reading Corner","du":"3:06","ds":186,"p":0,"n":0},{"i":257,"t":"The Fat Cat Sat on the Mat","b":"icr","d":"초급","l":"Level 1","v":"jlpt8AGNsxw","ch":"Jessica","du":"4:40","ds":280,"p":0,"n":0},{"i":258,"t":"Amelia Bedelia","b":"icr","d":"중급","l":"Level 2","v":"UWBs-HODcrk","ch":"My ReadingPlus","du":"8:02","ds":482,"p":0,"n":0},{"i":259,"t":"Come Back, Amelia Bedelia","b":"icr","d":"중급","l":"Level 2","v":"NFkOvgnPZl4","ch":"Jennifer Nocera","du":"7:38","ds":458,"p":0,"n":0},{"i":260,"t":"Amelia Bedelia Helps Out","b":"icr","d":"중급","l":"Level 2","v":"2c9TH7rMjoE","ch":"Jennifer Nocera","du":"10:31","ds":631,"p":0,"n":0},{"i":261,"t":"Thank You, Amelia Bedelia","b":"icr","d":"중급","l":"Level 2","v":"Ypo5rTZWTME","ch":"The Bookworms","du":"8:56","ds":536,"p":0,"n":0},{"i":262,"t":"Teach Us, Amelia Bedelia","b":"icr","d":"중급","l":"Level 2","v":"oNkfOgDX04U","ch":"Rockin Read Alouds","du":"11:58","ds":718,"p":0,"n":0},{"i":263,"t":"Frog and Toad Are Friends","b":"icr","d":"중급","l":"Level 2","v":"4p9WXKqIvYk","ch":"Sarah's Storytime","du":"10:17","ds":617,"p":0,"n":0},{"i":264,"t":"Frog and Toad Together","b":"icr","d":"중급","l":"Level 2","v":"uiu-WATnk7A","ch":"ReadingAllowed","du":"12:02","ds":722,"p":0,"n":0},{"i":265,"t":"Frog and Toad All Year","b":"icr","d":"중급","l":"Level 2","v":"KNqGpZhciV4","ch":"ReadingAllowed","du":"9:55","ds":595,"p":0,"n":0},{"i":266,"t":"Days with Frog and Toad","b":"icr","d":"중급","l":"Level 2","v":"KZwZ_a1IDZs","ch":"Eigo Papa","du":"4:27","ds":267,"p":0,"n":0},{"i":267,"t":"Owl at Home","b":"icr","d":"중급","l":"Level 2","v":"rUZkNNyKm7Y","ch":"ReadingAllowed","du":"9:10","ds":550,"p":0,"n":0},{"i":268,"t":"Mouse Soup","b":"icr","d":"중급","l":"Level 2","v":"bu3O9z5wjxE","ch":"ReadingAllowed","du":"7:39","ds":459,"p":0,"n":0},{"i":269,"t":"Grasshopper on the Road","b":"icr","d":"중급","l":"Level 2","v":"1dc3zX0bWHE","ch":"Declan Boyer","du":"10:59","ds":659,"p":0,"n":0},{"i":270,"t":"Zack's Alligator","b":"icr","d":"중급","l":"Level 2","v":"S0yc584mxzc","ch":"Nita Reads","du":"12:08","ds":728,"p":0,"n":0},{"i":271,"t":"Zack's Alligator Goes to School","b":"icr","d":"중급","l":"Level 2","v":"77Q-A-rHzXM","ch":"Bedtime Stories For Kids","du":"5:30","ds":330,"p":0,"n":0},{"i":272,"t":"Wagon Wheels","b":"icr","d":"고급","l":"Level 3","v":"tHTdZE1fHKE","ch":"Declan Boyer","du":"10:11","ds":611,"p":0,"n":0},{"i":273,"t":"Hill of Fire","b":"icr","d":"고급","l":"Level 3","v":"0cfBFP2VAFQ","ch":"LeRoy Alaways","du":"11:25","ds":685,"p":0,"n":0},{"i":274,"t":"Buffalo Bill and the Pony Express","b":"icr","d":"고급","l":"Level 3","v":"v_-geJAUcdc","ch":"Reading Corner with Mrs. G","du":"11:52","ds":712,"p":0,"n":0},{"i":275,"t":"Sam the Minuteman","b":"icr","d":"고급","l":"Level 3","v":"8dXS_EwhQmI","ch":"Declan Boyer","du":"9:01","ds":541,"p":0,"n":0},{"i":276,"t":"The Josefina Story Quilt","b":"icr","d":"고급","l":"Level 3","v":"aBVKkd85pFc","ch":"abcenglish","du":"16:27","ds":987,"p":0,"n":0},{"i":277,"t":"Chang's Paper Pony","b":"icr","d":"고급","l":"Level 3","v":"pYr1PS08Z8Y","ch":"Read Together","du":"11:08","ds":668,"p":0,"n":0},{"i":278,"t":"The Long Way to a New Land","b":"icr","d":"고급","l":"Level 3","v":"XKs_XJqoXGQ","ch":"abcenglish","du":"14:40","ds":880,"p":0,"n":0},{"i":279,"t":"The Long Way Westward","b":"icr","d":"고급","l":"Level 3","v":"t7NuWtmyX54","ch":"Declan Boyer","du":"13:43","ds":823,"p":0,"n":0},{"i":280,"t":"Minnie and Moo Go to the Moon","b":"icr","d":"고급","l":"Level 3","v":"j0Sv9qu4WZk","ch":"Hannibal Ferret Story Books!","du":"10:41","ds":641,"p":0,"n":0},{"i":281,"t":"Minnie and Moo: Wanted Dead or Alive","b":"icr","d":"고급","l":"Level 3","v":"kE6S_2szJ-o","ch":" 초이스영어교습소","du":"8:15","ds":495,"p":0,"n":0},{"i":282,"t":"Cece Loves Science: Push and Pull","b":"icr","d":"고급","l":"Level 3","v":"VJuCjhtGI6A","ch":"Alphia Reads","du":"9:59","ds":599,"p":0,"n":0},{"i":283,"t":"Play, Kitty!","b":"ngk","d":"초급","l":"Pre-reader","v":"v6szvAB2uJg","ch":"Read with Chimey","du":"1:36","ds":96,"p":1,"n":12},{"i":284,"t":"Hop, Bunny!","b":"ngk","d":"초급","l":"Pre-reader","v":"7EuxtttFUeE","ch":"Ms. Lindsey's Book Nook","du":"1:29","ds":89,"p":0,"n":5},{"i":285,"t":"Peek, Otter!","b":"ngk","d":"초급","l":"Pre-reader","v":"-Tav1QReDRE","ch":"Storytime with Bon and Bi","du":"1:51","ds":111,"p":0,"n":9},{"i":286,"t":"Trot, Pony!","b":"ngk","d":"초급","l":"Pre-reader","v":"OicB9WCAyj0","ch":"Read with Chimey","du":"2:29","ds":149,"p":0,"n":6},{"i":287,"t":"Swing, Sloth!","b":"ngk","d":"초급","l":"Pre-reader","v":"tjR7iFrIfI0","ch":"Read Alongs","du":"1:49","ds":109,"p":0,"n":7},{"i":288,"t":"Buzz, Bee!","b":"ngk","d":"초급","l":"Pre-reader","v":"MWrltqaq3-Y","ch":"Storytime with Bon and Bi","du":"2:43","ds":163,"p":0,"n":7},{"i":289,"t":"Odd Animals","b":"ngk","d":"초급","l":"Pre-reader","v":"bxL5mBADd-k","ch":"Read with Chimey","du":"2:53","ds":173,"p":0,"n":0},{"i":290,"t":"Ducks","b":"ngk","d":"초급","l":"Pre-reader","v":"9_UEv643U-0","ch":"The Book Keepers","du":"2:15","ds":135,"p":0,"n":0},{"i":291,"t":"Hoot, Owl!","b":"ngk","d":"초급","l":"Pre-reader","v":"P9xPQQBzUyg","ch":"Storytime with Bon and Bi","du":"1:57","ds":117,"p":0,"n":0},{"i":292,"t":"At the Beach","b":"ngk","d":"초급","l":"Level 1","v":"Q-9dFF-puZM","ch":"마스터즈영어","du":"2:01","ds":121,"p":0,"n":0},{"i":293,"t":"Animal Homes","b":"ngk","d":"초급","l":"Level 1","v":"6u3u9V78orY","ch":"Read with Chimey","du":"2:34","ds":154,"p":0,"n":8},{"i":294,"t":"Giraffes","b":"ngk","d":"초급","l":"Level 1","v":"DnOnCFTMWuQ","ch":"Read with Chimey","du":"6:37","ds":397,"p":0,"n":0},{"i":295,"t":"Lions","b":"ngk","d":"초급","l":"Level 1","v":"zqu-9AI99X0","ch":"Read Alongs","du":"4:53","ds":293,"p":0,"n":0},{"i":296,"t":"Spiders","b":"ngk","d":"초급","l":"Level 1","v":"yXFtaf0Hfm0","ch":"Read Alongs","du":"5:18","ds":318,"p":0,"n":0},{"i":297,"t":"Weather","b":"ngk","d":"초급","l":"Level 1","v":"CR_1xyaDeUQ","ch":"Read with Chimey","du":"6:22","ds":382,"p":0,"n":0},{"i":298,"t":"Trains","b":"ngk","d":"초급","l":"Level 1","v":"n9cqyjhpsHM","ch":"아이와 함께 말랑 영어","du":"8:02","ds":482,"p":0,"n":0},{"i":299,"t":"Seed to Plant","b":"ngk","d":"초급","l":"Level 1","v":"ts542GhKv_E","ch":"Read with Chimey","du":"7:43","ds":463,"p":0,"n":0},{"i":300,"t":"Owls","b":"ngk","d":"초급","l":"Level 1","v":"vLa5a8abrjY","ch":"Read Alongs","du":"6:43","ds":403,"p":0,"n":0},{"i":301,"t":"Ponies","b":"ngk","d":"초급","l":"Level 1","v":"DlFwsaOg8V0","ch":"Story Time Pals","du":"10:59","ds":659,"p":0,"n":0},{"i":302,"t":"Koalas","b":"ngk","d":"초급","l":"Level 1","v":"LL_6r1mvhBg","ch":"CasaCrazy","du":"8:57","ds":537,"p":0,"n":0},{"i":303,"t":"Hedgehogs","b":"ngk","d":"초급","l":"Level 1","v":"ie34rxaTSOo","ch":"Read with Chimey","du":"7:53","ds":473,"p":0,"n":0},{"i":304,"t":"Whales","b":"ngk","d":"초급","l":"Level 1","v":"Gg5yTMC6OIk","ch":"Read with Chimey","du":"3:32","ds":212,"p":0,"n":0},{"i":305,"t":"Penguins","b":"ngk","d":"중급","l":"Level 2","v":"58T4syspj6g","ch":"Eundo Bookclub","du":"13:38","ds":818,"p":0,"n":0},{"i":306,"t":"Planets","b":"ngk","d":"중급","l":"Level 2","v":"jU6J991XXfc","ch":"Eundo Bookclub","du":"14:09","ds":849,"p":0,"n":0},{"i":307,"t":"Pandas","b":"ngk","d":"중급","l":"Level 2","v":"_dhoqLxm684","ch":"Eundo Bookclub","du":"15:16","ds":916,"p":0,"n":0},{"i":308,"t":"Monkeys","b":"ngk","d":"중급","l":"Level 2","v":"8o3UnQWKHbo","ch":"Eundo Bookclub","du":"16:13","ds":973,"p":0,"n":0},{"i":309,"t":"Volcanoes","b":"ngk","d":"중급","l":"Level 2","v":"SCppgDTNjew","ch":"Eundo Bookclub","du":"17:53","ds":1073,"p":0,"n":0},{"i":310,"t":"Prehistoric Mammals","b":"ngk","d":"중급","l":"Level 2","v":"yssmYkTRrZU","ch":"Eundo Bookclub","du":"18:25","ds":1105,"p":0,"n":0},{"i":311,"t":"Wolves","b":"ngk","d":"중급","l":"Level 2","v":"H6j3c2235M4","ch":"Eundo Bookclub","du":"14:40","ds":880,"p":0,"n":0},{"i":312,"t":"Foxes","b":"ngk","d":"중급","l":"Level 2","v":"MMcd3SyDvG4","ch":"Karissa Parker","du":"12:19","ds":739,"p":0,"n":0},{"i":313,"t":"Sharks","b":"ngk","d":"중급","l":"Level 2","v":"7rYce1J-j0A","ch":"Read with Chimey","du":"8:20","ds":500,"p":0,"n":0},{"i":314,"t":"Mummies","b":"ngk","d":"중급","l":"Level 2","v":"YAcQKowaK90","ch":"Read with Chimey","du":"9:15","ds":555,"p":0,"n":0},{"i":315,"t":"Cats","b":"ngk","d":"중급","l":"Level 2","v":"x1c0KaUwyEM","ch":"Read with Chimey","du":"8:05","ds":485,"p":0,"n":0},{"i":316,"t":"Bears","b":"ngk","d":"중급","l":"Level 2","v":"aztjaMNayXA","ch":"Read with Chimey","du":"21:59","ds":1319,"p":0,"n":0},{"i":317,"t":"Great Migrations: Amazing Animal Journeys","b":"ngk","d":"고급","l":"Level 3","v":"X5jx1lxasZM","ch":"Read Alongs","du":"12:16","ds":736,"p":0,"n":0},{"i":318,"t":"Great Migrations: Whales","b":"ngk","d":"고급","l":"Level 3","v":"BfNVJjAdRhI","ch":"Michael Espino","du":"12:18","ds":738,"p":0,"n":0},{"i":319,"t":"Great Migrations: Butterflies","b":"ngk","d":"고급","l":"Level 3","v":"eCIE1He19as","ch":"Susan Cornish","du":"14:04","ds":844,"p":0,"n":0},{"i":320,"t":"Deadly Predators","b":"ngk","d":"고급","l":"Level 3","v":"NppEP9WZixw","ch":"Book Bug Storytime","du":"8:25","ds":505,"p":0,"n":0},{"i":321,"t":"Rocks and Minerals","b":"ngk","d":"고급","l":"Level 3","v":"x-RgS55wvyc","ch":"TopShelfKids","du":"8:12","ds":492,"p":0,"n":0},{"i":322,"t":"Amelia Earhart","b":"ngk","d":"고급","l":"Level 3","v":"rNJV-BElZX8","ch":"Ms. Lindsey's Book Nook","du":"6:39","ds":399,"p":0,"n":0},{"i":323,"t":"Animals in the City","b":"ngk","d":"고급","l":"Level 3","v":"owYrnIZCEg4","ch":"Read with Chimey","du":"11:31","ds":691,"p":0,"n":0}];
+const SENT={"eEhA8uGBj3E":{"c":"자동 자막 기준. 'spread like a cone'(원문 'shaped like a cone' 추정), 'His uncle is beekeeper'(주어 누락) 등 일부 인식 오류 있음.","r":"","s":[{"n":1,"e":"Shapes are everywhere.","k":"모양은 어디에나 있어요.","w":[["shape","모양"],["everywhere","어디에나"]]},{"n":2,"e":"Shapes are everywhere in nature.","k":"자연에는 모양이 어디에나 있어요.","w":[["nature","자연"]]},{"n":3,"e":"Here are some shapes you might see.","k":"여기 여러분이 볼 수 있는 몇 가지 모양이 있어요.","w":[["might","~일 수도 있다"],["see","보다"]]},{"n":4,"e":"A 2D shape is flat. You can draw it on a piece of paper.","k":"2D(이차원) 모양은 평평해요. 종이 위에 그릴 수 있어요.","w":[["flat","평평한"],["draw","그리다"]]},{"n":5,"e":"A 3D shape takes up space. You can hold 3D shapes in your hand.","k":"3D(삼차원) 모양은 공간을 차지해요. 3D 모양은 손에 들 수 있어요.","w":[["take up space","공간을 차지하다"],["hold","들다"]]},{"n":6,"e":"A starfish is in the shape of a star.","k":"불가사리는 별 모양이에요.","w":[["starfish","불가사리"],["star","별"]]},{"n":7,"e":"Peacocks have ovals on their tail feathers. They look like eyes.","k":"공작새의 꼬리 깃털에는 타원이 있어요. 눈처럼 보여요.","w":[["peacock","공작새"],["oval","타원"],["feather","깃털"]]},{"n":8,"e":"The center of the sunflower is a circle.","k":"해바라기 가운데는 동그라미예요.","w":[["center","가운데"],["sunflower","해바라기"],["circle","원, 동그라미"]]},{"n":9,"e":"The insect eggs are spheres.","k":"곤충의 알은 구(공 모양)예요.","w":[["insect","곤충"],["egg","알"],["sphere","구, 공 모양"]]},{"n":10,"e":"The bird's beaks are triangles.","k":"새의 부리는 삼각형이에요.","w":[["beak","부리"],["triangle","삼각형"]]},{"n":11,"e":"Some of the crystals form pyramids.","k":"몇몇 결정은 피라미드 모양을 이뤄요.","w":[["crystal","결정"],["pyramid","피라미드"]]},{"n":12,"e":"The holes in a honeycomb are hexagons.","k":"벌집의 구멍은 육각형이에요.","w":[["honeycomb","벌집"],["hexagon","육각형"]]}]},"d2VjbgEJQkw":{"c":"자동 자막 기준. 본문이 짧고 반복 구조라 인식 상태 양호.","r":"","s":[{"n":1,"e":"Hello, big butterfly.","k":"안녕, 커다란 나비야.","w":[["hello","안녕"],["big","큰"]]},{"n":2,"e":"Hello, small butterfly.","k":"안녕, 작은 나비야.","w":[["small","작은"]]},{"n":3,"e":"Hello, red butterfly.","k":"안녕, 빨간 나비야.","w":[["red","빨간"]]},{"n":4,"e":"Hello, green butterfly.","k":"안녕, 초록 나비야.","w":[["green","초록"]]},{"n":5,"e":"Hello, striped butterfly.","k":"안녕, 줄무늬 나비야.","w":[["striped","줄무늬가 있는"]]},{"n":6,"e":"Hello, spotted butterfly.","k":"안녕, 점박이 나비야.","w":[["spotted","점이 있는"]]},{"n":7,"e":"Hello, new butterfly.","k":"안녕, 새로 나온 나비야.","w":[["new","새로운"]]},{"n":8,"e":"Hello, butterfly.","k":"안녕, 나비야.","w":[["butterfly","나비"]]}]},"J-S2LVz4b5o":{"c":"자동 자막에서 'Biff'가 'Beth', 'Mum'이 'Mom'으로 인식됨. 시리즈 표기(Biff, Mum)로 정정해 수록.","r":"","s":[{"n":1,"e":"Dad was fierce.","k":"아빠는 무서운 표정을 지었어요.","w":[["fierce","사나운, 무서운"]]},{"n":2,"e":"Chip was sad.","k":"칩은 슬픈 표정을 지었어요.","w":[["sad","슬픈"]]},{"n":3,"e":"Biff was good.","k":"비프는 착한 표정을 지었어요.","w":[["good","착한, 좋은"]]},{"n":4,"e":"Mum was frightened.","k":"엄마는 무서워하는 표정을 지었어요.","w":[["frightened","겁먹은"]]},{"n":5,"e":"Kipper was hungry.","k":"키퍼는 배고픈 표정을 지었어요.","w":[["hungry","배고픈"]]}]},"vJ_kMon5aeY":{"c":"자동 자막 기준. 마지막 부분('Pen sees Peg, pan in hand, catches Peg')이 뭉개져 인식되어, 확실한 문장만 수록하고 마지막 문장은 주의 표시.","r":"","s":[{"n":1,"e":"Peg the chick sees a string.","k":"병아리 페그가 끈을 봐요.","w":[["chick","병아리"],["string","끈"]]},{"n":2,"e":"Peg sees a balloon.","k":"페그가 풍선을 봐요.","w":[["balloon","풍선"]]},{"n":3,"e":"Peg sees the clouds.","k":"페그가 구름을 봐요.","w":[["cloud","구름"]]},{"n":4,"e":"Peg sees the butterflies.","k":"페그가 나비들을 봐요.","w":[["butterfly","나비"]]},{"n":5,"e":"Peg sees the birds.","k":"페그가 새들을 봐요.","w":[["bird","새"]]},{"n":6,"e":"Peg sees the trees. Pop!","k":"페그가 나무들을 봐요. 펑!","w":[["tree","나무"],["pop","펑(터지는 소리)"]]},{"n":7,"e":"Pen the hen sees Peg.","k":"암탉 펜이 페그를 봐요.","w":[["hen","암탉"],["see","보다"]]},{"n":8,"e":"Pen catches Peg. Hooray!","k":"펜이 페그를 잡아요. 만세!","w":[["catch","잡다"],["hooray","만세"]]}]},"v6szvAB2uJg":{"c":"자동 자막 기준. 권말 활동(따라 그리기) 안내 문장은 생략.","r":"","s":[{"n":1,"e":"My kitty likes to play.","k":"우리 고양이는 노는 것을 좋아해요.","w":[["kitty","고양이(아기 고양이)"],["play","놀다"]]},{"n":2,"e":"Run, kitty.","k":"고양이야, 달려.","w":[["run","달리다"]]},{"n":3,"e":"Swing.","k":"그네를 타요.","w":[["swing","그네 타다"]]},{"n":4,"e":"Stretch.","k":"기지개를 켜요.","w":[["stretch","쭉 펴다, 기지개 켜다"]]},{"n":5,"e":"Climb.","k":"올라가요.","w":[["climb","오르다"]]},{"n":6,"e":"Let's hide. Peekaboo! What do you see?","k":"숨자. 까꿍! 뭐가 보이니?","w":[["hide","숨다"],["peekaboo","까꿍"]]},{"n":7,"e":"Kitty swats a bug.","k":"고양이가 벌레를 툭 쳐요.","w":[["swat","(손으로) 때리다"],["bug","벌레"]]},{"n":8,"e":"Play with string.","k":"끈을 가지고 놀아요.","w":[["with","~와 함께"],["string","끈"]]},{"n":9,"e":"It's time to eat.","k":"먹을 시간이에요.","w":[["It's time to ~","~할 시간이다"]]},{"n":10,"e":"Lick to clean.","k":"핥아서 씻어요.","w":[["lick","핥다"],["clean","깨끗하게 하다"]]},{"n":11,"e":"Let's cuddle.","k":"서로 끌어안아요.","w":[["cuddle","끌어안다"]]},{"n":12,"e":"Yawn. It's time to sleep.","k":"하품해요. 잘 시간이에요.","w":[["yawn","하품하다"],["sleep","자다"]]}]},"ZXYMjjQ70Ig":{"c":"자동 자막 기준. 그림만 있고 문장이 없는 도입부를 제외한 본문 목록.","r":"","s":[{"n":1,"e":"A big house.","k":"커다란 집.","w":[["big","큰"],["house","집"]]},{"n":2,"e":"A big dog.","k":"커다란 개.","w":[["dog","개"]]},{"n":3,"e":"A big car.","k":"커다란 자동차.","w":[["car","자동차"]]},{"n":4,"e":"A big bus.","k":"커다란 버스.","w":[["bus","버스"]]},{"n":5,"e":"A big plane.","k":"커다란 비행기.","w":[["plane","비행기"]]},{"n":6,"e":"A big tree.","k":"커다란 나무.","w":[["tree","나무"]]},{"n":7,"e":"A big elephant.","k":"커다란 코끼리.","w":[["elephant","코끼리"]]},{"n":8,"e":"A big dinosaur.","k":"커다란 공룡.","w":[["dinosaur","공룡"]]}]},"oVKrWARMSj8":{"c":"자동 자막 기준. 낱말 그림책이라 짧은 어구로 인식됨.","r":"","s":[{"n":1,"e":"The ocean.","k":"바다.","w":[["ocean","대양, 바다"]]},{"n":2,"e":"The wave.","k":"파도.","w":[["wave","파도"]]},{"n":3,"e":"The beach.","k":"해변.","w":[["beach","해변"]]},{"n":4,"e":"The rocks.","k":"바위들.","w":[["rock","바위"]]},{"n":5,"e":"The cliff.","k":"절벽.","w":[["cliff","절벽"]]},{"n":6,"e":"The birds.","k":"새들.","w":[["bird","새"]]},{"n":7,"e":"The lighthouse.","k":"등대.","w":[["lighthouse","등대"]]},{"n":8,"e":"The coast.","k":"해안.","w":[["coast","해안"]]}]},"KkFaHiP3vMY":{"c":"자동 자막 기준. 도입부의 책 정보 낭독은 제외.","r":"","s":[{"n":1,"e":"What can dogs do?","k":"개는 무엇을 할 수 있을까요?","w":[["what","무엇"],["can","~할 수 있다"]]},{"n":2,"e":"My dog can jump.","k":"우리 개는 뛸 수 있어요.","w":[["jump","뛰다"]]},{"n":3,"e":"My dog can run.","k":"우리 개는 달릴 수 있어요.","w":[["run","달리다"]]},{"n":4,"e":"My dog can swim.","k":"우리 개는 수영할 수 있어요.","w":[["swim","수영하다"]]},{"n":5,"e":"My dog can dig.","k":"우리 개는 땅을 팔 수 있어요.","w":[["dig","파다"]]},{"n":6,"e":"My dog can climb.","k":"우리 개는 올라갈 수 있어요.","w":[["climb","오르다"]]},{"n":7,"e":"My dog can sit.","k":"우리 개는 앉을 수 있어요.","w":[["sit","앉다"]]},{"n":8,"e":"My dog can roll over.","k":"우리 개는 몸을 굴릴 수 있어요.","w":[["roll over","몸을 굴리다"]]},{"n":9,"e":"My dog can hug.","k":"우리 개는 안을 수 있어요.","w":[["hug","안다"]]},{"n":10,"e":"Good job.","k":"잘했어요.","w":[["Good job","잘했어"]]}]},"pdfrPq7Lsa8":{"c":"자동 자막 기준. 반복 구조라 인식 상태 양호하며, 반복 문장 일부는 생략.","r":"","s":[{"n":1,"e":"This is Biscuit.","k":"이건 비스킷이에요.","w":[["this","이것"]]},{"n":2,"e":"Biscuit is small. Biscuit is yellow.","k":"비스킷은 작아요. 비스킷은 노래요.","w":[["small","작은"],["yellow","노란"]]},{"n":3,"e":"Time for bed, Biscuit.","k":"잘 시간이야, 비스킷.","w":[["Time for ~","~할 시간"]]},{"n":4,"e":"Woof, woof.","k":"멍멍.","w":[["woof","멍(개 짖는 소리)"]]},{"n":5,"e":"Biscuit wants to play.","k":"비스킷은 놀고 싶어요.","w":[["want to","~하고 싶다"]]},{"n":6,"e":"Biscuit wants a snack.","k":"비스킷은 간식을 먹고 싶어요.","w":[["snack","간식"]]},{"n":7,"e":"Biscuit wants a drink.","k":"비스킷은 마실 것을 원해요.","w":[["drink","마실 것"]]},{"n":8,"e":"Biscuit wants to hear a story.","k":"비스킷은 이야기를 듣고 싶어요.","w":[["hear","듣다"],["story","이야기"]]},{"n":9,"e":"Biscuit wants his blanket.","k":"비스킷은 자기 담요를 원해요.","w":[["blanket","담요"]]},{"n":10,"e":"Biscuit wants a hug.","k":"비스킷은 안아 주기를 원해요.","w":[["hug","포옹"]]},{"n":11,"e":"Biscuit wants a kiss.","k":"비스킷은 뽀뽀를 원해요.","w":[["kiss","뽀뽀"]]},{"n":12,"e":"Biscuit wants to be tucked in.","k":"비스킷은 이불을 덮어 주길 원해요.","w":[["tuck in","이불을 덮어 주다"]]},{"n":13,"e":"Biscuit wants to curl up. Sleepy puppy.","k":"비스킷은 몸을 둥글게 말고 싶어 해요. 졸린 강아지.","w":[["curl up","몸을 둥글게 말다"],["sleepy","졸린"],["puppy","강아지"]]},{"n":14,"e":"Good night, Biscuit.","k":"잘 자, 비스킷.","w":[["Good night","잘 자"]]}]},"hm74SbW4FjA":{"c":"자동 자막 기준. 배경 음악 표시([Music])가 섞여 있고, 후반부에 'pizzas'/'Pizza Sandwich'로 잘못 인식된 부분은 수록하지 않음.","r":"","s":[{"n":1,"e":"It is lunch time. Pete is ready to eat.","k":"점심시간이에요. 피트는 먹을 준비가 됐어요.","w":[["lunch","점심"],["ready","준비된"]]},{"n":2,"e":"What should he eat?","k":"무엇을 먹어야 할까요?","w":[["should","~해야 한다"]]},{"n":3,"e":"A sandwich would be nice.","k":"샌드위치가 좋겠어요.","w":[["sandwich","샌드위치"]]},{"n":4,"e":"Pete opens the fridge. He takes out a loaf of bread.","k":"피트가 냉장고를 열어요. 식빵 한 덩이를 꺼내요.","w":[["fridge","냉장고"],["a loaf of bread","식빵 한 덩이"]]},{"n":5,"e":"He finds a yummy fish. He adds tomato and mayo.","k":"맛있는 생선을 찾아요. 토마토와 마요네즈를 넣어요.","w":[["yummy","맛있는"],["add","더하다, 넣다"]]},{"n":6,"e":"It is too small. Something is missing.","k":"너무 작아요. 뭔가 빠졌어요.","w":[["too small","너무 작은"],["missing","빠진"]]},{"n":7,"e":"His sandwich needs an apple.","k":"샌드위치에 사과가 필요해요.","w":[["need","필요로 하다"]]},{"n":8,"e":"Pete adds a pickle, cheese, an egg, two hot dogs, a banana, and a can of beans.","k":"피트는 절임 오이, 치즈, 달걀, 핫도그 두 개, 바나나, 콩 통조림을 넣어요.","w":[["pickle","절임 오이"],["cheese","치즈"],["a can of beans","콩 통조림 한 캔"]]},{"n":9,"e":"Pete's sandwich is too big for Pete to eat.","k":"피트의 샌드위치는 피트가 먹기엔 너무 커요.","w":[["too big to eat","먹기에 너무 큰"]]},{"n":10,"e":"Pete calls all of his friends.","k":"피트가 친구들을 모두 불러요.","w":[["call","부르다"]]},{"n":11,"e":"Pete's sandwich is big enough for everyone. Dig in!","k":"피트의 샌드위치는 모두에게 충분할 만큼 커요. 맛있게 먹어!","w":[["enough","충분한"],["Dig in","맛있게 먹다"]]},{"n":12,"e":"Pete's friends are full. They liked Pete's big lunch.","k":"피트의 친구들은 배불러요. 모두 피트의 커다란 점심을 좋아했어요.","w":[["full","배부른"],["like","좋아하다"]]}]},"KBx1scO1S80":{"c":"자동 자막 기준. 'Mercer Mayer' 성이 'mayor'로 인식되는 등 고유명사 오류 있음.","r":"","s":[{"n":1,"e":"This morning I wanted to make breakfast just for you, but the eggs were too slippery.","k":"오늘 아침 너만을 위해 아침을 만들고 싶었는데, 달걀이 너무 미끄러웠어.","w":[["breakfast","아침 식사"],["slippery","미끄러운"]]},{"n":2,"e":"I wanted to wash the floor just for you, but the soap was too bubbly.","k":"너만을 위해 바닥을 닦고 싶었는데, 비누 거품이 너무 많았어.","w":[["wash","씻다, 닦다"],["bubbly","거품이 많은"]]},{"n":3,"e":"I wanted to put away the dishes just for you, but the floor was too wet.","k":"너만을 위해 그릇을 정리하고 싶었는데, 바닥이 너무 젖어 있었어.","w":[["put away","정리하다"],["wet","젖은"]]},{"n":4,"e":"I wanted to carry the groceries just for you, but the bag broke.","k":"너만을 위해 장본 것을 들고 오고 싶었는데, 봉지가 찢어졌어.","w":[["carry","나르다"],["groceries","장본 것"],["break","부서지다, 찢어지다"]]},{"n":5,"e":"I wanted to take a nap just for you, but the bed was too bouncy.","k":"너만을 위해 낮잠을 자고 싶었는데, 침대가 너무 통통 튀었어.","w":[["take a nap","낮잠을 자다"],["bouncy","통통 튀는"]]},{"n":6,"e":"I wanted to mow the lawn just for you, but I was too little.","k":"너만을 위해 잔디를 깎고 싶었는데, 내가 너무 어렸어.","w":[["mow the lawn","잔디를 깎다"],["little","어린"]]},{"n":7,"e":"I wanted to do something very special just for you. And I did it!","k":"너만을 위해 아주 특별한 걸 하고 싶었어. 그리고 해냈어!","w":[["special","특별한"]]}]},"OHBg7f50Ymw":{"c":"자동 자막 기준. 도입부 책 정보 낭독은 제외.","r":"","s":[{"n":1,"e":"Tug the Pup likes to play.","k":"강아지 터그는 노는 걸 좋아해요.","w":[["pup","강아지"],["like to","~하는 것을 좋아하다"]]},{"n":2,"e":"Tug the Pup likes to splash.","k":"터그는 물을 첨벙거리는 걸 좋아해요.","w":[["splash","첨벙거리다"]]},{"n":3,"e":"Tug the Pup likes to bark.","k":"터그는 짖는 걸 좋아해요.","w":[["bark","짖다"]]},{"n":4,"e":"Tug the Pup likes to dig.","k":"터그는 땅을 파는 걸 좋아해요.","w":[["dig","파다"]]},{"n":5,"e":"Tug the Pup likes to howl.","k":"터그는 멀리 짖는 걸 좋아해요.","w":[["howl","길게 울부짖다"]]},{"n":6,"e":"Tug the Pup likes to make friends.","k":"터그는 친구를 사귀는 걸 좋아해요.","w":[["make friends","친구를 사귀다"]]}]},"0fG6-YVSp5k":{"c":"자동 자막 기준. 본문 전체가 확인됨.","r":"","s":[{"n":1,"e":"We are all in red.","k":"우리는 모두 빨간 옷을 입었어요.","w":[["all","모두"],["red","빨강"]]},{"n":2,"e":"We are all in blue.","k":"우리는 모두 파란 옷을 입었어요.","w":[["blue","파랑"]]},{"n":3,"e":"Come on, the reds.","k":"빨강팀, 이리 와.","w":[["Come on","이리 와, 힘내"]]},{"n":4,"e":"Come on, the blues.","k":"파랑팀, 이리 와.","w":[]},{"n":5,"e":"Who is in red?","k":"누가 빨간 옷을 입었니?","w":[["who","누구"]]},{"n":6,"e":"Who is in blue?","k":"누가 파란 옷을 입었니?","w":[]},{"n":7,"e":"We are all muddy.","k":"우리는 모두 진흙투성이야.","w":[["muddy","진흙투성이의"]]}]},"KhX2585jVyU":{"c":"자동 자막에서 'Mum'이 'Mom'으로 인식됨. 시리즈 표기(Mum)로 정정.","r":"","s":[{"n":1,"e":"Mum put on a big red nose.","k":"엄마가 커다란 빨간 코를 붙였어요.","w":[["put on","붙이다, 입다"],["nose","코"]]},{"n":2,"e":"Mum put on a big pillow.","k":"엄마가 커다란 베개를 넣었어요.","w":[["pillow","베개"]]},{"n":3,"e":"Mum put on big boots.","k":"엄마가 커다란 장화를 신었어요.","w":[["boots","장화"]]},{"n":4,"e":"Mum put on big eyebrows.","k":"엄마가 커다란 눈썹을 붙였어요.","w":[["eyebrow","눈썹"]]},{"n":5,"e":"She put on a big beard.","k":"엄마가 커다란 수염을 붙였어요.","w":[["beard","수염"]]},{"n":6,"e":"\"Ho, ho, ho,\" said Mum.","k":"\"호호호.\" 엄마가 말했어요.","w":[["say","말하다"]]}]},"iluIOlyAyt0":{"c":"자동 자막 기준. 책 뒤쪽 문장은 인식이 뭉개져 확인 가능한 앞부분만 수록.","r":"","s":[{"n":1,"e":"A rug.","k":"깔개.","w":[["rug","깔개, 양탄자"]]},{"n":2,"e":"A sheet.","k":"시트(큰 천).","w":[["sheet","시트, 큰 천"]]},{"n":3,"e":"A big box.","k":"커다란 상자.","w":[["box","상자"]]},{"n":4,"e":"A little box.","k":"작은 상자.","w":[["little","작은"]]}]},"7EuxtttFUeE":{"c":"자동 자막에서 제목이 'Hot Bunny'로 인식됨(실제 표기는 Hop, Bunny!).","r":"","s":[{"n":1,"e":"In the forest, a bunny can see many things.","k":"숲에서 토끼는 많은 것을 볼 수 있어요.","w":[["forest","숲"],["bunny","토끼"]]},{"n":2,"e":"Hop, hop, hop.","k":"깡충, 깡충, 깡충.","w":[["hop","깡충 뛰다"]]},{"n":3,"e":"Big trees stand tall. Others lie down.","k":"큰 나무는 꼿꼿이 서 있어요. 어떤 나무는 누워 있어요.","w":[["stand tall","꼿꼿이 서다"],["lie down","눕다"]]},{"n":4,"e":"There are leaves and ferns. There are tiny flowers.","k":"나뭇잎과 고사리가 있어요. 아주 작은 꽃도 있어요.","w":[["leaf","나뭇잎"],["fern","고사리"],["tiny","아주 작은"]]},{"n":5,"e":"Deer dance through the woods. Squirrels scamper. Bugs are busy. Snakes slither. Wild turkeys trot.","k":"사슴이 숲 사이로 춤추듯 지나가요. 다람쥐가 종종걸음으로 달려요. 벌레들은 바빠요. 뱀은 미끄러지듯 가요. 들칠면조는 총총걸음으로 걸어요.","w":[["deer","사슴"],["squirrel","다람쥐"],["slither","미끄러지듯 기다"],["trot","총총걸음으로 걷다"]]}]},"-Tav1QReDRE":{"c":"자동 자막 기준. 도입부의 책 정보 낭독은 제외.","r":"","s":[{"n":1,"e":"Run to the river.","k":"강으로 달려가요.","w":[["river","강"]]},{"n":2,"e":"Jump.","k":"뛰어들어요.","w":[["jump","뛰다"]]},{"n":3,"e":"What's in the river? Fish and crabs.","k":"강에 뭐가 있지요? 물고기와 게가 있어요.","w":[["fish","물고기"],["crab","게"]]},{"n":4,"e":"Eat.","k":"먹어요.","w":[["eat","먹다"]]},{"n":5,"e":"An otter has a strong tail. It has webbed feet.","k":"수달은 튼튼한 꼬리가 있어요. 물갈퀴가 있는 발도 있어요.","w":[["otter","수달"],["strong","튼튼한"],["webbed feet","물갈퀴 발"]]},{"n":6,"e":"Swim. Flip.","k":"헤엄쳐요. 몸을 뒤집어요.","w":[["swim","헤엄치다"],["flip","뒤집다"]]},{"n":7,"e":"This otter teaches its baby to find food.","k":"이 수달은 아기에게 먹이 찾는 법을 가르쳐요.","w":[["teach","가르치다"],["find","찾다"]]},{"n":8,"e":"This otter calls out to its baby. \"Where is it? Here it is.\"","k":"이 수달이 아기에게 소리쳐 불러요. \"어디 있니? 여기 있구나.\"","w":[["call out","소리쳐 부르다"]]},{"n":9,"e":"It's been a busy day. Sleep, otter.","k":"바쁜 하루였어요. 수달아, 자렴.","w":[["busy","바쁜"]]}]},"MWrltqaq3-Y":{"c":"자동 자막 기준. 'powered'(원문 'powdery' 추정) 등 일부 오인식 구간은 제외.","r":"","s":[{"n":1,"e":"A bee flies in the air. It looks for a flower.","k":"벌이 공중을 날아요. 꽃을 찾아요.","w":[["bee","벌"],["fly","날다"],["flower","꽃"]]},{"n":2,"e":"There's a sweet treat in the flowers. It's called nectar.","k":"꽃 속에 달콤한 간식이 있어요. 그건 꿀물(nectar)이라고 해요.","w":[["sweet","달콤한"],["nectar","꽃꿀"]]},{"n":3,"e":"The bee drinks. The bee eats. It eats pollen.","k":"벌이 마셔요. 벌이 먹어요. 꽃가루를 먹어요.","w":[["drink","마시다"],["pollen","꽃가루"]]},{"n":4,"e":"It gets pollen to take home. Bees carry pollen in a basket on their legs.","k":"집에 가져갈 꽃가루를 모아요. 벌은 다리에 있는 바구니에 꽃가루를 담아요.","w":[["carry","나르다"],["basket","바구니"]]},{"n":5,"e":"A bee's home is called a hive. Many bees live in the hive.","k":"벌의 집은 벌집(hive)이라고 해요. 많은 벌이 벌집에 살아요.","w":[["hive","벌집"]]},{"n":6,"e":"Bees put pollen in the hive. They make honey from nectar, too.","k":"벌은 꽃가루를 벌집에 넣어요. 꽃꿀로 꿀도 만들어요.","w":[["honey","꿀"],["make","만들다"]]},{"n":7,"e":"Now there's food in the hive. Other bees can eat the pollen and honey.","k":"이제 벌집에 먹이가 있어요. 다른 벌들이 꽃가루와 꿀을 먹을 수 있어요.","w":[["food","먹이"],["other","다른"]]}]},"6u3u9V78orY":{"c":"자동 자막에서 'burrow'가 'borough', 'masked weaver'가 'mast weaver'로 인식됨. 본문 문장은 확인 가능.","r":"","s":[{"n":1,"e":"Animals need a place to live.","k":"동물에게는 살 곳이 필요해요.","w":[["animal","동물"],["place to live","살 곳"]]},{"n":2,"e":"Some animals build their homes.","k":"어떤 동물은 집을 지어요.","w":[["build","짓다"]]},{"n":3,"e":"Bees build a hive.","k":"벌은 벌집을 지어요.","w":[["hive","벌집"]]},{"n":4,"e":"Birds use grass and twigs. They make a nest.","k":"새는 풀과 잔가지를 써요. 둥지를 만들어요.","w":[["grass","풀"],["twig","잔가지"],["nest","둥지"]]},{"n":5,"e":"Some bats sleep in caves. They hang on to the rocks.","k":"어떤 박쥐는 동굴에서 자요. 바위에 매달려요.","w":[["bat","박쥐"],["cave","동굴"],["hang on","매달리다"]]},{"n":6,"e":"A fox lives in a den. It's in the ground.","k":"여우는 굴에서 살아요. 땅속에 있어요.","w":[["fox","여우"],["den","굴"]]},{"n":7,"e":"A spider lives on a web. It lives alone.","k":"거미는 거미줄에 살아요. 혼자 살아요.","w":[["spider","거미"],["web","거미줄"],["alone","혼자"]]},{"n":8,"e":"Rabbits live together. They live in a burrow.","k":"토끼는 함께 살아요. 굴 속에 살아요.","w":[["rabbit","토끼"],["together","함께"],["burrow","땅굴"]]}]},"OicB9WCAyj0":{"c":"자동 자막 기준. 조랑말 품종 이름(Exmoor, Dartmoor, Chincoteague 등)은 인식 오류가 많아 해당 문장은 제외.","r":"","s":[{"n":1,"e":"These young ponies play.","k":"이 어린 조랑말들이 놀아요.","w":[["pony","조랑말"],["young","어린"]]},{"n":2,"e":"They live in a field.","k":"들판에서 살아요.","w":[["field","들판"]]},{"n":3,"e":"Ponies live in a group called a herd.","k":"조랑말은 무리(herd)를 이루어 살아요.","w":[["group","무리"],["herd","가축의 무리"]]},{"n":4,"e":"There are ponies with light hair. There are ponies with dark hair.","k":"밝은 털을 가진 조랑말도 있고, 어두운 털을 가진 조랑말도 있어요.","w":[["light","밝은"],["dark","어두운"],["hair","털"]]},{"n":5,"e":"Some ponies have short hair. Some ponies have long hair.","k":"어떤 조랑말은 짧은 털을, 어떤 조랑말은 긴 털을 가졌어요.","w":[["short","짧은"],["long","긴"]]},{"n":6,"e":"All ponies eat grass. They eat hay, too.","k":"모든 조랑말은 풀을 먹어요. 건초도 먹어요.","w":[["hay","건초"]]}]},"m49cpK8-318":{"c":"자동 자막 기준. 마지막 부분이 끊겨 확인 가능한 문장만 수록.","r":"","s":[{"n":1,"e":"Pete loves go-karts. Go-karts go fast.","k":"피트는 카트를 좋아해요. 카트는 빠르게 달려요.","w":[["go-kart","카트(경주용 소형차)"],["fast","빠른"]]},{"n":2,"e":"Pete wants to make a go-kart. He will make the fastest one.","k":"피트는 카트를 만들고 싶어요. 가장 빠른 카트를 만들 거예요.","w":[["make","만들다"],["fastest","가장 빠른"]]},{"n":3,"e":"He finds an old wooden box. \"This is perfect,\" he says.","k":"낡은 나무 상자를 찾아요. \"이게 딱이야.\" 피트가 말해요.","w":[["wooden","나무로 만든"],["perfect","완벽한"]]},{"n":4,"e":"Pete sits in the box. \"Zoom!\" says Pete. But he can't see the road.","k":"피트가 상자에 앉아요. \"붕!\" 피트가 말해요. 그런데 길이 보이지 않아요.","w":[["zoom","붕(빠르게 가는 소리)"],["road","길"]]},{"n":5,"e":"\"You need a seat,\" says Bob.","k":"\"의자가 필요해.\" 밥이 말해요.","w":[["need","필요하다"],["seat","좌석"]]},{"n":6,"e":"\"You need wheels,\" says Callie.","k":"\"바퀴가 필요해.\" 캘리가 말해요.","w":[["wheel","바퀴"]]},{"n":7,"e":"The go-kart rolls a little. But Pete's go-kart is slow.","k":"카트가 조금 굴러가요. 그런데 피트의 카트는 느려요.","w":[["roll","굴러가다"],["slow","느린"]]},{"n":8,"e":"Pete finds the tallest hill.","k":"피트가 가장 높은 언덕을 찾아요.","w":[["tallest","가장 높은"],["hill","언덕"]]}]},"_lXiM7zzutE":{"c":"자동 자막 기준. 도입부 책 정보 낭독은 제외.","r":"","s":[{"n":1,"e":"Where do some animals live?","k":"어떤 동물들은 어디에 살까요?","w":[["where","어디에"],["live","살다"]]},{"n":2,"e":"Animals live here. A bear lives here.","k":"동물들이 여기 살아요. 곰이 여기 살아요.","w":[["bear","곰"]]},{"n":3,"e":"A deer lives here.","k":"사슴이 여기 살아요.","w":[["deer","사슴"]]},{"n":4,"e":"A fish lives here.","k":"물고기가 여기 살아요.","w":[["fish","물고기"]]},{"n":5,"e":"A frog lives here.","k":"개구리가 여기 살아요.","w":[["frog","개구리"]]},{"n":6,"e":"A worm lives here.","k":"지렁이가 여기 살아요.","w":[["worm","지렁이"]]},{"n":7,"e":"A bee lives here.","k":"벌이 여기 살아요.","w":[["bee","벌"]]},{"n":8,"e":"A child lives here.","k":"아이가 여기 살아요.","w":[["child","아이"]]},{"n":9,"e":"Good job.","k":"잘했어요.","w":[["Good job","잘했어"]]}]},"16ow6fNmiBM":{"c":"자동 자막 기준. 도입 인사말과 칭찬 멘트는 제외.","r":"","s":[{"n":1,"e":"Kids can do a lot at the library.","k":"아이들은 도서관에서 많은 것을 할 수 있어요.","w":[["kids","아이들"],["library","도서관"]]},{"n":2,"e":"Kids can read books at the library.","k":"아이들은 도서관에서 책을 읽을 수 있어요.","w":[["read","읽다"],["book","책"]]},{"n":3,"e":"Kids can make art at the library.","k":"아이들은 도서관에서 미술을 할 수 있어요.","w":[["make art","미술 활동을 하다"]]},{"n":4,"e":"Kids can listen to a story at the library.","k":"아이들은 도서관에서 이야기를 들을 수 있어요.","w":[["listen to","~을 듣다"]]},{"n":5,"e":"Kids play games at the library.","k":"아이들은 도서관에서 게임을 해요.","w":[["play games","게임을 하다"]]},{"n":6,"e":"Kids make friends at the library.","k":"아이들은 도서관에서 친구를 사귀어요.","w":[["make friends","친구를 사귀다"]]},{"n":7,"e":"The library is a fun place to visit.","k":"도서관은 가 보기 좋은 재미있는 곳이에요.","w":[["fun","재미있는"],["place","장소"]]}]},"tjR7iFrIfI0":{"c":"자동 자막 기준. 동물 이름(mountain lion 등) 일부가 잘못 인식되어 해당 문장은 제외.","r":"","s":[{"n":1,"e":"Welcome to the rain forest.","k":"열대 우림에 온 것을 환영해요.","w":[["rain forest","열대 우림"]]},{"n":2,"e":"It rains a lot. There are tall trees. There is hot sun.","k":"비가 많이 와요. 키 큰 나무들이 있어요. 뜨거운 해가 있어요.","w":[["rain","비"],["tall","키 큰"],["sun","해"]]},{"n":3,"e":"The rain forest is a good place for animals.","k":"열대 우림은 동물에게 좋은 곳이에요.","w":[["animal","동물"]]},{"n":4,"e":"Sloths swing. Snakes slither. Macaws call.","k":"나무늘보는 매달려 흔들여요. 뱀은 미끄러지듯 기어가요. 앵무새는 소리쳐 울어요.","w":[["sloth","나무늘보"],["swing","흔들리다"],["slither","미끄러지듯 기다"],["macaw","마코앵무"]]},{"n":5,"e":"Butterflies flutter. Monkeys climb.","k":"나비는 팔랑팔랑 날아요. 원숭이는 올라가요.","w":[["flutter","팔랑팔랑 날다"],["monkey","원숭이"]]},{"n":6,"e":"Some animals here are big. Some are small.","k":"여기 사는 동물 중에는 큰 동물도 있고 작은 동물도 있어요.","w":[["some","어떤"],["small","작은"]]},{"n":7,"e":"Sloths swing in trees. The rain forest is home to them all.","k":"나무늘보는 나무에 매달려 있어요. 열대 우림은 이 모든 동물의 집이에요.","w":[["in trees","나무 위에"],["home","집, 서식지"]]}]},"sA9F3P3_ljw":{"c":"자동 자막이 한국어/영어가 뒤섞여 인식되어 문장을 확인할 수 없음 → 문장 미수록.","r":"","s":[]},"707PAdR6VPw":{"c":"자동 자막이 등장인물 이름만 조각조각 인식되어 문장 확인 불가 → 문장 미수록.","r":"","s":[]}};
+</script>
+<script>
+'use strict';
+const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+const BRANDS={
+  raz:{n:'Reading A-Z (RAZ)',em:'🅰️',c1:'#ffe6c7',c2:'#ffcf9d',accent:'#e07a1f',sub:'미국 Reading A-Z 리딩 교재'},
+  ort:{n:'Oxford Reading Tree (ORT)',em:'🌳',c1:'#dcf4d2',c2:'#bfe8b2',accent:'#3a8a3f',sub:'옥스퍼드 리딩트리 · Biff, Chip, Kipper'},
+  icr:{n:'I Can Read!',em:'🐶',c1:'#dbe8ff',c2:'#c3d9ff',accent:'#2b6cd4',sub:'Biscuit · Pete the Cat · Little Critter'},
+  ngk:{n:'National Geographic Kids',em:'🦁',c1:'#ffe0e6',c2:'#ffc7d3',accent:'#d0436a',sub:'내셔널지오그래픽 키즈 리더스'}
+};
+const LEVEL_ORDER={
+  raz:['Level aa','Level A','Level B','Level C','Level D','Level E','Level F','Level G','Level H','Level I','Level J','Level K','Level L','Level M','Level N','Level P','Level Q','Level R','Level T','Level U','Level W','Level X','Level Y','Level Z'],
+  ort:['Stage 1','Stage 1+','Stage 2','Stage 3','Stage 4','Stage 5','Stage 6','Stage 7','Stage 8','Stage 9'],
+  icr:['My Very First','My First','Level 1','Level 2','Level 3'],
+  ngk:['Pre-reader','Level 1','Level 2','Level 3']
+};
+const GROUP={ // 상세 레벨 → 레벨 칩(묶음)
+  icr:l=>l.indexOf('My Very First')===0?'My Very First':(l.indexOf('My First')===0?'My First':l)
+};
+const DIFFS=['전체','초급','중급','고급'];
+const PRIORITY=['Shapes in Nature','Hello, Butterfly','Making Faces','Peg the Chick and the Balloon','Play, Kitty!'];
+
+/* ---------- 상태 ---------- */
+let curBrand=null, curDiff='전체', curLevel='전체', curSearch='', curBook=null, bookFrom='brand';
+let playQueue=[], playIdx=0, playingAll=false;
+
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),2200);}
+function show(id){$$('.screen').forEach(s=>s.classList.toggle('active',s.id===id));window.scrollTo(0,0);}
+function thumb(v){return 'https://i.ytimg.com/vi/'+v+'/mqdefault.jpg';}
+function grp(b,l){return (GROUP[b]||(x=>x))(l);}
+function lvIndex(b,l){const a=LEVEL_ORDER[b]||[];const i=a.indexOf(grp(b,l));return i<0?99:i;}
+
+/* ---------- 홈 ---------- */
+function renderHome(){
+  const total=BOOKS.length;
+  $('#totalCnt').textContent=total+'권';
+  $('#footVid').textContent=total;
+  $('#footSent').textContent=BOOKS.filter(b=>b.n>0).length;
+  $('#brandCards').innerHTML=Object.keys(BRANDS).map(k=>{
+    const bs=BOOKS.filter(b=>b.b===k), d={초급:0,중급:0,고급:0};
+    bs.forEach(b=>d[b.d]=(d[b.d]||0)+1);
+    return '<button class="brand" data-brand="'+k+'" style="--c1:'+BRANDS[k].c1+';--c2:'+BRANDS[k].c2+'">'
+      +'<span class="em">'+BRANDS[k].em+'</span>'
+      +'<span class="tx"><span class="nm">'+esc(BRANDS[k].n)+'</span>'
+      +'<span class="sb">'+bs.length+'권 · 초급 '+d.초급+' · 중급 '+d.중급+' · 고급 '+d.고급+'</span></span>'
+      +'<span class="go">›</span></button>';
+  }).join('');
+  $$('#brandCards .brand').forEach(el=>el.onclick=()=>openBrand(el.dataset.brand));
+}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+/* ---------- 브랜드 화면 ---------- */
+function openBrand(k){
+  curBrand=k; curDiff='전체'; curLevel='전체'; curSearch='';
+  $('#brandSearch').value='';
+  const B=BRANDS[k];
+  $('#brandTitle').textContent=B.n;
+  $('#brandMeta').textContent=B.sub;
+  document.documentElement.style.setProperty('--accent',B.accent);
+  const all=BOOKS.filter(b=>b.b===k);
+  $('#diffTabs').innerHTML=DIFFS.map(d=>{
+    const n=d==='전체'?all.length:all.filter(b=>b.d===d).length;
+    return '<button class="tab'+(d===curDiff?' on':'')+'" data-diff="'+d+'">'+d+'<span class="cnt">'+n+'권</span></button>';
+  }).join('');
+  $$('#diffTabs .tab').forEach(el=>el.onclick=()=>{curDiff=el.dataset.diff;curLevel='전체';syncBrand();});
+  syncBrand();
+  show('brand');
+}
+function visibleBooks(){
+  return BOOKS.filter(b=>b.b===curBrand)
+    .filter(b=>curDiff==='전체'||b.d===curDiff)
+    .filter(b=>curLevel==='전체'||grp(b.b,b.l)===curLevel)
+    .filter(b=>!curSearch||matchTitle(b.t,curSearch))
+    .sort((a,b)=>(lvIndex(a.b,a.l)-lvIndex(b.b,b.l)) || a.t.localeCompare(b.t));
+}
+function syncBrand(){
+  $$('#diffTabs .tab').forEach(el=>el.classList.toggle('on',el.dataset.diff===curDiff));
+  const base=BOOKS.filter(b=>b.b===curBrand).filter(b=>curDiff==='전체'||b.d===curDiff);
+  const levels=(LEVEL_ORDER[curBrand]||[]).filter(l=>base.some(b=>grp(b.b,b.l)===l));
+  $('#levelChips').innerHTML=['전체'].concat(levels).map(l=>{
+    const n=l==='전체'?base.length:base.filter(b=>grp(b.b,b.l)===l).length;
+    return '<button class="lchip'+(l===curLevel?' on':'')+'" data-lv="'+esc(l)+'">'+esc(l)+' <b style="opacity:.6">'+n+'</b></button>';
+  }).join('');
+  $$('#levelChips .lchip').forEach(el=>el.onclick=()=>{curLevel=el.dataset.lv;syncBrand();});
+  renderBrandList();
+}
+function renderBrandList(){
+  const list=visibleBooks();
+  $('#listInfo').textContent=(curSearch?'“'+curSearch+'” 검색 결과 ':'')+list.length+'권';
+  if(!list.length){$('#bookList').innerHTML='<li class="empty">조건에 맞는 책이 없어요.<br>난이도나 레벨을 다시 골라 보세요.</li>';return;}
+  $('#bookList').innerHTML=list.map(b=>{
+    const B=BRANDS[b.b];
+    return '<li><button class="bitem" data-v="'+b.v+'">'
+      +'<span class="thumb"><img src="'+thumb(b.v)+'" alt="" loading="lazy" onerror="this.parentNode.classList.add(\'noimg\')"></span>'
+      +'<span class="tx"><span class="t">'+(b.p?'⭐ ':'')+esc(b.t)+'</span>'
+      +'<span class="m"><span class="lv">'+esc(b.l)+'</span>'
+      +(b.n?'<span class="bd">📖 문장·해석</span>':'')
+      +'<span class="du">'+esc(b.du||'')+'</span></span></span>'
+      +'<span class="arw" style="font-size:1.2rem;color:#c0b39c">›</span></button></li>';
+  }).join('');
+  $$('#bookList .bitem').forEach(el=>el.onclick=()=>{
+    const b=BOOKS.find(x=>x.v===el.dataset.v); if(b) openBook(b,{from:'brand'});
+  });
+}
+
+/* ---------- 제목 매칭 ---------- */
+function norm(s){return String(s).toLowerCase().replace(/[’'`]/g,'').replace(/[^a-z0-9]+/g,' ').trim();}
+function matchTitle(title,q){
+  const t=norm(title), n=norm(q);
+  if(!n) return true;
+  if(t.indexOf(n)>=0) return true;
+  const tw=t.split(' ').filter(Boolean), qw=n.split(' ').filter(Boolean);
+  return qw.every(w=>tw.some(x=>x===w||(w.length>2&&x.indexOf(w)===0)));
+}
+
+/* ---------- 책 화면 ---------- */
+function openBook(b,opt){
+  curBook=b; stopAll(); bookFrom=(opt&&opt.from)||'brand';
+  const B=BRANDS[b.b];
+  $('#bookTitle').textContent=b.t;
+  $('#bookMeta').textContent=B.n+' · '+b.l+' · '+b.d+(b.du?' · '+b.du:'');
+  $('#ytPlayer').src='https://www.youtube-nocookie.com/embed/'+b.v+'?rel=0&playsinline=1&modestbranding=1';
+  $('#ytLink').href='https://www.youtube.com/watch?v='+b.v;
+  const s=SENT[b.v];
+  const has=!!(s&&s.s&&s.s.length);
+  $('#sentHead').classList.toggle('hidden',!has);
+  $('#readCtrl').classList.toggle('hidden',!has);
+  $('#sentList').innerHTML='';
+  $('#sentCaution').classList.add('hidden');
+  if(has) renderSentences(s);
+  else {
+    $('#pageHint').textContent=(s&&s.r?'이 책은 자동 자막 인식이 어려워 문장을 넣지 못했어요.':'이 책은 아직 준비된 문장이 없어요.')
+      +' 펼친 페이지를 사진으로 찍으면 문장을 읽어 줄게요.';
+  }
+  if(has) $('#pageHint').textContent='다른 페이지도 사진으로 찍어 읽어 볼 수 있어요.';
+  // 해석 토글 초기화
+  $('#koToggle').classList.remove('on'); $('#koToggle').textContent='한국어 해석 보기';
+  $$('#sentList .ko').forEach(e=>e.classList.add('hidden'));
+  $('#pageSent').innerHTML=''; $('#pageStat').classList.add('hidden'); $('#pageProg').classList.add('hidden');
+  show('book');
+}
+function renderSentences(s){
+  $('#sentCnt').textContent=s.s.length+'문장';
+  $('#sentList').innerHTML=s.s.map((x,i)=>{
+    return '<li class="sent"><span class="num">'+x.n+'</span><span class="body">'
+      +'<p class="en">'+esc(x.e)+'</p>'
+      +'<p class="ko hidden">'+esc(x.k)+'</p>'
+      +'<span class="btns"><button data-say="'+i+'">🔊 듣기</button><button class="slow" data-say="'+i+'" data-slow="1">🐢 천천히</button></span>'
+      +(x.w&&x.w.length?'<span class="words">'+x.w.map(w=>'<button class="wchip" data-word="'+esc(w[0])+'" data-mean="'+esc(w[1])+'">'+esc(w[0])+'</button>').join('')+'</span>':'')
+      +'</span></li>';
+  }).join('');
+  $$('#sentList [data-say]').forEach(el=>el.onclick=()=>{
+    const x=s.s[+el.dataset.say]; if(x) speak(x.e, el.dataset.slow?0.6:0.9);
+  });
+  $$('#sentList .wchip').forEach(el=>el.onclick=()=>{
+    if(!el.classList.contains('open')){
+      el.classList.add('open');
+      el.innerHTML=esc(el.dataset.word)+' <span class="wm">· '+esc(el.dataset.mean)+'</span>';
+    }
+    speak(el.dataset.word,0.85);
+  });
+  if(s.c){$('#sentCaution').textContent='참고: '+s.c;$('#sentCaution').classList.remove('hidden');}
+}
+
+/* ---------- TTS ---------- */
+let voice=null;
+function pickVoice(){
+  const vs=(window.speechSynthesis&&speechSynthesis.getVoices())||[];
+  if(!vs.length) return;
+  const pref=['Samantha','Google US English','Microsoft Aria','Microsoft Jenny','Karen','Moira','Daniel','Alex'];
+  let best=null;
+  for(const p of pref){best=vs.find(v=>v.name&&v.name.indexOf(p)>=0); if(best) break;}
+  if(!best) best=vs.find(v=>/^en[-_]US/i.test(v.lang))||vs.find(v=>/^en/i.test(v.lang));
+  voice=best||null;
+}
+if(window.speechSynthesis){pickVoice();speechSynthesis.onvoiceschanged=pickVoice;}
+function speak(text,rate){
+  if(!window.speechSynthesis){toast('이 브라우저에서는 소리가 나오지 않아요');return;}
+  speechSynthesis.cancel(); playingAll=false; $('#playAll').classList.remove('playing'); $('#playAll').textContent='🔊 전체 이어 듣기';
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang='en-US'; u.rate=rate||0.9; u.pitch=1.03; if(voice) u.voice=voice;
+  speechSynthesis.speak(u);
+}
+function stopAll(){ if(window.speechSynthesis) speechSynthesis.cancel();
+  playingAll=false; const p=$('#playAll'); if(p){p.classList.remove('playing');p.textContent='🔊 전체 이어 듣기';} }
+
+/* ---------- 해석 토글 · 전체 듣기 ---------- */
+$('#koToggle').onclick=function(){
+  const on=!this.classList.contains('on');
+  this.classList.toggle('on',on);
+  this.textContent=on?'한국어 해석 숨기기':'한국어 해석 보기';
+  $$('#sentList .ko').forEach(e=>e.classList.toggle('hidden',!on));
+};
+$('#playAll').onclick=function(){
+  const s=curBook&&SENT[curBook.v]; if(!s||!s.s.length) return;
+  if(playingAll){stopAll();return;}
+  playingAll=true; playIdx=0;
+  this.classList.add('playing'); this.textContent='⏹ 멈추기';
+  const btn=this;
+  const next=()=>{
+    if(!playingAll) return;
+    if(playIdx>=s.s.length){stopAll();return;}
+    const x=s.s[playIdx++];
+    const u=new SpeechSynthesisUtterance(x.e);
+    u.lang='en-US'; u.rate=0.85; u.pitch=1.03; if(voice) u.voice=voice;
+    u.onend=()=>setTimeout(next,700); u.onerror=()=>stopAll();
+    speechSynthesis.speak(u);
+  };
+  next();
+};
+
+/* ---------- OCR 엔진 ---------- */
+let tWorker=null, tPromise=null, ocrCb=null;
+const T_BASE='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/';
+function loadScript(src){
+  return new Promise((res,rej)=>{
+    const s=document.createElement('script'); s.src=src; s.async=true;
+    s.onload=res; s.onerror=()=>rej(new Error('script'));
+    document.head.appendChild(s);
+  });
+}
+async function worker(){
+  if(tWorker) return tWorker;
+  if(!tPromise){
+    tPromise=(async()=>{
+      if(!window.Tesseract) await loadScript(T_BASE+'tesseract.min.js');
+      tWorker=await Tesseract.createWorker('eng',1,{
+        workerPath:T_BASE+'worker.min.js',
+        corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1',
+        langPath:'https://tessdata.projectnaptha.com/4.0.0',
+        logger:m=>{ if(ocrCb) ocrCb(m); }
+      });
+      return tWorker;
+    })();
+    tPromise.catch(()=>{tPromise=null;});
+  }
+  return tPromise;
+}
+function fileToImage(file){
+  return new Promise((res,rej)=>{
+    const url=URL.createObjectURL(file); const im=new Image();
+    im.onload=()=>{res(im);};
+    im.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('img'));};
+    im.src=url;
+  });
+}
+function prepped(img,maxSide,contrast){
+  const long=Math.max(img.naturalWidth||img.width,img.naturalHeight||img.height)||1;
+  const scale=Math.min(2.2,Math.max(1,maxSide/long));
+  const w=Math.round((img.naturalWidth||img.width)*scale), h=Math.round((img.naturalHeight||img.height)*scale);
+  const c=document.createElement('canvas'); c.width=w; c.height=h;
+  const x=c.getContext('2d');
+  x.fillStyle='#fff'; x.fillRect(0,0,w,h);
+  x.drawImage(img,0,0,w,h);
+  try{
+    const d=x.getImageData(0,0,w,h), a=d.data, k=contrast||1.45;
+    for(let i=0;i<a.length;i+=4){
+      let v=0.299*a[i]+0.587*a[i+1]+0.114*a[i+2];
+      v=(v-128)*k+128+10;
+      v=v<0?0:(v>255?255:v);
+      a[i]=a[i+1]=a[i+2]=v;
+    }
+    x.putImageData(d,0,0);
+  }catch(e){}
+  return c;
+}
+function cropTop(canvas,frac){
+  const h=Math.round(canvas.height*frac);
+  const c=document.createElement('canvas'); c.width=canvas.width; c.height=h;
+  c.getContext('2d').drawImage(canvas,0,0,canvas.width,h,0,0,canvas.width,h);
+  return c;
+}
+async function ocrCanvas(canvas,onProgress){
+  const w=await worker();
+  ocrCb=onProgress||null;
+  const r=await w.recognize(canvas);
+  ocrCb=null;
+  return (r&&r.data&&r.data.text)||'';
+}
+
+/* ---------- 퍼지 매칭 ---------- */
+const STOP=new Set(['read','aloud','book','books','level','stage','series','by','author','illustrated','the','a','an','of','and','for','with','my','very','first','i','can','raz','reading','oxford','tree','national','geographic','kids','set','story','stories','song','songs','songbook','picture','pictures','collection','treasury','library','1','2','3']);
+const BRAND_HINT=[
+  [/reading\s*a\s*-?\s*z|raz/i,'raz'],
+  [/oxford|reading\s*tree|\bort\b|biff|chip|kipper/i,'ort'],
+  [/i\s*can\s*read|biscuit|pete\s*the|little\s*critter/i,'icr'],
+  [/national\s*geographic|nat\s*geo/i,'ngk']
+];
+function tokens(s){return norm(s).split(' ').filter(t=>t.length>1);}
+function lev(a,b){
+  const m=a.length,n=b.length; if(Math.abs(m-n)>2) return 99;
+  const dp=new Array(n+1); for(let j=0;j<=n;j++)dp[j]=j;
+  for(let i=1;i<=m;i++){let prev=dp[0];dp[0]=i;
+    for(let j=1;j<=n;j++){const tmp=dp[j];dp[j]=Math.min(dp[j]+1,dp[j-1]+1,prev+(a[i-1]===b[j-1]?0:1));prev=tmp;}}
+  return dp[n];
+}
+function dice(a,b){
+  const ga=[];for(let i=0;i<a.length-1;i++)ga.push(a.substr(i,2));
+  const gb=[];for(let i=0;i<b.length-1;i++)gb.push(b.substr(i,2));
+  if(!ga.length||!gb.length) return a===b?1:0;
+  const m=new Map(); ga.forEach(g=>m.set(g,(m.get(g)||0)+1));
+  let hit=0; gb.forEach(g=>{const c=m.get(g)||0; if(c){hit++;m.set(g,c-1);}});
+  return 2*hit/(ga.length+gb.length);
+}
+function candidates(text,limit){
+  const ot=tokens(text), on=norm(text);
+  const brandHit=[];
+  BRAND_HINT.forEach(([re,k])=>{if(re.test(text)) brandHit.push(k);});
+  const scored=BOOKS.map(b=>{
+    const tt=tokens(b.t), tn=norm(b.t);
+    const core=tt.filter(t=>!STOP.has(t));
+    const need=core.length?core:tt;
+    if(!need.length) return {b,s:0};
+    let hit=0;
+    need.forEach(t=>{ if(ot.some(o=>o===t||(t.length>3&&lev(o,t)<=1))) hit++; });
+    const cover=hit/need.length;
+    let win=0;
+    for(let i=0;i+need.length<=ot.length;i++){
+      win=Math.max(win,dice(ot.slice(i,i+need.length).join(''),tn.replace(/ /g,'')));
+    }
+    const cont=(tn.replace(/ /g,'').length>=5 && on.replace(/ /g,'').indexOf(tn.replace(/ /g,''))>=0)?0.3:0;
+    const bBoost=brandHit.indexOf(b.b)>=0?0.12:0;
+    return {b,s:0.62*cover+0.38*win+cont+bBoost};
+  });
+  scored.sort((x,y)=>y.s-x.s);
+  const out=[];
+  for(const x of scored){
+    if(out.length>=limit) break;
+    if(x.s<0.42) break;
+    if(out.some(o=>o.b.t===x.b.t)) continue;
+    out.push(x);
+  }
+  return out;
+}
+
+/* ---------- 표지로 찾기 ---------- */
+function setStat(el,txt,err,progEl,pct){
+  el.textContent=txt; el.classList.remove('hidden'); el.classList.toggle('err',!!err);
+  if(progEl){ progEl.classList.toggle('hidden',pct==null); if(pct!=null) progEl.querySelector('i').style.width=Math.max(4,pct)+'%'; }
+}
+async function findFromImage(file){
+  if(!file) return;
+  const prev=$('#findPreview');
+  const url=URL.createObjectURL(file);
+  prev.innerHTML='<img src="'+url+'" alt="찍은 표지 사진">'; prev.classList.remove('hidden');
+  $('#candWrap').innerHTML=''; $('#omniResults').innerHTML='';
+  const stat=$('#findStat'), prog=$('#findProg');
+  setStat(stat,'사진을 불러오는 중이에요…',false,prog,8);
+  let img;
+  try{ img=await fileToImage(file); }
+  catch(e){ setStat(stat,'사진을 열지 못했어요. 다른 사진으로 해 보세요.',true,prog,null); return; }
+  const big=prepped(img,1500,1.5);
+  setStat(stat,'글자를 읽는 중이에요… (처음 한 번은 준비에 조금 걸려요)',false,prog,15);
+  let text='';
+  try{
+    text=await ocrCanvas(big,m=>{
+      if(m&&m.status==='recognizing text') setStat(stat,'글자를 읽는 중이에요… '+Math.round((m.progress||0)*100)+'%',false,prog,25+Math.round((m.progress||0)*60));
+      else if(m&&m.status) setStat(stat,ocrLabel(m.status),false,prog,null);
+    });
+  }catch(e){
+    setStat(stat,'사진 인식 도구를 불러오지 못했어요. 인터넷 연결을 확인하거나 아래 제목 검색을 써 주세요.',true,prog,null);
+    return;
+  }
+  let cands=candidates(text,3);
+  if(!cands.length){
+    setStat(stat,'책 제목을 다시 한 번 찾아보는 중이에요…',false,prog,90);
+    try{ text=text+'\n'+(await ocrCanvas(cropTop(big,0.62),null)); }catch(e){}
+    cands=candidates(text,3);
+  }
+  setStat(stat,'',false,prog,null); stat.classList.add('hidden');
+  if(cands.length) renderCands(cands);
+  else{
+    $('#candWrap').innerHTML='<div class="fallback" style="margin-top:14px"><h3>😅 표지에서 제목을 찾지 못했어요</h3>'
+      +'<p>빛 반사가 있거나 글씨가 작으면 잘 안 읽혀요. 제목을 아래에 적어 주시면 바로 찾아 드릴게요.</p></div>';
+    $('#omniSearch').focus();
+  }
+}
+function ocrLabel(s){
+  return ({'loading tesseract core':'준비 중…','initializing tesseract':'준비 중…','loading language traineddata':'영어 글자 준비 중…',
+    'initializing api':'준비 중…','recognizing text':'글자를 읽는 중이에요…'})[s]||'글자를 읽는 중이에요…';
+}
+function renderCands(cands){
+  $('#candWrap').innerHTML='<p class="candtitle">이 책이에요! 맞는 책을 눌러 주세요</p>'
+    +cands.map((c,i)=>{const b=c.b,B=BRANDS[b.b];
+      return '<button class="cand'+(i===0?' top':'')+'" data-v="'+b.v+'">'
+        +'<span class="thumb" style="background-image:url('+thumb(b.v)+')"></span>'
+        +'<span class="tx"><span class="t">'+esc(b.t)+'</span>'
+        +'<span class="m">'+esc(B.n)+' · '+esc(b.l)+' · '+esc(b.d)+(b.n?' · 📖 문장·해석':'')+'</span></span>'
+        +'<span class="ok">보기</span></button>';
+    }).join('');
+  $$('#candWrap .cand').forEach(el=>el.onclick=()=>{
+    const b=BOOKS.find(x=>x.v===el.dataset.v); if(b) openBook(b,{from:'find'});
+  });
+}
+
+/* ---------- 책 페이지 사진 읽기 ---------- */
+async function readPage(file){
+  if(!file||!curBook) return;
+  const stat=$('#pageStat'), prog=$('#pageProg');
+  $('#pageSent').innerHTML='';
+  setStat(stat,'사진을 불러오는 중이에요…',false,prog,10);
+  let img;
+  try{ img=await fileToImage(file); }
+  catch(e){ setStat(stat,'사진을 열지 못했어요. 다시 찍어 주세요.',true,prog,null); return; }
+  const big=prepped(img,1600,1.5);
+  setStat(stat,'페이지 글자를 읽는 중이에요…',false,prog,20);
+  let text='';
+  try{
+    text=await ocrCanvas(big,m=>{
+      if(m&&m.status==='recognizing text') setStat(stat,'페이지 글자를 읽는 중이에요… '+Math.round((m.progress||0)*100)+'%',false,prog,25+Math.round((m.progress||0)*65));
+    });
+  }catch(e){
+    setStat(stat,'사진 인식 도구를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.',true,prog,null); return;
+  }
+  stat.classList.add('hidden'); prog.classList.add('hidden');
+  const lines=pageSentences(text);
+  if(!lines.length){
+    setStat(stat,'글자를 찾지 못했어요. 책을 더 가까이, 밝게 찍어 주세요.',true,prog,null); return;
+  }
+  $('#pageSent').innerHTML=lines.map((l,i)=>
+    '<div class="ocrline"><p class="tx">'+esc(l)+'</p>'
+    +'<span class="spk"><button data-say="'+i+'">🔊</button><button class="slow" data-say="'+i+'" data-slow="1">🐢</button></span></div>')
+    .join('');
+  $$('#pageSent [data-say]').forEach(el=>el.onclick=()=>speak(lines[+el.dataset.say],el.dataset.slow?0.6:0.9));
+  toast(lines.length+'개 문장을 찾았어요!');
+}
+function pageSentences(t){
+  const clean=String(t).replace(/[|_~^]+/g,' ').replace(/\s+/g,' ').trim();
+  const parts=clean.match(/[^.!?]+[.!?]*/g)||[];
+  return parts.map(s=>s.trim())
+    .filter(s=>s.length>1 && /[A-Za-z]{2}/.test(s) && !/^[^A-Za-z]*$/.test(s))
+    .slice(0,14);
+}
+
+/* ---------- 이벤트 ---------- */
+$('#btnPhoto').onclick=()=>{show('find');$('#candWrap').innerHTML='';$('#findPreview').classList.add('hidden');$('#findPreview').innerHTML='';$('#findStat').classList.add('hidden');$('#findProg').classList.add('hidden');};
+$('#btnStar').onclick=()=>{
+  const list=PRIORITY.map(t=>BOOKS.find(x=>x.t===t)).filter(Boolean);
+  $('#starList').innerHTML=list.map(b=>{
+    const B=BRANDS[b.b];
+    return '<button class="starcard" data-v="'+b.v+'">'
+      +'<span class="thumb" style="background-image:url('+thumb(b.v)+')"></span>'
+      +'<span class="tx"><span class="t">'+esc(b.t)+'</span>'
+      +'<span class="m"><span>'+esc(B.n)+'</span><span>'+esc(b.l)+'</span>'
+      +(b.n?'<span class="bd">📖 문장·해석</span>':'')+'</span></span>'
+      +'<span class="ok">읽기</span></button>';
+  }).join('');
+  $$('#starList .starcard').forEach(el=>el.onclick=()=>{
+    const b=BOOKS.find(x=>x.v===el.dataset.v); if(b) openBook(b,{from:'star'});
+  });
+  show('star');
+};
+$('#starBack').onclick=()=>{show('home');};
+$('#starHome').onclick=()=>{show('home');};
+$('#brandBack').onclick=()=>{show('home');};
+$('#brandHome').onclick=()=>{show('home');};
+$('#bookBack').onclick=()=>{stopAll();$('#ytPlayer').src='';show(bookFrom||'brand');};
+$('#bookHome').onclick=()=>{stopAll();$('#ytPlayer').src='';show('home');};
+window.addEventListener('pagehide',()=>{try{speechSynthesis.cancel();}catch(e){}});
+$('#findBack').onclick=()=>{show('home');};
+$('#findHome').onclick=()=>{show('home');};
+$('#brandSearch').oninput=function(){curSearch=this.value.trim();renderBrandList();};
+
+$('#findCam').onclick=()=>$('#findCamInput').click();
+$('#findPick').onclick=()=>$('#findPickInput').click();
+$('#findCamInput').onchange=function(){findFromImage(this.files[0]);this.value='';};
+$('#findPickInput').onchange=function(){findFromImage(this.files[0]);this.value='';};
+$('#pageCam').onclick=()=>$('#pageCamInput').click();
+$('#pagePick').onclick=()=>$('#pagePickInput').click();
+$('#pageCamInput').onchange=function(){readPage(this.files[0]);this.value='';};
+$('#pagePickInput').onchange=function(){readPage(this.files[0]);this.value='';};
+
+function renderOmni(){
+  const q=$('#omniSearch').value.trim();
+  const box=$('#omniResults');
+  if(!q){box.innerHTML='';return;}
+  const list=BOOKS.filter(b=>matchTitle(b.t,q)).sort((a,b)=>(b.p-a.p)||a.t.localeCompare(b.t)).slice(0,14);
+  if(!list.length){box.innerHTML='<p class="empty">그런 제목이 없어요. 영어로 조금만 적어 주세요.</p>';return;}
+  box.innerHTML=list.map(b=>{
+    const B=BRANDS[b.b];
+    return '<button class="res" data-v="'+b.v+'"><span class="thumb" style="background-image:url('+thumb(b.v)+')"></span>'
+      +'<span class="tx"><span class="t">'+esc(b.t)+'</span><span class="m">'+esc(B.n)+' · '+esc(b.l)+'</span></span></button>';
+  }).join('');
+  $$('#omniResults .res').forEach(el=>el.onclick=()=>{
+    const b=BOOKS.find(x=>x.v===el.dataset.v); if(b) openBook(b,{from:'find'});
+  });
+}
+$('#omniSearch').oninput=renderOmni;
+
+/* ---------- 시작 ---------- */
+renderHome();
+</script>
+</body>
+</html>
