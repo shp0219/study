@@ -553,16 +553,18 @@
     function step(){
       if (swStop || k >= list.length) { done(); return; }
       mark(k - 1, false); mark(k, true);
+      var advanced = false;
+      function next(){ if (advanced) return; advanced = true; if (swStop) return; k++; setTimeout(step, 420); }
       try{
         var u = new SpeechSynthesisUtterance(list[k].en);
         u.lang = 'en-US'; u.rate = .84;
         var v = voices.filter(function(x){ return (x.lang||'').toLowerCase().indexOf('en') === 0; })[0];
         if (v) u.voice = v;
-        u.onend = function(){ if (swStop) return; k++; setTimeout(step, 420); };
-        u.onerror = function(){ done(); };
+        u.onend = next; u.onerror = next;
         window.speechSynthesis.cancel();
         window.speechSynthesis.speak(u);
-      }catch(e){ done(); }
+        setTimeout(function(){ if (!advanced) next(); }, Math.max(1800, list[k].en.length * 80));
+      }catch(e){ setTimeout(function(){ if (!advanced) next(); }, 1400); }
     }
     step();
   }
