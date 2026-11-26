@@ -202,6 +202,10 @@
   .sent.on{background:#fff4dc;box-shadow:0 0 0 3px #ffd166 inset}
 
   .empty{padding:40px 10px;text-align:center;color:var(--ink3);font-weight:800}
+  .toast{position:fixed;left:50%;bottom:34px;transform:translateX(-50%) translateY(20px);background:#2f2417;color:#fff;
+    border-radius:999px;padding:13px 22px;font-weight:900;font-size:17px;box-shadow:0 8px 24px rgba(0,0,0,.25);opacity:0;
+    transition:all .3s ease;z-index:60;pointer-events:none}
+  .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
   .foot{text-align:center;font-size:12px;color:#b7a68c;padding:10px 0 26px;font-weight:700}
   @media (max-width:359px){ .card{min-height:146px} .card .ic{font-size:40px} .card .nm{font-size:19px} h1{font-size:26px} }
 </style>
@@ -296,11 +300,19 @@
     });
   }
   function gemTop(){
-    return '<div class="gemtop" id="gemtop"><span class="g">💎</span><span id="gemn">' + gemCount() + '</span></div>';
+    return '<div class="gemtop" id="gemtop"><span class="g">💎</span><span class="gemn">' + gemCount() + '</span></div>';
+  }
+  function toast(msg){
+    var el = document.getElementById('tst');
+    if (!el) { el = document.createElement('div'); el.id = 'tst'; el.className = 'toast'; document.body.appendChild(el); }
+    el.textContent = msg;
+    void el.offsetWidth; el.classList.add('on');
+    clearTimeout(el._t); el._t = setTimeout(function(){ el.classList.remove('on'); }, 2200);
   }
   function bumpGem(){
-    var el = document.getElementById('gemtop'), n = document.getElementById('gemn');
-    if (n) n.textContent = gemCount();
+    var els = document.querySelectorAll('.gemn');
+    for (var i = 0; i < els.length; i++) els[i].textContent = gemCount();
+    var el = document.getElementById('gemtop');
     if (el) { el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
   }
   function epAt(key, i){ return (EPS[key] || [])[i]; }
@@ -363,7 +375,7 @@
     return '<div class="topbar"><div class="wrap"><div class="row">' +
       '<button class="back" data-go="#/" aria-label="뒤로">←</button>' +
       '<div class="ttl"><b>' + esc(s.name) + '</b><span>' + esc(s.sub) + '</span></div>' +
-      '<span class="pill">💎 <span>' + g + '</span></span></div></div></div>' +
+      '<span class="pill">💎 <span class="gemn">' + g + '</span></span></div></div></div>' +
       '<div class="wrap"><div style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;font-weight:900;color:#a08c72">' +
       '<span>' + done + ' / ' + total + '편 봤어요</span>' +
       '<span style="flex:1;height:10px;border-radius:999px;background:#f1e3ce;overflow:hidden"><i style="display:block;height:100%;border-radius:999px;background:' +
@@ -387,7 +399,7 @@
     return '<div class="topbar"><div class="wrap"><div class="row">' +
       '<button class="back" data-go="#/s/' + key + '" aria-label="뒤로">←</button>' +
       '<div class="ttl"><b>' + esc(s.name) + '</b><span>' + esc(e.se || '') + (e.dur ? ' · ' + e.dur : '') + '</span></div>' +
-      '<span class="pill">💎 <span>' + gemCount() + '</span></span></div></div></div>' +
+      '<span class="pill">💎 <span class="gemn">' + gemCount() + '</span></span></div></div></div>' +
       '<div class="wrap player">' + player +
       '<div class="ephead"><h2>' + (e.no || (i + 1)) + '번 · ' + esc(e.title) + '</h2>' +
       '<div class="meta">' + esc([e.title2, e.se, e.dur].filter(Boolean).join(' · ')) + '</div></div>' +
@@ -465,7 +477,8 @@
       '<div class="score">' + st.total + '문제 중 ' + st.firstRight + '개 맞혔어요</div>' +
       '<p>' + (st.newGem ? '영상 보고 학습까지, 보석 하나 획득!' : (gems[e.qid] ? '이미 받은 보석이에요. 다시 봐도 좋아요!' : '영상을 먼저 보면 보석을 받을 수 있어요')) + '</p>' +
       '<div class="btns">' +
-      (nxt >= 0 ? '<button class="bigbtn" data-go="#/p/' + key + '/' + nxt + '">다음 회차 보기 →</button>' : '') +
+      (!gotGem && !gems[e.qid] ? '<button class="bigbtn" data-go="#/p/' + key + '/' + i + '">▶ 영상 보고 보석 받기</button>' : '') +
+      (nxt >= 0 ? '<button class="bigbtn' + (gotGem || gems[e.qid] ? '' : ' ghost') + '" data-go="#/p/' + key + '/' + nxt + '">다음 회차 보기 →</button>' : '') +
       '<button class="bigbtn ghost" data-go="#/s/' + key + '">' + esc(s.name) + ' 목록</button>' +
       '<button class="mini" data-go="#/">🏠 처음으로</button></div></div>';
   }
@@ -475,7 +488,7 @@
     var qs = Q[e.q] || [];
     var correct = st.qi; // 맞힌 문제 수(첫 시도 기준 아님)
     var prev = best[e.qid] || 0;
-    if (st.firstRight > prev) { best[e.qid] = st.firstRight; lsSet(K_BEST, best); }
+    if (st.firstRight > prev || !(e.qid in best)) { best[e.qid] = Math.max(prev, st.firstRight); lsSet(K_BEST, best); }
     st.newGem = false;
     if (vid[e.qid] && !gems[e.qid]) { gems[e.qid] = 1; saveGems(); st.newGem = true; sndGem(); }
     if (!gems[e.qid] && !vid[e.qid]) {
@@ -495,7 +508,7 @@
     return '<div class="topbar"><div class="wrap"><div class="row">' +
       '<button class="back" data-go="#/" aria-label="뒤로">←</button>' +
       '<div class="ttl"><b>사이트워드 100</b><span>자주 나오는 영어 단어 100개</span></div>' +
-      '<span class="pill">💎 <span>' + gemCount() + '</span></span></div></div></div>' +
+      '<span class="pill">💎 <span class="gemn">' + gemCount() + '</span></span></div></div></div>' +
       '<div class="wrap"><div class="swgrid">' + chips + '</div></div>';
   }
   function viewWord(i){
@@ -508,7 +521,7 @@
     return '<div class="topbar"><div class="wrap"><div class="row">' +
       '<button class="back" data-go="#/w" aria-label="뒤로">←</button>' +
       '<div class="ttl"><b>사이트워드 100</b><span>' + (i + 1) + ' / ' + SW.length + '</span></div>' +
-      '<span class="pill">💎 <span>' + gemCount() + '</span></span></div></div></div>' +
+      '<span class="pill">💎 <span class="gemn">' + gemCount() + '</span></span></div></div></div>' +
       '<div class="wrap"><div class="swhead"><span class="word">' + esc(w.word) + '</span>' +
       '<span class="ko">' + esc(w.word_ko) + '</span></div>' +
       '<div class="swnote">' + esc(w.note || '') + '</div>' +
@@ -597,6 +610,7 @@
       var e = epAt(cur.key, cur.idx);
       seen.add(e.qid); saveSeen();
       vid[e.qid] = 1; lsSet(K_VID, vid);
+      if ((e.qid in best) && !gems[e.qid]) { gems[e.qid] = 1; saveGems(); sndGem(); bumpGem(); toast('💎 보석을 얻었어요!'); }
       sv.outerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + sv.getAttribute('data-vid') +
         '?autoplay=1&rel=0&playsinline=1&modestbranding=1" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
       return;
