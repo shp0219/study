@@ -341,6 +341,20 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
 .sp-done-toggle.on{background:#e9fbf2;border-color:#b9e5cf;color:#1c8c62}
 .cell.blank{background:#fbf8ff;border-style:dashed;border-color:#e6daf2}
 #spPeekTimer.run>i{animation-duration:2s}
+
+/* ---------- 이어서 하기 (resume) ---------- */
+.resume-slot{margin-top:14px}
+.resume-slot:empty{display:none}
+.resume-card{background:linear-gradient(140deg,#fff,#fdf5ff);border:1.5px solid #ffdcea;border-radius:20px;padding:14px 15px 15px;box-shadow:0 8px 18px rgba(230,150,180,.16)}
+.resume-top{display:flex;align-items:center;gap:8px}
+.resume-badge{font-size:.7rem;font-weight:900;color:#fff;background:#f2619a;border-radius:999px;padding:4px 10px;letter-spacing:-.01em}
+.resume-when{font-size:.7rem;font-weight:800;color:#b0a6c2;margin-left:auto}
+.resume-title{display:block;font-size:1rem;font-weight:900;color:#423858;margin-top:9px;letter-spacing:-.02em;overflow-wrap:anywhere}
+.resume-sub{display:block;font-size:.78rem;font-weight:700;color:#9189a6;margin-top:3px;line-height:1.45}
+.resume-actions{display:flex;gap:8px;margin-top:11px}
+.resume-go{flex:1;min-height:46px;border-radius:14px;background:linear-gradient(135deg,#ff9dc0,#f2619a);color:#fff;font-size:.95rem;font-weight:900;box-shadow:0 8px 16px rgba(242,97,154,.26)}
+.resume-go:active{transform:scale(.99)}
+.resume-reset{flex:0 0 auto;min-height:46px;padding:0 15px;border-radius:14px;background:#fff;border:1px solid #eee4f6;color:#8f88a4;font-size:.82rem;font-weight:900}
 </style>
 <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
 </head>
@@ -377,6 +391,8 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
       </button>
     </div>
 
+    <div id="resumeSlot" class="resume-slot"></div>
+
     <details class="parent-tip">
       <summary>부모님께 💡</summary>
       <p>휴대폰 자판 위 ‘추천 단어/자동 완성’을 잠깐 끄면 실전 연습에 더 좋아요!</p>
@@ -397,6 +413,8 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
       <button type="button" class="on" role="tab" aria-selected="true" data-grade="g1">1학년</button>
       <button type="button" role="tab" aria-selected="false" data-grade="g2" disabled title="2학년 급수표는 준비 중이에요">2학년 <small>준비 중</small></button>
     </div>
+
+    <div id="resumeSlotYear" class="resume-slot"></div>
 
     <div class="progress-card">
       <div class="progress-top">
@@ -724,6 +742,217 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
   var DB = loadDB();
   function saveDB() { try { store.set(DB_KEY, JSON.stringify(DB)); } catch (e) { /* never crash */ } }
 
+  /* ============================================================
+     이어서 하기 (resume) — 하던 곳부터 다시
+     새 저장 키: gayun.dictation.resume.v1 (기존 gayun.dictation.v1 과 별개)
+     ============================================================ */
+  var RESUME_KEY = 'gayun.dictation.resume.v1';
+  var RESUME = null;
+
+  function resumeRaw() {
+    var raw = null, d = null;
+    try { raw = store.get(RESUME_KEY); } catch (e) { raw = null; }
+    if (!raw) return null;
+    try { d = JSON.parse(raw); } catch (e) { d = null; }
+    return (d && typeof d === 'object') ? d : null;
+  }
+  function resumeSave(obj) {
+    try {
+      obj.v = 1;
+      obj.ts = Date.now();
+      store.set(RESUME_KEY, JSON.stringify(obj));
+      RESUME = obj;
+    } catch (e) { /* 저장에 실패해도 놀이는 계속돼요 */ }
+  }
+  function resumeClear() {
+    try {
+      if (LS_OK) window.localStorage.removeItem(RESUME_KEY);
+      else delete MEM[RESUME_KEY];
+    } catch (e) { try { delete MEM[RESUME_KEY]; } catch (e2) {} }
+    RESUME = null;
+    renderResumeCard();
+  }
+  function rQueueOK(q) {
+    if (!Array.isArray(q) || !q.length) return false;
+    for (var i = 0; i < q.length; i++) {
+      var it = q[i];
+      if (!it || typeof it.text !== 'string' || typeof it.level !== 'number' || typeof it.idx !== 'number') return false;
+    }
+    return true;
+  }
+  function resumeLoad() {
+    var d = resumeRaw();
+    if (!d) return null;
+    var out = null;
+    try {
+      if (d.kind === 'play' && d.play && rQueueOK(d.play.queue)) {
+        var p = d.play, pos = Math.floor(Number(p.pos));
+        if (!(pos >= 0)) pos = 0;
+        if (pos < p.queue.length) {
+          var res = Array.isArray(p.results) ? p.results.slice(0, p.queue.length) : [];
+          while (res.length < p.queue.length) res.push(undefined);
+          out = { kind: 'play', play: {
+            mode: (p.mode === 'memory' || p.mode === 'review') ? p.mode : 'practice',
+            level: Math.floor(Number(p.level)) || 1,
+            queue: p.queue, pos: pos, results: res,
+            newStars: Math.floor(Number(p.newStars)) || 0
+          } };
+        }
+      } else if (d.kind === 'test' && d.test && rQueueOK(d.test.queue)) {
+        var t = d.test, n = t.queue.length, step = Math.floor(Number(t.step));
+        if (!(step >= 0) || step >= n) step = 0;
+        var ans = Array.isArray(t.answers) ? t.answers.slice(0, n) : [];
+        while (ans.length < n) ans.push('');
+        var rs2 = Array.isArray(t.results) ? t.results.slice(0, n) : [];
+        while (rs2.length < n) rs2.push(null);
+        var chk = Array.isArray(t.checked) ? t.checked.slice(0, n) : [];
+        while (chk.length < n) chk.push(false);
+        out = { kind: 'test', test: {
+          level: Math.floor(Number(t.level)) || 1, queue: t.queue, answers: ans,
+          results: rs2, checked: chk, step: step, instant: !!t.instant
+        } };
+      } else if (d.kind === 'spell' && d.spell && Array.isArray(d.spell.queue)) {
+        var s = d.spell;
+        var q = s.queue.filter(function (it) {
+          return it && typeof it.text === 'string' && typeof it.id === 'string';
+        });
+        var sp = Math.floor(Number(s.pos));
+        if (!(sp >= 0)) sp = 0;
+        if (q.length && sp < q.length) {
+          out = { kind: 'spell', spell: {
+            mode: s.mode || 'study', queue: q, pos: sp,
+            results: Array.isArray(s.results) ? s.results.slice(0, q.length) : []
+          } };
+        }
+      }
+    } catch (e) { return null; }
+    if (out) out.ts = Math.floor(Number(d.ts)) || 0;
+    return out;
+  }
+  function resumeModeLabel(mode) {
+    return mode === 'memory' ? '깜빡 기억 놀이' : (mode === 'review' ? '틀린 문제 다시 놀기' : '보고 따라 치기');
+  }
+  function resumeSpellLabel(mode) {
+    if (mode === 'dictate') return '받아쓰기';
+    if (mode === 'review-study') return '복습 · 자판 치기';
+    if (mode === 'review-dictate') return '복습 · 랜덤 받아쓰기';
+    return '맞춤법 공부';
+  }
+  function resumeInfo(r) {
+    if (!r) return null;
+    if (r.kind === 'play') {
+      var p = r.play;
+      return { badge: '받아쓰기 1학년',
+               title: p.level + '급 · ' + resumeModeLabel(p.mode),
+               sub: (p.pos + 1) + ' / ' + p.queue.length + '문제에서 멈췄어요' };
+    }
+    if (r.kind === 'test') {
+      var t = r.test;
+      return { badge: '실전 시험',
+               title: t.level + '급 실전 받아쓰기 시험',
+               sub: (t.step + 1) + ' / ' + t.queue.length + '번 문제에서 멈췄어요' };
+    }
+    var s = r.spell;
+    return { badge: '평소 틀린 맞춤법',
+             title: resumeSpellLabel(s.mode),
+             sub: (s.pos + 1) + ' / ' + s.queue.length + '문제에서 멈췄어요' };
+  }
+  function resumeWhen(ts) {
+    if (!ts) return '';
+    try {
+      var d = new Date(ts), now = new Date();
+      var sameDay = d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+      return sameDay ? '오늘 ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes())
+                     : (d.getMonth() + 1) + '월 ' + d.getDate() + '일';
+    } catch (e) { return ''; }
+  }
+  function renderResumeCard() {
+    fillResumeSlot($('#resumeSlot'));
+    fillResumeSlot($('#resumeSlotYear'));
+  }
+  function fillResumeSlot(slot) {
+    if (!slot) return;
+    var r = resumeLoad();
+    RESUME = r;
+    var info = resumeInfo(r);
+    if (!r || !info) { slot.innerHTML = ''; return; }
+    var when = resumeWhen(r.ts);
+    slot.innerHTML = '<div class="resume-card">' +
+      '<div class="resume-top"><span class="resume-badge">' + esc(info.badge) + '</span>' +
+      (when ? '<span class="resume-when">' + esc(when) + '</span>' : '') + '</div>' +
+      '<b class="resume-title">' + esc(info.title) + '</b>' +
+      '<small class="resume-sub">' + esc(info.sub) + '</small>' +
+      '<div class="resume-actions">' +
+      '<button type="button" class="resume-go">▶ 이어서 하기</button>' +
+      '<button type="button" class="resume-reset">처음부터</button>' +
+      '</div></div>';
+    var go = slot.querySelector('.resume-go');
+    if (go) go.onclick = resumeGo;
+    var rs = slot.querySelector('.resume-reset');
+    if (rs) rs.onclick = function () { resumeClear(); toast('처음부터 새로 시작할 수 있어요'); };
+  }
+  function resumeGo() {
+    var r = resumeLoad();
+    if (!r) { renderResumeCard(); toast('이어갈 놀이가 없어요'); return; }
+    try {
+      if (r.kind === 'play') {
+        clearPlayTimers();
+        PLAY.mode = r.play.mode;
+        PLAY.level = r.play.level;
+        PLAY.queue = r.play.queue;
+        PLAY.pos = r.play.pos;
+        PLAY.results = r.play.results.slice();
+        PLAY.newStars = r.play.newStars || 0;
+        PLAY.done = false;
+        show('s-play');
+        renderPlay();
+      } else if (r.kind === 'test') {
+        TEST.level = r.test.level;
+        TEST.queue = r.test.queue;
+        TEST.answers = r.test.answers.slice();
+        TEST.results = r.test.results.slice();
+        TEST.checked = r.test.checked.slice();
+        TEST.step = r.test.step;
+        TEST.instant = !!r.test.instant;
+        TEST.graded = false;
+        TEST.newStars = 0;
+        $('#testTitle').textContent = TEST.level + '급 실전 시험';
+        $('#testStart').classList.add('hidden');
+        $('#testDone').classList.add('hidden');
+        $('#testDone').innerHTML = '';
+        $('#testRun').classList.remove('hidden');
+        $('#instantChk').checked = TEST.instant;
+        show('s-test');
+        renderTestQ(false);
+      } else if (r.kind === 'spell') {
+        clearSpellTimers();
+        SP.mode = r.spell.mode;
+        SP.queue = r.spell.queue;
+        SP.pos = r.spell.pos;
+        SP.results = r.spell.results.slice();
+        SP.answered = false;
+        show('s-spell-play');
+        renderSpellQ(false);
+      }
+    } catch (e) { toast('이어서 하지 못했어요. 처음부터 다시 해 주세요'); }
+  }
+  function resumeSavePlay() {
+    if (!PLAY.queue || !PLAY.queue.length) return;
+    if (!(PLAY.pos >= 0) || PLAY.pos >= PLAY.queue.length) return;
+    resumeSave({ kind: 'play', play: { mode: PLAY.mode, level: PLAY.level, queue: PLAY.queue,
+      pos: PLAY.pos, results: PLAY.results, newStars: PLAY.newStars } });
+  }
+  function resumeSaveTest() {
+    if (!TEST.queue || !TEST.queue.length || TEST.graded) return;
+    resumeSave({ kind: 'test', test: { level: TEST.level, queue: TEST.queue, answers: TEST.answers,
+      results: TEST.results, checked: TEST.checked, step: TEST.step, instant: TEST.instant } });
+  }
+  function resumeSaveSpell() {
+    if (!SP.queue || !SP.queue.length) return;
+    if (!(SP.pos >= 0) || SP.pos >= SP.queue.length) return;
+    resumeSave({ kind: 'spell', spell: { mode: SP.mode, queue: SP.queue, pos: SP.pos, results: SP.results } });
+  }
+
   /* ---------- 학년 구조 (지금은 1학년, 2학년 급수표를 여기에 더하면 됨) ---------- */
   var GRADES = [
     { id: 'g1', label: '1학년', levels: LEVELS, ready: true },
@@ -1029,6 +1258,8 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
 
     $('#entrySpellTodo').textContent = '공부할 ' + spTodoCount() + '개';
     $('#entrySpellDone').textContent = '완료 ' + spDoneCount() + '개';
+
+    renderResumeCard();
   }
 
   /* ---------- level screen ---------- */
@@ -1134,6 +1365,7 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
       $('#targetBody').innerHTML = gridHTML(item.text);
       focusInput(input);
     }
+    resumeSavePlay();
   }
 
   function hideTarget() {
@@ -1181,6 +1413,7 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
     PLAY.done = true;
     var input = $('#answerInput');
     PLAY.results[PLAY.pos] = { ok: true, user: input.value, tags: [] };
+    resumeSavePlay();
     if (markLearned(item.level, item.idx)) PLAY.newStars++;
     removeWrong(item.level, item.idx);
     input.disabled = true;
@@ -1210,6 +1443,7 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
     if (res.ok) { succeed(); return; }
 
     PLAY.results[PLAY.pos] = { ok: false, user: val, tags: res.tags };
+    resumeSavePlay();
     addWrong(item.level, item.idx);
     ding(false);
     $('#feedback').innerHTML = wrongFeedbackHTML(item, val, res) +
@@ -1247,6 +1481,7 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
   }
 
   function finishPlay() {
+    resumeClear();
     var total = PLAY.queue.length;
     var ok = PLAY.results.filter(function (r) { return r && r.ok; }).length;
     var wrong = PLAY.queue.filter(function (it, i) { return !(PLAY.results[i] && PLAY.results[i].ok); });
@@ -1382,6 +1617,7 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
 
     if (!inp.disabled) focusInput(inp);
     if (autoSpeak) speak(item.text, DB.rate);
+    resumeSaveTest();
   }
 
   function renderTestFeedback(item, val, res) {
@@ -1407,6 +1643,7 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
     $('#btnTestCheck').disabled = true;
     $('#btnTestCheck').textContent = '확인했어요 ✓';
     renderTestFeedback(item, val, res);
+    resumeSaveTest();
     try { $('#testFeedback')._scrollIntoView; } catch (e) {}
   }
 
@@ -1421,6 +1658,7 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
       return { it: it, ans: ans, res: res };
     });
     TEST.graded = true;
+    resumeClear();
     setBest(TEST.level, score);
     renderTestDone(rows, score);
     $('#testRun').classList.add('hidden');
@@ -1737,6 +1975,7 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
     paintSpellDone();
     focusInput(inp);
     if (auto && info.hide) speak(it.text, 0.82);
+    resumeSaveSpell();
   }
 
   function spPeek() {
@@ -1770,6 +2009,7 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
     var inp = $('#spInputAnswer');
     SP.answered = true;
     SP.results[SP.pos] = { it: it, ok: true, ans: inp.value };
+    resumeSaveSpell();
     inp.disabled = true;
     $('#spCheck').disabled = true;
     $('#spTargetBody').innerHTML = gridHTML(it.text, Array.from(norm(it.text)).map(function () { return 'ok'; }));
@@ -1793,6 +2033,7 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
 
     SP.answered = true;
     SP.results[SP.pos] = { it: it, ok: false, ans: val, tags: res.tags };
+    resumeSaveSpell();
     var src = spById(it.id);
     if (src) { src.wrong = (src.wrong || 0) + 1; saveDB(); }
     ding(false);
@@ -1833,6 +2074,7 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
   }
 
   function spFinish() {
+    resumeClear();
     var total = SP.queue.length;
     var ok = SP.results.filter(function (r) { return r && r.ok; }).length;
     var wrong = SP.queue.filter(function (it, i) { return !(SP.results[i] && SP.results[i].ok); });

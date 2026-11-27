@@ -123,6 +123,22 @@ img{-webkit-user-drag:none;user-select:none}
   box-shadow:0 4px 14px rgba(150,120,80,.13);border:2px solid #fff}
 .empty{padding:24px 10px;text-align:center;font-size:.88rem;font-weight:800;color:#a2947e;line-height:1.6}
 
+/* ---------- 이어서 보기 (resume) ---------- */
+.resume-slot{margin:0 0 12px}
+.resume-slot:empty{display:none}
+.resume{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 14px;
+  background:linear-gradient(135deg,#fffdf6,#ffeecd);border-radius:20px;border:2.5px solid #ffd489;
+  box-shadow:0 5px 15px rgba(224,150,30,.18);transition:transform .12s}
+.resume:active{transform:scale(.985)}
+.resume .ri{flex:0 0 auto;width:46px;height:46px;border-radius:14px;background:#fff;display:grid;place-items:center;
+  font-size:1.5rem;box-shadow:inset 0 0 0 2px #ffe0aa}
+.resume .rt{flex:1;min-width:0}
+.resume .rt b{display:block;font-size:1rem;font-weight:900;letter-spacing:-.4px;color:#7a4a05}
+.resume .rt span{display:block;font-size:.76rem;font-weight:800;color:#a97b2e;margin-top:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.resume .rg{flex:0 0 auto;font-size:1.3rem;font-weight:900;color:#d9a45a}
+.sent.cur{box-shadow:0 0 0 3px #ffce7a inset,0 3px 11px rgba(224,150,30,.2)}
+
 /* ---------- 책 화면 ---------- */
 .player{position:relative;width:100%;aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:#000;
   box-shadow:0 6px 18px rgba(60,50,30,.2)}
@@ -136,16 +152,21 @@ img{-webkit-user-drag:none;user-select:none}
   font-size:.95rem;font-weight:900;letter-spacing:-.3px;color:#1f6f43;background:#e9f9ee;border-radius:15px;
   box-shadow:inset 0 0 0 2px #b9e6c6,0 3px 10px rgba(150,120,80,.12)}
 .fsbtn:active{transform:scale(.985)}
-.fsclose{position:absolute;top:calc(8px + env(safe-area-inset-top));right:8px;z-index:5;display:none;
-  align-items:center;gap:5px;padding:10px 15px;border-radius:14px;font-size:.9rem;font-weight:900;color:#fff;
-  background:rgba(18,18,18,.74);box-shadow:0 2px 10px rgba(0,0,0,.45)}
-.fsclose:active{transform:scale(.95)}
+.fsbtns{position:absolute;top:calc(8px + env(safe-area-inset-top));right:8px;z-index:6;display:none;gap:6px}
+.fsbtns .fsclose,.fsbtns .fsrot{position:static;display:flex;
+  align-items:center;gap:5px;padding:9px 12px;border-radius:14px;font-size:.85rem;font-weight:900;color:#fff;
+  background:rgba(18,18,18,.74);box-shadow:0 2px 10px rgba(0,0,0,.45);white-space:nowrap}
+.fsbtns .fsclose:active,.fsbtns .fsrot:active{transform:scale(.95)}
 body.fs-on,body.fs-native{overflow:hidden}
-body.fs-on .fsclose,body.fs-native .fsclose{display:flex}
+body.fs-on .fsbtns,body.fs-native .fsbtns{display:flex}
 body.fs-on .player{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;max-width:none;
   aspect-ratio:auto;border-radius:0;box-shadow:none;z-index:2147483002}
 .player:fullscreen{width:100vw;height:100vh;height:100dvh;max-width:none;aspect-ratio:auto;border-radius:0}
 .player:-webkit-full-screen{width:100vw;height:100vh;height:100dvh;max-width:none;aspect-ratio:auto;border-radius:0}
+/* ── 가로 회전 (폰 자동 회전이 꺼져 있어도 CSS로 돌려서 가로로 보기) ── */
+body.fs-rot .player{top:50%;left:50%;right:auto;bottom:auto;width:100vh;width:100dvh;height:100vw;
+  transform:translate(-50%,-50%) rotate(90deg);transform-origin:center center}
+body.fs-rot .fsbtns{transform:rotate(-90deg)}
 .bookhead{margin:14px 2px 8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .bookhead b{font-size:1rem;font-weight:900;letter-spacing:-.35px}
 .bookhead .cnt{font-size:.74rem;font-weight:800;color:#a2947e}
@@ -255,6 +276,7 @@ body.fs-on .player{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh
       <h1>유니의<br><em>리딩 놀이터</em></h1>
       <p>표지를 찍으면 책을 찾아 주고,<br>Read Aloud 영상과 함께 읽어 줘요!</p>
     </div>
+    <div id="resumeSlot" class="resume-slot"></div>
     <button class="bigbtn photo" id="btnPhoto">
       <span class="ico">📷</span>
       <span class="tx"><b>책 표지 사진 찍어 찾기</b><small>카메라로 표지를 비추면 책을 찾아 줘요</small></span>
@@ -298,7 +320,7 @@ body.fs-on .player{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh
       <div class="ytposter hidden" id="ytPoster">
         <span class="pl">▶</span><span class="cap">영상은 인터넷 주소로 열면 바로 재생돼요</span>
       </div>
-      <button class="fsclose" id="ytFsClose" type="button" aria-label="작게 보기">✕ 작게 보기</button></div>
+      <div class="fsbtns"><button class="fsrot" id="ytFsRot" type="button">🔄 가로 회전</button><button class="fsclose" id="ytFsClose" type="button" aria-label="작게 보기">✕ 작게 보기</button></div></div>
     <button class="fsbtn" id="ytFs" type="button">⛶ 화면 꽉 채우기</button>
 
     <div class="bookhead" id="sentHead"><b>📖 문장 따라 읽기</b><span class="cnt" id="sentCnt"></span></div>
@@ -398,7 +420,58 @@ let curBrand=null, curDiff='전체', curLevel='전체', curSearch='', curBook=nu
 let playQueue=[], playIdx=0, playingAll=false;
 
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),2200);}
-function show(id){if(id!=='book') exitFs(); $$('.screen').forEach(s=>s.classList.toggle('active',s.id===id));window.scrollTo(0,0);}
+function show(id){if(id!=='book') exitFs(); $$('.screen').forEach(s=>s.classList.toggle('active',s.id===id));window.scrollTo(0,0);
+  if(id==='home') paintResume();}
+
+/* ---------- 이어서 보기 (resume) — 새 키: reading.playground.resume.v1 ---------- */
+const RESUME_KEY='reading.playground.resume.v1';
+function resumeRead(){
+  try{
+    const raw=localStorage.getItem(RESUME_KEY);
+    if(!raw) return null;
+    const d=JSON.parse(raw);
+    if(!d||typeof d!=='object'||typeof d.bv!=='string') return null;
+    const book=BOOKS.find(x=>x.v===d.bv);
+    if(!book) return null;
+    const si=Math.floor(Number(d.si));
+    return {book:book, si:(si>=0?si:0), ts:Math.floor(Number(d.ts))||0};
+  }catch(e){ return null; }
+}
+function resumeSave(si){
+  try{
+    if(!curBook) return;
+    const n=(typeof si==='number'&&isFinite(si)&&si>=0)?Math.floor(si):0;
+    localStorage.setItem(RESUME_KEY, JSON.stringify({ver:1, ts:Date.now(), bv:curBook.v, si:n}));
+  }catch(e){}
+}
+function resumeClear(){
+  try{ localStorage.removeItem(RESUME_KEY); }catch(e){}
+  paintResume();
+}
+function paintResume(){
+  const box=$('#resumeSlot'); if(!box) return;
+  const r=resumeRead();
+  if(!r){ box.innerHTML=''; return; }
+  const s=SENT[r.book.v];
+  const total=(s&&s.s&&s.s.length)||0;
+  const line=total?('읽던 곳: '+(Math.min(r.si+1,total))+' / '+total+'번째 문장'):'보던 책이에요';
+  box.innerHTML='<button class="resume" id="resumeGo">'
+    +'<span class="ri">📖</span>'
+    +'<span class="rt"><b>이어서 보기</b>'
+    +'<span>'+esc(r.book.t)+' · '+esc(BRANDS[r.book.b].n)+'</span>'
+    +'<span>'+esc(line)+'</span></span>'
+    +'<span class="rg">›</span></button>';
+  const go=document.getElementById('resumeGo');
+  if(go) go.onclick=()=>{ openBook(r.book,{from:'home', resume:r.si}); };
+}
+function resumeJumpTo(i){
+  const s=curBook&&SENT[curBook.v]; if(!s||!s.s||!s.s.length) return;
+  const k=Math.max(0,Math.min(Math.floor(i)||0,s.s.length-1));
+  const li=$$('#sentList .sent')[k]; if(!li) return;
+  setTimeout(()=>{
+    try{ li.classList.add('cur'); li.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){}
+  },200);
+}
 function thumb(v){return 'https://i.ytimg.com/vi/'+v+'/mqdefault.jpg';}
 function thumbBig(v){return 'https://i.ytimg.com/vi/'+v+'/hqdefault.jpg';}
 const IS_FILE=location.protocol==='file:';
@@ -568,6 +641,8 @@ function openBook(b,opt){
   $$('#sentList .ko').forEach(e=>e.classList.add('hidden'));
   $('#pageSent').innerHTML=''; $('#pageStat').classList.add('hidden'); $('#pageProg').classList.add('hidden');
   show('book');
+  resumeSave((opt&&typeof opt.resume==='number')?opt.resume:0);
+  if(opt&&typeof opt.resume==='number') resumeJumpTo(opt.resume);
 }
 function renderSentences(s){
   $('#sentCnt').textContent=s.s.length+'문장';
@@ -580,7 +655,7 @@ function renderSentences(s){
       +'</span></li>';
   }).join('');
   $$('#sentList [data-say]').forEach(el=>el.onclick=()=>{
-    const x=s.s[+el.dataset.say]; if(x) speak(x.e, el.dataset.slow?0.6:0.9);
+    const x=s.s[+el.dataset.say]; if(x){ resumeSave(+el.dataset.say); speak(x.e, el.dataset.slow?0.6:0.9); }
   });
   $$('#sentList .wchip').forEach(el=>el.onclick=()=>{
     if(!el.classList.contains('open')){
@@ -631,6 +706,7 @@ $('#playAll').onclick=function(){
     if(!playingAll) return;
     if(playIdx>=s.s.length){stopAll();return;}
     const x=s.s[playIdx++];
+    resumeSave(playIdx-1);
     const u=new SpeechSynthesisUtterance(x.e);
     u.lang='en-US'; u.rate=0.85; u.pitch=1.03; if(voice) u.voice=voice;
     u.onend=()=>setTimeout(next,700); u.onerror=()=>stopAll();
@@ -864,9 +940,24 @@ function pageSentences(t){
 
 /* ---------- 화면 꽉 채우기 ---------- */
 let fsPseudo=false;
+let fsRot=false;
 function natFsEl(){return document.fullscreenElement||document.webkitFullscreenElement||null;}
 function fsPseudoOn(){fsPseudo=true;document.body.classList.add('fs-on');}
+function lockLandscape(){try{const so=screen.orientation;if(so&&so.lock){const p=so.lock('landscape');if(p&&p.catch)p.catch(()=>{});}}catch(e){}}
+function unlockOrient(){try{const so=screen.orientation;if(so&&so.unlock)so.unlock();}catch(e){}}
+function fsRotLabel(){const b=document.getElementById('ytFsRot');if(b)b.textContent=fsRot?'🔄 세로 복귀':'🔄 가로 회전';}
+function setFsRot(on){
+  fsRot=!!on;
+  document.body.classList.toggle('fs-rot',fsRot);
+  fsRotLabel();
+  if(fsRot)lockLandscape();else unlockOrient();
+}
+function toggleFsRot(){
+  if(!fsRot&&window.innerWidth>window.innerHeight){toast('이미 가로 화면이에요');return;}
+  setFsRot(!fsRot);
+}
 function exitFs(){
+  setFsRot(false);
   if(fsPseudo){fsPseudo=false;document.body.classList.remove('fs-on');}
   document.body.classList.remove('fs-native');
   const n=natFsEl();
@@ -881,14 +972,16 @@ function enterFs(){
   let p=null;
   try{p=fn.call(el);}catch(e){fsPseudoOn();return;}
   if(p&&p.then){
-    p.then(()=>{document.body.classList.add('fs-native');})
+    p.then(()=>{document.body.classList.add('fs-native');lockLandscape();})
      .catch(()=>{fsPseudoOn();});   // 기기·브라우저가 거절하면 오버레이로
   }else{
-    setTimeout(()=>{if(natFsEl()){document.body.classList.add('fs-native');}else fsPseudoOn();},160);
+    setTimeout(()=>{if(natFsEl()){document.body.classList.add('fs-native');lockLandscape();}else fsPseudoOn();},160);
   }
 }
 ['fullscreenchange','webkitfullscreenchange'].forEach(ev=>document.addEventListener(ev,()=>{
-  if(!natFsEl()){document.body.classList.remove('fs-native');}
+  if(natFsEl()){fsRotLabel();return;}
+  document.body.classList.remove('fs-native');
+  setFsRot(false);
 }));
 
 /* ---------- 이벤트 ---------- */
@@ -899,6 +992,7 @@ $('#bookBack').onclick=()=>{stopAll();exitFs();$('#ytPlayer').src='';show(bookFr
 $('#bookHome').onclick=()=>{stopAll();exitFs();$('#ytPlayer').src='';show('home');};
 $('#ytPoster').onclick=()=>{$('#ytPoster').classList.add('hidden');$('#ytPlayer').classList.remove('hidden');};
 $('#ytFs').onclick=()=>{(fsPseudo||natFsEl())?exitFs():enterFs();};
+$('#ytFsRot').onclick=(e)=>{e.preventDefault();e.stopPropagation();toggleFsRot();};
 $('#ytFsClose').onclick=(e)=>{e.preventDefault();e.stopPropagation();exitFs();};
 window.addEventListener('pagehide',()=>{try{speechSynthesis.cancel();}catch(e){}});
 $('#findBack').onclick=()=>{show('home');};
@@ -947,6 +1041,7 @@ $('#browseHome').onclick=()=>show('home');
 
 /* ---------- 시작 ---------- */
 renderHome();
+paintResume();
 
 /* 홈 화면에 추가(standalone) 실행용 서비스 워커 */
 if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){

@@ -163,6 +163,19 @@ img{-webkit-user-drag:none;user-select:none}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 .toast.warn{color:#7d6bb0}
 
+/* ---------- 하던 곳 이어하기 ---------- */
+.resume{display:flex;align-items:center;gap:11px;width:100%;text-align:left;margin:0 0 14px;padding:12px 13px;
+  background:linear-gradient(140deg,#fff,#f1f6ff);border-radius:20px;border:2.5px solid #cfe0ff;
+  box-shadow:0 4px 14px rgba(120,105,150,.13);transition:transform .14s}
+.resume:active{transform:scale(.985)}
+.resume .ric{flex:0 0 auto;width:42px;height:42px;border-radius:14px;background:#8fb3ff;color:#fff;
+  display:grid;place-items:center;font-size:16px;box-shadow:0 3px 9px rgba(143,179,255,.4)}
+.resume .rtx{flex:1;min-width:0}
+.resume .rtx b{display:block;font-size:.95rem;font-weight:900;letter-spacing:-.3px}
+.resume .rtx span{display:block;font-size:.72rem;font-weight:700;color:#8b87a0;margin-top:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.resume .rgo{flex:0 0 auto;font-size:1.2rem;font-weight:900;color:#bcc7dd}
+
 /* ---------- result ---------- */
 .result{text-align:center;padding-top:6px}
 .result img{width:190px;height:220px;object-fit:contain;object-position:bottom;margin:0 auto -8px;display:block;filter:drop-shadow(0 8px 8px rgba(120,105,150,.18));animation:jump 1.1s ease infinite}
@@ -210,6 +223,8 @@ img{-webkit-user-drag:none;user-select:none}
         <p class="ko" id="home-ko">같이 영어 놀이하자! 도마도 기다리고 있어.</p>
       </div>
     </div>
+
+    <div id="resume-slot"></div>
 
     <div class="sechead"><h2>단계별 놀이</h2><span>하고 싶은 단계를 바로 눌러도 돼요</span></div>
     <div id="level-list"></div>
@@ -341,6 +356,68 @@ var store = (function(){
 function saveStore(){ try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch(e){} }
 function totalStars(){ var s=0; for (var k in store.levels) s += (store.levels[k].stars||0); return s; }
 
+/* ---------- 이어서 하기 (resume) — 새 키: unihyeoni-english-resume-v1 ---------- */
+var RESUME_KEY = 'unihyeoni-english-resume-v1';
+function resumeRead(){
+  try{
+    var raw = localStorage.getItem(RESUME_KEY);
+    if (!raw) return null;
+    var d = JSON.parse(raw);
+    if (!d || typeof d !== 'object') return null;
+    if (typeof d.level !== 'number' || !LEVELS[d.level]) return null;
+    if (!Array.isArray(d.rounds) || !d.rounds.length) return null;
+    var idx = Math.floor(Number(d.idx));
+    if (!(idx >= 0) || idx >= d.rounds.length) return null;
+    return { level: d.level, idx: idx, rounds: d.rounds,
+             mistakes: Math.max(0, Math.floor(Number(d.mistakes)) || 0),
+             cleared: Math.max(0, Math.floor(Number(d.cleared)) || 0),
+             ts: Math.floor(Number(d.ts)) || 0 };
+  }catch(e){ return null; }
+}
+function resumeSave(){
+  try{
+    if (!state.rounds || !state.rounds.length || !(state.idx >= 0) || state.idx >= state.rounds.length) return;
+    localStorage.setItem(RESUME_KEY, JSON.stringify({
+      v: 1, ts: Date.now(), level: state.level, idx: state.idx,
+      mistakes: state.mistakes, cleared: state.cleared, rounds: state.rounds
+    }));
+  }catch(e){}
+}
+function resumeClear(){
+  try{ localStorage.removeItem(RESUME_KEY); }catch(e){}
+  paintResume();
+}
+function paintResume(){
+  var box = document.getElementById('resume-slot');
+  if (!box) return;
+  var r = resumeRead();
+  if (!r) { box.innerHTML = ''; return; }
+  var L = LEVELS[r.level];
+  box.innerHTML = '<button class="resume" id="btn-resume" aria-label="하던 곳 이어하기">' +
+      '<span class="ric">▶</span>' +
+      '<span class="rtx"><b>하던 곳 이어하기</b>' +
+        '<span>' + L.lv + ' · ' + L.title + ' · ' + (r.idx + 1) + '/' + r.rounds.length + '번째 놀이</span></span>' +
+      '<span class="rgo">›</span></button>';
+  var b = document.getElementById('btn-resume');
+  if (b) b.addEventListener('click', function(){ sfxTap(); resumeResume(); });
+}
+function resumeResume(){
+  var r = resumeRead();
+  if (!r) { paintResume(); return; }
+  try{
+    state.level = r.level;
+    state.rounds = r.rounds;
+    state.idx = r.idx;
+    state.mistakes = r.mistakes;
+    state.cleared = r.cleared;
+    state.locked = false;
+    document.getElementById('play-level').textContent = LEVELS[r.level].lv;
+    setPlayChar('surprise');
+    show('play');
+    renderRound();
+  }catch(e){ toast('이어서 하지 못했어요', true); }
+}
+
 /* ---------- sound ---------- */
 var AC = null;
 function ac(){
@@ -426,6 +503,7 @@ function paintHome(){
   document.getElementById('btn-sfx').textContent = store.sfx ? '🔔' : '🔕';
   document.getElementById('btn-sfx2').textContent = store.sfx ? '🔔' : '🔕';
   updateSlowBtn();
+  paintResume();
 }
 function updateSlowBtn(){
   var b = document.getElementById('btn-slow');
@@ -614,6 +692,7 @@ function renderRound(){
     setTimeout(function(){ speak(r.phrase, slowMode); }, 380);
   }
   document.getElementById('btn-replay').classList.toggle('hidden', r.mode === 'memory');
+  resumeSave();
 }
 
 function optionBtn(r, o, onPick){
@@ -635,11 +714,13 @@ function judge(r, o, btn, optsHost){
     state.cleared++;
     btn.classList.add('correct');
     state.locked = true;
+    resumeSave();
     goodMoment(r);
   } else {
     r.tries++;
     btn.classList.add('wrong');
     btn.disabled = true;
+    resumeSave();
     if (r.tries >= 2) {
       retryHint();
       state.locked = true;
@@ -756,12 +837,14 @@ function renderBuild(r){
         if (placed === r.words.length) {
           state.cleared++;
           state.locked = true;
+          resumeSave();
           speak(r.words.join(' '), false);
           goodMoment(r);
         }
       } else {
         r.tries++;
         state.mistakes++;
+        resumeSave();
         sfxBad();
         setPlayChar('sad');
         toast('다음 단어는 "' + r.words[placed] + '"', true);
@@ -820,6 +903,7 @@ function renderSpeak(r){
   bNext.addEventListener('click', function(){
     if (state.locked) return;
     sfxTap(); state.locked = true; state.cleared++;
+    resumeSave();
     setPlayChar('laugh'); toast('좋아요!');
     setTimeout(nextRound, 500);
   });
@@ -866,12 +950,14 @@ function renderMemory(r){
             sfxGood(); setPlayChar('cheer');
             if (matched === r.pairs.length) {
               state.cleared++; state.locked = true;
+              resumeSave();
               toast(DATA.praise[rnd(DATA.praise.length)] + ' ★');
               setTimeout(nextRound, 900);
             }
           }, 420);
         } else {
           state.mistakes++;
+          resumeSave();
           setTimeout(function(){
             a.b.classList.remove('open'); d.b.classList.remove('open');
             a.b.innerHTML = '🦎'; d.b.innerHTML = '🦎';
@@ -890,6 +976,7 @@ function renderMemory(r){
 
 /* ---------- result ---------- */
 function finishLevel(){
+  resumeClear();
   var L = LEVELS[state.level];
   var stars = state.mistakes <= 1 ? 3 : state.mistakes <= 4 ? 2 : 1;
   var prev = store.levels[L.id] || {stars:0, done:false};

@@ -123,16 +123,21 @@
     border-radius:20px;font-weight:900;font-size:17px;color:#4a3a22;background:#fff;
     box-shadow:0 4px 0 rgba(47,36,23,.07),inset 0 0 0 2px #f0e2cd}
   .fsbtn:active{transform:translateY(2px)}
-  .fsclose{position:absolute;top:calc(8px + env(safe-area-inset-top));right:8px;z-index:5;display:none;
-    align-items:center;gap:5px;padding:10px 15px;border-radius:14px;font-weight:900;font-size:15px;
-    color:#fff;background:rgba(18,18,18,.74);box-shadow:0 2px 10px rgba(0,0,0,.45)}
-  .fsclose:active{transform:scale(.95)}
+  .fsbtns{position:absolute;top:calc(8px + env(safe-area-inset-top));right:8px;z-index:6;display:none;gap:6px}
+  .fsbtns .fsclose,.fsbtns .fsrot{position:static;display:flex;
+    align-items:center;gap:5px;padding:10px 13px;border-radius:14px;font-weight:900;font-size:14px;
+    color:#fff;background:rgba(18,18,18,.74);box-shadow:0 2px 10px rgba(0,0,0,.45);white-space:nowrap}
+  .fsbtns .fsclose:active,.fsbtns .fsrot:active{transform:scale(.95)}
   body.fs-on,body.fs-native{overflow:hidden}
-  body.fs-on .fsclose,body.fs-native .fsclose{display:flex}
+  body.fs-on .fsbtns,body.fs-native .fsbtns{display:flex}
   body.fs-on .video{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;max-width:none;
     aspect-ratio:auto;border-radius:0;box-shadow:none;z-index:2147483002;background:#000}
   .video:fullscreen{width:100vw;height:100vh;height:100dvh;aspect-ratio:auto;border-radius:0}
   .video:-webkit-full-screen{width:100vw;height:100vh;height:100dvh;aspect-ratio:auto;border-radius:0}
+  /* ── 가로 회전 (폰 자동 회전이 꺼져 있어도 CSS로 돌려서 가로로 보기) ── */
+  body.fs-rot .video{top:50%;left:50%;right:auto;bottom:auto;width:100vh;width:100dvh;height:100vw;
+    transform:translate(-50%,-50%) rotate(90deg);transform-origin:center center}
+  body.fs-rot .fsbtns{transform:rotate(-90deg)}
   .ephead{padding:16px 2px 4px}
   .ephead h2{margin:0;font-size:26px;font-weight:900;letter-spacing:-.8px;line-height:1.22}
   .ephead .meta{font-size:13px;font-weight:800;color:var(--ink3);margin-top:4px}
@@ -230,6 +235,19 @@
   .sent.on{background:#fff4dc;box-shadow:0 0 0 3px #ffd166 inset}
 
   .empty{padding:40px 10px;text-align:center;color:var(--ink3);font-weight:800}
+
+  /* ── 하던 곳 이어하기 ── */
+  .rsc{display:flex;align-items:center;gap:12px;width:100%;text-align:left;margin:2px 0 14px;padding:13px 14px;
+    border-radius:20px;background:linear-gradient(135deg,#fffdf9,#fff3e4);border:2px solid #ffdca8;
+    box-shadow:0 5px 0 rgba(47,36,23,.05),0 10px 22px rgba(47,36,23,.08);transition:transform .12s ease}
+  .rsc:active{transform:scale(.99)}
+  .rsc-ic{flex:0 0 auto;width:46px;height:46px;border-radius:14px;background:#ffb020;color:#fff;display:flex;align-items:center;
+    justify-content:center;font-size:18px;box-shadow:0 3px 0 #d9601f}
+  .rsc-tx{flex:1;min-width:0}
+  .rsc-tx b{display:block;font-size:17px;font-weight:900;letter-spacing:-.5px}
+  .rsc-tx span{display:block;font-size:12.5px;font-weight:800;color:#9a7b4e;margin-top:2px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rsc-go{flex:0 0 auto;font-size:22px;font-weight:900;color:#c7b08e}
   .toast{position:fixed;left:50%;bottom:34px;transform:translateX(-50%) translateY(20px);background:#2f2417;color:#fff;
     border-radius:999px;padding:13px 22px;font-weight:900;font-size:17px;box-shadow:0 8px 24px rgba(0,0,0,.25);opacity:0;
     transition:all .3s ease;z-index:60;pointer-events:none}
@@ -262,6 +280,66 @@
   var best = lsGet(K_BEST, {}) || {};
   var gems = lsGet(K_GEM, {}) || {};
   var vid  = lsGet(K_VID, {}) || {};
+
+  /* ── 이어서 하기 (resume) — 새 키: blocks.playground.resume.v1 ── */
+  var K_RESUME = 'blocks.playground.resume.v1';
+  function rsValid(rec){
+    if (!rec || typeof rec !== 'object' || typeof rec.hash !== 'string') return false;
+    var h = rec.hash, m;
+    if ((m = h.match(/^#\/q\/([\w-]+)\/(\d+)/))) return !!byKey[m[1]] && !!epAt(m[1], +m[2]);
+    if ((m = h.match(/^#\/p\/([\w-]+)\/(\d+)/))) return !!byKey[m[1]] && !!epAt(m[1], +m[2]);
+    if ((m = h.match(/^#\/w\/(\d+)/))) return !!SW[+m[1]];
+    if ((m = h.match(/^#\/s\/([\w-]+)/))) return !!byKey[m[1]] && byKey[m[1]].type !== 'sw';
+    return false;
+  }
+  var RS = lsGet(K_RESUME, null);
+  if (!rsValid(RS)) RS = null;
+  function rsSave(rec){
+    if (!rsValid(rec)) return;
+    try{
+      rec.v = 1; rec.ts = Date.now();
+      RS = rec; lsSet(K_RESUME, rec);
+    }catch(e){}
+  }
+  function rsClear(){ try{ window.localStorage.removeItem(K_RESUME); }catch(e){} RS = null; }
+  function rsEpName(key, i){
+    var s = byKey[key], e = epAt(key, i);
+    if (!s || !e) return '';
+    return s.name + ' · ' + (e.no || (i + 1)) + '번';
+  }
+  function rsApplyQuiz(st, q){
+    try{
+      var qi = Math.floor(Number(q.qi));
+      if (!(qi >= 0) || qi >= st.total) return;
+      st.qi = qi;
+      st.tries = Math.min(2, Math.max(0, Math.floor(Number(q.tries)) || 0));
+      st.firstRight = Math.min(st.total, Math.max(0, Math.floor(Number(q.firstRight)) || 0));
+      st.dead = Array.isArray(q.dead) ? q.dead.filter(function(x){ return typeof x === 'number' && x >= 0; }) : [];
+      st.reveal = !!q.reveal;
+      st.answered = !!q.reveal;
+    }catch(e){}
+  }
+  function rsMaybeSave(h){
+    var m, rec = null;
+    if ((m = h.match(/^#\/q\/([\w-]+)\/(\d+)/))) {
+      var nk = m[1] + '/' + m[2];
+      if (!st || st.qkey !== nk || !byKey[m[1]] || !epAt(m[1], +m[2])) return;
+      if (st.finished){
+        rec = { hash: '#/p/' + nk, label: rsEpName(m[1], +m[2]) + ' 학습활동 끝!' };
+      } else {
+        rec = { hash: h, label: rsEpName(m[1], +m[2]) + ' 학습활동 ' + (st.qi + 1) + '/' + (st.total || 0) + '문제',
+                quiz: { qkey: nk, qi: st.qi, tries: st.tries, firstRight: st.firstRight,
+                        total: st.total, dead: st.dead.slice(), reveal: !!st.reveal } };
+      }
+    } else if ((m = h.match(/^#\/p\/([\w-]+)\/(\d+)/)) && byKey[m[1]]) {
+      rec = { hash: h, label: rsEpName(m[1], +m[2]) + ' 보던 중' };
+    } else if ((m = h.match(/^#\/w\/(\d+)/)) && SW[+m[1]]) {
+      rec = { hash: h, label: '사이트워드 100 · ' + SW[+m[1]].word };
+    } else if ((m = h.match(/^#\/s\/([\w-]+)/)) && byKey[m[1]] && byKey[m[1]].type !== 'sw') {
+      rec = { hash: h, label: byKey[m[1]].name + ' · 회차 목록' };
+    }
+    if (rec) rsSave(rec);
+  }
   if (!Object.keys(gems).length) {
     Object.keys(best).forEach(function(qid){ if (best[qid] > 0) gems[qid] = 1; });
   }
@@ -354,6 +432,13 @@
   function seriesColor(s){ return s.grad; }
 
   /* ── 홈 ── */
+  function resumeCardHTML(){
+    if (!RS || !RS.hash || RS.hash === '#/') return '';
+    return '<button class="rsc" data-go="' + esc(RS.hash) + '">' +
+      '<span class="rsc-ic">▶</span>' +
+      '<span class="rsc-tx"><b>하던 곳 이어하기</b><span>' + esc(RS.label || '') + '</span></span>' +
+      '<span class="rsc-go">›</span></button>';
+  }
   function viewHome(){
     var cards = SER.map(function(s){
       var total = s.type === 'sw' ? SW.length : (EPS[s.key] || []).length;
@@ -371,6 +456,7 @@
     return '<div class="wrap">' + gemTop() +
       '<div class="home-top"><div class="logo"><span class="blk"><i></i><i></i><i></i><i></i></span><h1>유니혀니의<br>학습 놀이터</h1></div>' +
       '<p class="tagline">보고, 듣고, 놀이로 배우는 수와 글자</p></div>' +
+      resumeCardHTML() +
       '<div class="grid">' + cards + '</div>' +
       '<div class="foot">영상은 유튜브에서 재생돼요 · 학습 기록은 이 기기에만 저장돼요</div>' +
       '</div>';
@@ -417,7 +503,9 @@
     var s = byKey[key], e = epAt(key, i);
     if (!s || !e) return viewHome();
     var started = !!vid[e.qid];
-    var fsCloseBtn = '<button class="fsclose" id="fsclose" aria-label="작게 보기">✕ 작게 보기</button>';
+    var fsCloseBtn = '<div class="fsbtns">' +
+      '<button class="fsrot" id="fsrot" aria-label="가로 회전">🔄 가로 회전</button>' +
+      '<button class="fsclose" id="fsclose" aria-label="작게 보기">✕ 작게 보기</button></div>';
     var player = started
       ? '<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/' + e.vid + '?autoplay=1&rel=0&playsinline=1&modestbranding=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>' + fsCloseBtn + '</div>'
       : '<div class="video">' +
@@ -611,7 +699,10 @@
     } else if ((m = h.match(/^#\/q\/([\w-]+)\/(\d+)/))) {
       cur.key = m[1]; cur.idx = +m[2];
       var nk = m[1] + '/' + m[2];
-      if (st.qkey !== nk) { st = { qi:0, tries:0, total:(Q[epAt(m[1],+m[2]).q || epAt(m[1],+m[2]).qid] || []).length, firstRight:0, answered:false, finished:false, reveal:false, dead:[], newGem:false, busy:false, qkey:nk }; }
+      if (st.qkey !== nk) {
+        st = { qi:0, tries:0, total:(Q[epAt(m[1],+m[2]).q || epAt(m[1],+m[2]).qid] || []).length, firstRight:0, answered:false, finished:false, reveal:false, dead:[], newGem:false, busy:false, qkey:nk };
+        if (RS && RS.quiz && RS.quiz.qkey === nk) rsApplyQuiz(st, RS.quiz);
+      }
       app.innerHTML = viewQuiz(m[1], +m[2]);
       if (!st.finished && st.tries === 0 && !st.reveal) {
         var q = (Q[epAt(m[1], +m[2]).q || epAt(m[1],+m[2]).qid] || [])[st.qi];
@@ -625,13 +716,36 @@
       app.innerHTML = viewHome();
     }
     window.scrollTo(0, 0);
+    rsMaybeSave(h);
   }
 
   /* ── 화면 꽉 채우기 ── */
   var fsPseudo = false;
+  var fsRot = false;
   function natFsEl(){ return document.fullscreenElement || document.webkitFullscreenElement || null; }
   function fsPseudoOn(){ fsPseudo = true; document.body.classList.add('fs-on'); }
+  function lockLandscape(){
+    try{ var so = screen.orientation; if (so && so.lock) { var p = so.lock('landscape'); if (p && p.catch) p.catch(function(){}); } }catch(e){}
+  }
+  function unlockOrient(){
+    try{ var so = screen.orientation; if (so && so.unlock) so.unlock(); }catch(e){}
+  }
+  function fsRotLabel(){
+    var b = document.getElementById('fsrot');
+    if (b) b.textContent = fsRot ? '🔄 세로 복귀' : '🔄 가로 회전';
+  }
+  function setFsRot(on){
+    fsRot = !!on;
+    if (fsRot) document.body.classList.add('fs-rot'); else document.body.classList.remove('fs-rot');
+    fsRotLabel();
+    if (fsRot) lockLandscape(); else unlockOrient();
+  }
+  function toggleFsRot(){
+    if (!fsRot && window.innerWidth > window.innerHeight) { toast('이미 가로 화면이에요'); return; }
+    setFsRot(!fsRot);
+  }
   function exitFs(){
+    setFsRot(false);
     if (fsPseudo) { fsPseudo = false; document.body.classList.remove('fs-on'); }
     document.body.classList.remove('fs-native');
     if (natFsEl()) { try{ (document.exitFullscreen || document.webkitExitFullscreen).call(document); }catch(e){} }
@@ -645,15 +759,17 @@
     var p = null;
     try{ p = fn.call(el); }catch(err){ return fsPseudoOn(); }
     if (p && p.then) {
-      p.then(function(){ document.body.classList.add('fs-native'); })
+      p.then(function(){ document.body.classList.add('fs-native'); lockLandscape(); })
        .catch(function(){ fsPseudoOn(); });   /* 기기·브라우저가 거절하면 오버레이로 */
     } else {
-      setTimeout(function(){ if (natFsEl()) { document.body.classList.add('fs-native'); } else fsPseudoOn(); }, 160);
+      setTimeout(function(){ if (natFsEl()) { document.body.classList.add('fs-native'); lockLandscape(); } else fsPseudoOn(); }, 160);
     }
   }
   ['fullscreenchange','webkitfullscreenchange'].forEach(function(ev){
     document.addEventListener(ev, function(){
-      if (!natFsEl()) { document.body.classList.remove('fs-native'); }
+      if (natFsEl()) { fsRotLabel(); return; }
+      document.body.classList.remove('fs-native');
+      setFsRot(false);
     });
   });
   function startPlayback(sv){
@@ -688,6 +804,9 @@
 
     var sv = ev.target.closest('#startv');
     if (sv) { startPlayback(sv); return; }
+
+    var rb = ev.target.closest('#fsrot');
+    if (rb) { toggleFsRot(); return; }
 
     var fb = ev.target.closest('#fsbtn, #fsclose');
     if (fb) {
