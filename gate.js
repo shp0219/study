@@ -247,7 +247,7 @@
   function init() {
     checking();
     withTimeout(
-      loadScript(ROOT + 'fb-config.js')
+      loadScript(ROOT + 'fb-config.js?v=3')
         .then(function () { return loadScript(ROOT + 'sdk/firebase-app-compat.js'); })
         .then(function () { return loadScript(ROOT + 'sdk/firebase-firestore-compat.js'); })
         .then(function () {
