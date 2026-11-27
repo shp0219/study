@@ -864,14 +864,12 @@ function pageSentences(t){
 /* ---------- 화면 꽉 채우기 ---------- */
 let fsPseudo=false;
 function natFsEl(){return document.fullscreenElement||document.webkitFullscreenElement||null;}
-function fsLabel(on){const b=$('#ytFs'); if(b) b.textContent=on?'✕ 작게 보기':'⛶ 화면 꽉 채우기';}
-function fsPseudoOn(){fsPseudo=true;document.body.classList.add('fs-on');fsLabel(true);}
+function fsPseudoOn(){fsPseudo=true;document.body.classList.add('fs-on');}
 function exitFs(){
   if(fsPseudo){fsPseudo=false;document.body.classList.remove('fs-on');}
   document.body.classList.remove('fs-native');
   const n=natFsEl();
   if(n){try{(document.exitFullscreen||document.webkitExitFullscreen||function(){}).call(document);}catch(e){}}
-  fsLabel(false);
 }
 function enterFs(){
   if(fsPseudo||natFsEl()) return;
@@ -882,14 +880,14 @@ function enterFs(){
   let p=null;
   try{p=fn.call(el);}catch(e){fsPseudoOn();return;}
   if(p&&p.then){
-    p.then(()=>{document.body.classList.add('fs-native');fsLabel(true);})
+    p.then(()=>{document.body.classList.add('fs-native');})
      .catch(()=>{fsPseudoOn();});   // 기기·브라우저가 거절하면 오버레이로
   }else{
-    setTimeout(()=>{if(natFsEl()){document.body.classList.add('fs-native');fsLabel(true);}else fsPseudoOn();},160);
+    setTimeout(()=>{if(natFsEl()){document.body.classList.add('fs-native');}else fsPseudoOn();},160);
   }
 }
 ['fullscreenchange','webkitfullscreenchange'].forEach(ev=>document.addEventListener(ev,()=>{
-  if(!natFsEl()){document.body.classList.remove('fs-native');if(!fsPseudo) fsLabel(false);}
+  if(!natFsEl()){document.body.classList.remove('fs-native');}
 }));
 
 /* ---------- 이벤트 ---------- */
