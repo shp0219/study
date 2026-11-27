@@ -143,17 +143,20 @@
     if (app) {
       html += '<div class="err" style="background:#fff8e6;color:#8a6f19;text-align:left">' +
         '지금 ' + esc(inAppBrowserName()) + ' 안의 브라우저로 열려 있어요.<br>' +
-        'Google은 이런 앱 안에서는 로그인을 막아요. <b>크롬으로 열면</b> 바로 됩니다.</div>' +
+        'Google은 앱 안의 브라우저에서는 로그인을 막아요. <b>크롬으로 열면</b> 바로 됩니다.</div>' +
         '<button class="btn" id="chrome">크롬으로 열기</button>' +
         '<button class="btn ghost" id="copy" style="margin-top:8px">주소 복사</button>' +
-        '<p style="margin:16px 0 0;font-size:13px;color:#8a8398">크롬에서 연 뒤, 아래 버튼으로 로그인해 주세요.</p>';
+        errHTML(err) +
+        '<p style="margin:16px 0 0;font-size:13px;color:#8a8398;word-break:keep-all">' +
+        '크롬에서 연 뒤 <b>Google로 로그인</b>을 눌러 주세요.<br>' +
+        '크롬이 없다면 플레이스토어에서 설치해 주세요.</p>';
     } else {
       html += '<p>기기를 승인·차단하려면 보호자 Google 계정으로 들어와 주세요.</p>';
-    }
-    html += errHTML(err);
-    html += '<button class="btn" id="go"' + (app ? ' style="margin-top:10px"' : '') + '>Google로 로그인</button>';
-    if (err && !app) {
-      html += '<button class="btn ghost" id="alt" style="margin-top:8px">로그인 창이 안 되면 다른 방식으로</button>';
+      html += errHTML(err);
+      html += '<button class="btn" id="go">Google로 로그인</button>';
+      if (err) {
+        html += '<button class="btn ghost" id="alt" style="margin-top:8px">로그인 창이 안 되면 다른 방식으로</button>';
+      }
     }
     html += '<p style="margin-top:14px;font-size:12.5px;color:#9a93b0">' + esc(ADMIN) + '</p></div>';
     view.innerHTML = html;
@@ -161,10 +164,11 @@
     if (app) {
       document.getElementById('chrome').addEventListener('click', chromeOpen);
       document.getElementById('copy').addEventListener('click', function () { copyAddress(this); });
+    } else {
+      document.getElementById('go').addEventListener('click', function () { startSignIn(this); });
+      var alt = document.getElementById('alt');
+      if (alt) alt.addEventListener('click', function () { startRedirect(this); });
     }
-    document.getElementById('go').addEventListener('click', function () { startSignIn(this); });
-    var alt = document.getElementById('alt');
-    if (alt) alt.addEventListener('click', function () { startRedirect(this); });
   }
 
   function wrongAccount(email) {
