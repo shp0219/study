@@ -117,6 +117,21 @@
   .poster .play{width:78px;height:78px;border-radius:50%;background:rgba(255,255,255,.94);color:#2f2417;
     display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 8px 22px rgba(0,0,0,.3)}
   .poster b{font-size:17px;font-weight:900}
+  /* ── 화면 꽉 채우기 ── */
+  .fsbtn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:12px;padding:15px;
+    border-radius:20px;font-weight:900;font-size:17px;color:#4a3a22;background:#fff;
+    box-shadow:0 4px 0 rgba(47,36,23,.07),inset 0 0 0 2px #f0e2cd}
+  .fsbtn:active{transform:translateY(2px)}
+  .fsclose{position:absolute;top:calc(8px + env(safe-area-inset-top));right:8px;z-index:5;display:none;
+    align-items:center;gap:5px;padding:10px 15px;border-radius:14px;font-weight:900;font-size:15px;
+    color:#fff;background:rgba(18,18,18,.74);box-shadow:0 2px 10px rgba(0,0,0,.45)}
+  .fsclose:active{transform:scale(.95)}
+  body.fs-on,body.fs-native{overflow:hidden}
+  body.fs-on .fsclose,body.fs-native .fsclose{display:flex}
+  body.fs-on .video{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;max-width:none;
+    aspect-ratio:auto;border-radius:0;box-shadow:none;z-index:2147483002;background:#000}
+  .video:fullscreen{width:100vw;height:100vh;height:100dvh;aspect-ratio:auto;border-radius:0}
+  .video:-webkit-full-screen{width:100vw;height:100vh;height:100dvh;aspect-ratio:auto;border-radius:0}
   .ephead{padding:16px 2px 4px}
   .ephead h2{margin:0;font-size:26px;font-weight:900;letter-spacing:-.8px;line-height:1.22}
   .ephead .meta{font-size:13px;font-weight:800;color:var(--ink3);margin-top:4px}
@@ -401,11 +416,12 @@
     var s = byKey[key], e = epAt(key, i);
     if (!s || !e) return viewHome();
     var started = !!vid[e.qid];
+    var fsCloseBtn = '<button class="fsclose" id="fsclose" aria-label="작게 보기">✕ 작게 보기</button>';
     var player = started
-      ? '<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/' + e.vid + '?autoplay=1&rel=0&playsinline=1&modestbranding=1" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>'
+      ? '<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/' + e.vid + '?autoplay=1&rel=0&playsinline=1&modestbranding=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>' + fsCloseBtn + '</div>'
       : '<div class="video">' +
         '<button class="poster" id="startv" data-vid="' + e.vid + '" style="background:' + s.grad + '">' +
-        '<span class="play">▶</span><b>영상 보기</b></button></div>';
+        '<span class="play">▶</span><b>영상 보기</b></button>' + fsCloseBtn + '</div>';
     var learn = e.learn ? '<div class="learnbox"><div class="lt">이 편에서 배우는 것</div>' + esc(e.learn) + (e.detail ? '<div style="margin-top:6px;color:#8a7458;font-size:14.5px">' + esc(e.detail) + '</div>' : '') + '</div>' : '';
     var desc = e.desc ? '<div class="learnbox" style="background:#f7f2ea"><div class="lt">이야기</div>' +
       '<div class="descbox" id="dbox"><span style="font-size:14.5px;color:#6d5c47">' + esc(e.desc) + '</span></div>' +
@@ -416,6 +432,7 @@
       '<div class="ttl"><b>' + esc(s.name) + '</b><span>' + esc(e.se || '') + (e.dur ? ' · ' + e.dur : '') + '</span></div>' +
       '<span class="pill">💎 <span class="gemn">' + gemCount() + '</span></span></div></div></div>' +
       '<div class="wrap player">' + player +
+      '<button class="fsbtn" id="fsbtn">⛶ 화면 꽉 채우기</button>' +
       '<div class="ephead"><h2>' + (e.no || (i + 1)) + '번 · ' + esc(e.title) + '</h2>' +
       '<div class="meta">' + esc([e.title2, e.dur].filter(Boolean).join(' · ')) + '</div></div>' +
       learn + desc +
@@ -581,6 +598,7 @@
 
   /* ── 라우터 ── */
   function render(){
+    exitFs();
     stopSpeech();
     var h = location.hash || '#/';
     var m;
@@ -608,6 +626,53 @@
     window.scrollTo(0, 0);
   }
 
+  /* ── 화면 꽉 채우기 ── */
+  var fsPseudo = false;
+  function natFsEl(){ return document.fullscreenElement || document.webkitFullscreenElement || null; }
+  function fsLabel(on){ var b = document.getElementById('fsbtn'); if (b) b.textContent = on ? '✕ 작게 보기' : '⛶ 화면 꽉 채우기'; }
+  function fsPseudoOn(){ fsPseudo = true; document.body.classList.add('fs-on'); fsLabel(true); }
+  function exitFs(){
+    if (fsPseudo) { fsPseudo = false; document.body.classList.remove('fs-on'); }
+    document.body.classList.remove('fs-native');
+    if (natFsEl()) { try{ (document.exitFullscreen || document.webkitExitFullscreen).call(document); }catch(e){} }
+    fsLabel(false);
+  }
+  function enterFs(){
+    if (fsPseudo || natFsEl()) return;
+    var el = document.querySelector('.player .video');
+    if (!el) return;
+    var fn = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (!fn) return fsPseudoOn();
+    var p = null;
+    try{ p = fn.call(el); }catch(err){ return fsPseudoOn(); }
+    if (p && p.then) {
+      p.then(function(){ document.body.classList.add('fs-native'); fsLabel(true); })
+       .catch(function(){ fsPseudoOn(); });   /* 기기·브라우저가 거절하면 오버레이로 */
+    } else {
+      setTimeout(function(){ if (natFsEl()) { document.body.classList.add('fs-native'); fsLabel(true); } else fsPseudoOn(); }, 160);
+    }
+  }
+  ['fullscreenchange','webkitfullscreenchange'].forEach(function(ev){
+    document.addEventListener(ev, function(){
+      if (!natFsEl()) { document.body.classList.remove('fs-native'); if (!fsPseudo) fsLabel(false); }
+    });
+  });
+  function startPlayback(sv){
+    var e = epAt(cur.key, cur.idx);
+    if (!e || !sv) return null;
+    seen.add(e.qid); saveSeen();
+    vid[e.qid] = 1; lsSet(K_VID, vid);
+    if ((e.qid in best) && !gems[e.qid]) { gems[e.qid] = 1; saveGems(); sndGem(); bumpGem(); toast('💎 보석을 얻었어요!'); }
+    var fr = document.createElement('iframe');
+    fr.setAttribute('src', 'https://www.youtube-nocookie.com/embed/' + sv.getAttribute('data-vid') +
+      '?autoplay=1&rel=0&playsinline=1&modestbranding=1');
+    fr.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen');
+    fr.setAttribute('allowfullscreen', '');
+    fr.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+    sv.parentNode.replaceChild(fr, sv);
+    return fr;
+  }
+
   /* ── 이벤트 ── */
   document.addEventListener('click', function(ev){
     var t = ev.target.closest('[data-go]');
@@ -623,13 +688,16 @@
     }
 
     var sv = ev.target.closest('#startv');
-    if (sv) {
-      var e = epAt(cur.key, cur.idx);
-      seen.add(e.qid); saveSeen();
-      vid[e.qid] = 1; lsSet(K_VID, vid);
-      if ((e.qid in best) && !gems[e.qid]) { gems[e.qid] = 1; saveGems(); sndGem(); bumpGem(); toast('💎 보석을 얻었어요!'); }
-      sv.outerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + sv.getAttribute('data-vid') +
-        '?autoplay=1&rel=0&playsinline=1&modestbranding=1" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
+    if (sv) { startPlayback(sv); return; }
+
+    var fb = ev.target.closest('#fsbtn, #fsclose');
+    if (fb) {
+      if (fb.id === 'fsclose' || fsPseudo || natFsEl()) { exitFs(); }
+      else {
+        var pv = document.getElementById('startv');
+        if (pv) startPlayback(pv);
+        enterFs();
+      }
       return;
     }
 
