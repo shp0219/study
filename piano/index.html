@@ -4,7 +4,14 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,viewport-fit=cover">
 <meta name="theme-color" content="#ffe0b2">
-<title>유니혀니의 큰 악보 놀이터</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="피아노">
+<title>유니혀니의 피아노 놀이터</title>
 <style>
 :root{ --ink:#1b1f27; --soft:#5b6472; --pink:#d81b60; }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
@@ -314,7 +321,8 @@ body.hasdock{padding-bottom:158px;}
 @media print{
   #pianodock,.actions,.gearpanel,.audiobar,.viewbar,header,#home{display:none!important;}
 }
-</style></head>
+</style><script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
+</head>
 <body class="view-home">
 <header>
   <div class="bar-top">
@@ -441,7 +449,7 @@ body.hasdock{padding-bottom:158px;}
 <div class="wrap">
   <section class="panel home on" id="home">
     <div class="home-top">
-      <div class="home-big">🎹 유니혀니의 큰 악보 놀이터</div>
+      <div class="home-big">🎹 유니혀니의 피아노 놀이터</div>
       <div class="home-sub">치고 싶은 노래를 골라 봐요!</div>
     </div>
     <div class="cards">

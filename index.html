@@ -6,10 +6,16 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#fff2f7">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>가윤이의 받아쓰기 놀이터 · 1~15급</title>
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="받아쓰기">
+<title>유니의 받아쓰기 놀이터</title>
 <style>
-/* 가윤이의 받아쓰기 놀이터 — single-file app styles */
+/* 유니의 받아쓰기 놀이터 — single-file app styles */
 *,*::before,*::after{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%;min-height:100%;
   background:linear-gradient(180deg,#fff2f7 0%,#f6f1ff 42%,#eaf8f2 100%) no-repeat;
@@ -261,17 +267,133 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+
+/* ---------- entry cards (입장 화면) ---------- */
+.entry-list{display:flex;flex-direction:column;gap:12px;margin-top:18px}
+.entry-card{display:flex;align-items:center;gap:14px;width:100%;min-height:96px;padding:16px;border-radius:22px;text-align:left;
+  background:linear-gradient(140deg,#fff,#fff4f8);border:1px solid #ffe0ea;box-shadow:0 10px 22px rgba(230,150,180,.14);transition:transform .12s ease}
+.entry-card:active{transform:scale(.985)}
+.entry-card.spell{background:linear-gradient(140deg,#fff,#f2f8ff);border-color:#dcebfb;box-shadow:0 10px 22px rgba(140,170,220,.14)}
+.entry-em{flex:0 0 auto;width:54px;height:54px;border-radius:17px;display:grid;place-items:center;font-size:1.7rem;background:#fff0f6}
+.entry-card.spell .entry-em{background:#eef6ff}
+.entry-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.entry-body b{font-size:1.12rem;font-weight:900;color:#423858;letter-spacing:-.02em}
+.entry-body small{font-size:.8rem;color:#9189a6;font-weight:700;line-height:1.35}
+.entry-foot{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px;font-size:.76rem;font-weight:800;color:#a9557f}
+.entry-card.spell .entry-foot{color:#4a76a8}
+.entry-go{flex:0 0 auto;font-size:1.5rem;color:#cbbfd8;font-weight:900;line-height:1}
+
+/* ---------- grade row ---------- */
+.grade-row{display:flex;gap:8px;margin:0 0 12px}
+.grade-row button{flex:1;min-height:46px;border-radius:14px;background:#fff;border:1.5px solid #efe6f5;font-size:.9rem;font-weight:900;color:#8f88a4}
+.grade-row button.on{background:#ffe1ec;border-color:#ffc2d8;color:#c9336b}
+.grade-row button:disabled{opacity:.6;color:#b6aec4}
+.grade-row button small{font-size:.68rem;font-weight:800;color:#b4a8c6}
+
+/* ---------- 평소 틀린 맞춤법 ---------- */
+.sp-add{background:#fff;border:1px solid #f2e9f8;border-radius:20px;padding:14px;margin-top:14px;box-shadow:0 8px 18px rgba(170,140,200,.1)}
+.sp-add-label{display:block;font-size:.84rem;font-weight:900;color:#7d6e99;margin:0 0 8px 2px}
+.sp-textarea{width:100%;min-height:58px;border-radius:15px;border:2px solid #eadcf6;background:#fdfbff;padding:11px 13px;font-family:inherit;font-size:1.02rem;font-weight:800;color:#3f3659;outline:none;line-height:1.45;resize:vertical}
+.sp-textarea:focus{border-color:#cba9ee;background:#fff;box-shadow:0 0 0 4px #f5ecff}
+.sp-textarea::placeholder{font-weight:700;color:#c3b8d3;font-size:.9rem}
+.sp-memo-input{width:100%;height:48px;margin-top:8px;border-radius:14px;border:1.5px solid #eee4f6;background:#fbf8ff;padding:0 13px;font-family:inherit;font-size:.9rem;font-weight:700;color:#4a4063;outline:none}
+.sp-memo-input::placeholder{color:#c3b8d3;font-weight:700;font-size:.84rem}
+.sp-memo-input:focus{border-color:#dcc7f0;background:#fff}
+.sp-add-foot{display:flex;align-items:center;gap:10px;margin-top:10px}
+.sp-add-foot .mini{flex:1;min-width:0;margin:0;font-size:.74rem}
+.sp-save{flex:0 0 auto;min-height:48px;padding:0 22px;border-radius:15px}
+
+.sp-dates{margin:2px 0 10px}
+.sp-dates .chip .n{display:block;font-size:.68rem;font-weight:800;color:#b1a4c2;margin-top:1px}
+.sp-dates .chip.on .n{color:#c56b92}
+.sp-actions{display:flex;gap:10px;margin:0 0 12px}
+.sp-act{flex:1;min-height:84px;padding:12px 8px;border-radius:18px;background:#fff;border:1px solid #f0e7f7;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;box-shadow:0 6px 14px rgba(170,140,200,.1)}
+.sp-act:active{transform:scale(.98)}
+.sp-act:disabled{opacity:.5;box-shadow:none}
+.sp-act .em{font-size:1.4rem;line-height:1}
+.sp-act b{font-size:.92rem;font-weight:900;color:#423858}
+.sp-act small{font-size:.7rem;font-weight:700;color:#9a91ae;text-align:center;line-height:1.3}
+.sp-act.review{background:linear-gradient(150deg,#fff,#f4f9ff);border-color:#dfeafa}
+.sp-wide{width:100%;min-height:64px;border-radius:18px;background:linear-gradient(135deg,#ffeaf4,#f2ecff);border:1px solid #ffdcec;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 18px;font-size:.95rem;font-weight:900;color:#8c2f5c;box-shadow:0 8px 18px rgba(240,150,180,.16)}
+.sp-wide b{font-size:.82rem;color:#a9557f;background:#fff;border-radius:999px;padding:5px 11px;font-weight:900}
+.sp-wide:disabled{background:#f7f3fa;border-color:#eee6f4;color:#b3a9c2;box-shadow:none}
+.sp-wide:disabled b{color:#b3a9c2}
+.sp-group{margin:0 0 4px}
+.sp-group-head{display:flex;align-items:center;gap:8px;margin:14px 2px 8px}
+.sp-group-head b{font-size:.86rem;font-weight:900;color:#5d5179}
+.sp-group-head .n{font-size:.72rem;font-weight:800;color:#a89bc0;background:#f5effc;border-radius:999px;padding:3px 9px}
+.sp-item{display:flex;align-items:flex-start;gap:8px;background:#fff;border:1px solid #f3ecf8;border-radius:16px;padding:10px 10px 10px 12px;margin-bottom:7px;box-shadow:0 3px 8px rgba(170,140,200,.06)}
+.sp-item.done{background:#f6fbf8;border-color:#dff0e7}
+.sp-item .body{flex:1;min-width:0}
+.sp-item .txt{display:block;font-size:.98rem;font-weight:800;color:#4a4063;overflow-wrap:anywhere;line-height:1.4}
+.sp-item.done .txt{color:#7f9a8d}
+.sp-item .memo{display:block;font-size:.76rem;font-weight:700;color:#9b93ad;margin-top:3px;overflow-wrap:anywhere}
+.sp-item .badge{display:inline-block;font-size:.66rem;font-weight:900;color:#1c8c62;background:#e9fbf2;border-radius:999px;padding:2px 8px;margin-top:5px}
+.sp-item .tools{flex:0 0 auto;display:flex;gap:2px}
+.sp-item .act{width:42px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:1rem;color:#a48fb8;background:#f9f4fe}
+.sp-item .act.ok{color:#1c8c62;background:#e9fbf2}
+.sp-empty{background:#fff;border:1px dashed #e6daf2;border-radius:18px;padding:22px 16px;text-align:center;color:#9a8fb0;font-size:.85rem;line-height:1.6}
+.sp-memo{margin-top:10px;background:#fff8e8;border:1px solid #ffe7b8;border-radius:14px;padding:9px 12px;font-size:.84rem;font-weight:700;color:#8a6a33;line-height:1.5}
+.sp-memo b{color:#b57b12}
+.sp-done-toggle{width:100%;min-height:50px;margin-top:12px;border-radius:15px;background:#fff;border:1.5px solid #e3eef7;font-size:.88rem;font-weight:900;color:#6f6388;padding:8px 10px;line-height:1.35}
+.sp-done-toggle.on{background:#e9fbf2;border-color:#b9e5cf;color:#1c8c62}
+.cell.blank{background:#fbf8ff;border-style:dashed;border-color:#e6daf2}
+#spPeekTimer.run>i{animation-duration:2s}
 </style>
+<script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
 </head>
 <body>
 <div class="app">
 
-  <!-- ============ HOME ============ -->
+  <!-- ============ HOME (입장 화면) ============ -->
   <section class="screen active" id="s-home">
     <div class="home-head">
-      <span class="eyebrow">1~15급 · 매주 화요일 시험 대비</span>
-      <h1>가윤이의<br><span class="hl">받아쓰기 놀이터</span></h1>
-      <p class="lead">한 문제씩 차근차근, 별을 모아 보자! ✨</p>
+      <span class="eyebrow">유니의 맞춤법 · 받아쓰기</span>
+      <h1>유니의<br><span class="hl">받아쓰기 놀이터</span></h1>
+      <p class="lead">오늘은 어떤 놀이를 해 볼까? ✨</p>
+    </div>
+
+    <div class="entry-list">
+      <button type="button" class="entry-card" id="btnEnterYear">
+        <span class="entry-em">📝</span>
+        <span class="entry-body">
+          <b>받아쓰기 1학년</b>
+          <small>1~15급 · 매주 화요일 시험 대비</small>
+          <span class="entry-foot"><span id="entryStars">🌟 0 / 150</span><span id="entryLevels">만점 0급</span></span>
+        </span>
+        <span class="entry-go">›</span>
+      </button>
+
+      <button type="button" class="entry-card spell" id="btnEnterSpell">
+        <span class="entry-em">🩹</span>
+        <span class="entry-body">
+          <b>평소 틀린 맞춤법</b>
+          <small>내가 틀린 단어·문장을 모아 공부해요</small>
+          <span class="entry-foot"><span id="entrySpellTodo">공부할 0개</span><span id="entrySpellDone">완료 0개</span></span>
+        </span>
+        <span class="entry-go">›</span>
+      </button>
+    </div>
+
+    <details class="parent-tip">
+      <summary>부모님께 💡</summary>
+      <p>휴대폰 자판 위 ‘추천 단어/자동 완성’을 잠깐 끄면 실전 연습에 더 좋아요!</p>
+      <p>소리가 안 나오면 시험 화면의 <b>‘엄마가 읽어주기’</b>를 켜 주세요. 시험은 다 쓴 뒤 <b>채점하기</b>를 누르면 한 번에 채점돼요.</p>
+      <p><b>평소 틀린 맞춤법</b>에 학교·숙제에서 틀린 단어나 문장을 적어 두면, 날짜별로 모아 공부하고 받아쓰기로 다시 확인할 수 있어요.</p>
+    </details>
+    <p class="footnote">매일 조금씩, 즐겁게 ✏️</p>
+  </section>
+
+  <!-- ============ YEAR (받아쓰기 1학년 · 1~15급) ============ -->
+  <section class="screen" id="s-year">
+    <div class="bar-head">
+      <button type="button" class="icon-btn" id="btnYearHome" aria-label="처음으로">🏠</button>
+      <h2>받아쓰기 1학년</h2>
+    </div>
+
+    <div class="grade-row" id="gradeSeg" role="tablist" aria-label="학년 선택">
+      <button type="button" class="on" role="tab" aria-selected="true" data-grade="g1">1학년</button>
+      <button type="button" role="tab" aria-selected="false" data-grade="g2" disabled title="2학년 급수표는 준비 중이에요">2학년 <small>준비 중</small></button>
     </div>
 
     <div class="progress-card">
@@ -440,12 +562,95 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
 
 </div>
 
+
+  <!-- ============ SPELL (평소 틀린 맞춤법) ============ -->
+  <section class="screen" id="s-spell">
+    <div class="bar-head">
+      <button type="button" class="icon-btn" id="spBackHome" aria-label="처음으로">←</button>
+      <h2>평소 틀린 맞춤법</h2>
+      <span class="spacer"></span>
+      <span class="best-pill" id="spTodoPill">공부할 0</span>
+    </div>
+
+    <div class="sp-add">
+      <label class="sp-add-label" for="spInput">오늘 틀린 단어나 문장을 적어 주세요</label>
+      <textarea class="sp-textarea" id="spInput" rows="2" placeholder="예) 웬일이야" enterkeyhint="done"></textarea>
+      <input class="sp-memo-input" id="spMemo" type="text" placeholder="뜻·설명 (넣어도 되고 안 넣어도 돼요)">
+      <div class="sp-add-foot">
+        <span class="mini">줄을 바꿔 여러 개도 한 번에 넣을 수 있어요</span>
+        <button type="button" class="primary sp-save" id="btnSpAdd">저장 ✏️</button>
+      </div>
+    </div>
+
+    <h3 class="sec-title">날짜별 공부</h3>
+    <div class="chips sp-dates" id="spDates"></div>
+    <div class="sp-actions">
+      <button type="button" class="sp-act" id="spStudyDate"><span class="em">📖</span><b>공부하기</b><small id="spStudySub">보고 따라 치기</small></button>
+      <button type="button" class="sp-act" id="spListenDate"><span class="em">✍️</span><b>받아쓰기</b><small id="spListenSub">듣고 쓰기</small></button>
+    </div>
+
+    <button type="button" class="sp-wide" id="spRandom"><span>🔀 랜덤 받아쓰기</span><b id="spRandomCnt">0문제</b></button>
+
+    <h3 class="sec-title">완료한 것까지 복습</h3>
+    <p class="mini">‘알겠어요’ 체크한 것까지 모두 모아 다시 놀아요.</p>
+    <div class="sp-actions">
+      <button type="button" class="sp-act review" id="spReviewStudy"><span class="em">🔁</span><b>자판 치기</b><small id="spReviewSub">보고 따라 치기</small></button>
+      <button type="button" class="sp-act review" id="spReviewListen"><span class="em">🎧</span><b>랜덤 받아쓰기</b><small>듣고 쓰기</small></button>
+    </div>
+
+    <h3 class="sec-title">내가 적은 맞춤법</h3>
+    <div id="spList"></div>
+  </section>
+
+  <!-- ============ SPELL PLAY (공부·받아쓰기·복습) ============ -->
+  <section class="screen" id="s-spell-play">
+    <div class="bar-head">
+      <button type="button" class="icon-btn" id="spPlayBack" aria-label="뒤로">←</button>
+      <div class="progress"><i id="spBar"></i></div>
+      <span class="count" id="spCount">1/5</span>
+    </div>
+    <p class="mode-eyebrow" id="spModeLabel">맞춤법 공부 ✏️</p>
+
+    <div class="target-card">
+      <div class="label"><span id="spTargetLabel">이렇게 써요</span><span id="spTargetHint">네모 칸을 보며 따라 써 보세요</span></div>
+      <div id="spTargetBody"></div>
+      <div class="sp-memo hidden" id="spMemoBox"></div>
+      <div class="mem-timer hidden" id="spPeekTimer"><i></i></div>
+    </div>
+
+    <div class="tool-row">
+      <button type="button" class="tool-btn" id="spListenBtn">🔊 소리 듣기</button>
+      <button type="button" class="tool-btn hidden" id="spPeekBtn">👀 살짝 보기</button>
+    </div>
+
+    <div class="answer-card">
+      <label class="answer-label" for="spInputAnswer">여기에 써 보세요</label>
+      <input class="answer" id="spInputAnswer" type="text" inputmode="text" lang="ko"
+             autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="next"
+             placeholder="여기에 써 보세요" aria-label="맞춤법 답">
+      <button type="button" class="check-btn" id="spCheck">확인 ✔</button>
+    </div>
+
+    <button type="button" class="sp-done-toggle" id="spDoneToggle" aria-pressed="false">☐ 알겠어요</button>
+
+    <div id="spFeedback" aria-live="polite"></div>
+  </section>
+
+  <!-- ============ SPELL DONE ============ -->
+  <section class="screen" id="s-spell-done">
+    <div class="bar-head">
+      <button type="button" class="icon-btn" id="spDoneBack" aria-label="목록으로">←</button>
+      <h2>오늘의 결과</h2>
+    </div>
+    <div id="spDoneBody"></div>
+  </section>
+
 <div class="confetti-layer" id="confetti" aria-hidden="true"></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 /* ============================================================
-   가윤이의 받아쓰기 놀이터 · 1~15급
+   유니의 받아쓰기 놀이터 · 1~15급 + 평소 틀린 맞춤법
    Single-file offline web app
    ============================================================ */
 (function () {
@@ -494,7 +699,7 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
 
   var DB_KEY = 'gayun.dictation.v1';
   function loadDB() {
-    var base = { best: {}, learned: {}, wrong: [], order: 'seq', rate: 0.72 };
+    var base = { best: {}, learned: {}, wrong: [], order: 'seq', rate: 0.72, spell: [] };
     var raw = null, d = null;
     try { raw = store.get(DB_KEY); } catch (e) { raw = null; }
     try { d = raw ? JSON.parse(raw) : null; } catch (e) { d = null; }
@@ -508,35 +713,58 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
       }
       if (d.order === 'random' || d.order === 'seq') base.order = d.order;
       if (typeof d.rate === 'number' && d.rate > 0.4 && d.rate < 1.3) base.rate = d.rate;
+      if (Array.isArray(d.spell)) base.spell = d.spell.filter(function (x) {
+        return x && typeof x.text === 'string' && String(x.text).trim();
+      }).map(function (x) { return spItem(x); });
     }
     return base;
   }
   var DB = loadDB();
   function saveDB() { try { store.set(DB_KEY, JSON.stringify(DB)); } catch (e) { /* never crash */ } }
 
-  function learnedCount(lv) { var a = DB.learned[String(lv)]; return Array.isArray(a) ? a.length : 0; }
+  /* ---------- 학년 구조 (지금은 1학년, 2학년 급수표를 여기에 더하면 됨) ---------- */
+  var GRADES = [
+    { id: 'g1', label: '1학년', levels: LEVELS, ready: true },
+    { id: 'g2', label: '2학년', levels: [], ready: false }
+  ];
+  var GRADE = 'g1';
+  function gradeOf(id) {
+    var want = id || GRADE;
+    for (var i = 0; i < GRADES.length; i++) { if (GRADES[i].id === want) return GRADES[i]; }
+    return GRADES[0];
+  }
+  function gradeLevels() { return gradeOf().levels; }
+  function lvKey(lv) { var g = gradeOf(); return (g.id === 'g1' ? '' : g.id + '-') + lv; }
+
+  function learnedCount(lv) { var a = DB.learned[lvKey(lv)]; return Array.isArray(a) ? a.length : 0; }
   function markLearned(lv, idx) {
-    var k = String(lv);
+    var k = lvKey(lv);
     if (!Array.isArray(DB.learned[k])) DB.learned[k] = [];
     if (DB.learned[k].indexOf(idx) < 0) { DB.learned[k].push(idx); saveDB(); return true; }
     return false;
   }
-  function bestOf(lv) { var v = DB.best[String(lv)]; return typeof v === 'number' ? v : 0; }
+  function bestOf(lv) { var v = DB.best[lvKey(lv)]; return typeof v === 'number' ? v : 0; }
   function setBest(lv, score) {
-    if (score > bestOf(lv)) { DB.best[String(lv)] = score; saveDB(); }
+    if (score > bestOf(lv)) { DB.best[lvKey(lv)] = score; saveDB(); }
+  }
+  function wrongGrade(w) { return w && w.grade ? w.grade : 'g1'; }
+  function currentWrongs() {
+    return DB.wrong.filter(function (w) { return wrongGrade(w) === GRADE; });
   }
   function hasWrong(lv, idx) {
-    return DB.wrong.some(function (w) { return w.level === lv && w.idx === idx; });
+    return currentWrongs().some(function (w) { return w.level === lv && w.idx === idx; });
   }
   function addWrong(lv, idx) {
     if (hasWrong(lv, idx)) return;
-    DB.wrong.push({ level: lv, idx: idx, text: LEVELS[lv - 1][idx] });
+    var lvls = gradeLevels();
+    if (!lvls[lv - 1] || lvls[lv - 1][idx] === undefined) return;
+    DB.wrong.push({ grade: GRADE, level: lv, idx: idx, text: lvls[lv - 1][idx] });
     DB.wrong.sort(function (a, b) { return a.level - b.level || a.idx - b.idx; });
     saveDB();
   }
   function removeWrong(lv, idx) {
     var before = DB.wrong.length;
-    DB.wrong = DB.wrong.filter(function (w) { return !(w.level === lv && w.idx === idx); });
+    DB.wrong = DB.wrong.filter(function (w) { return !(wrongGrade(w) === GRADE && w.level === lv && w.idx === idx); });
     if (DB.wrong.length !== before) saveDB();
   }
 
@@ -762,21 +990,24 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
     var totalLearned = 0, perfect = 0, k;
     for (k in DB.learned) { if (Object.prototype.hasOwnProperty.call(DB.learned, k) && Array.isArray(DB.learned[k])) totalLearned += DB.learned[k].length; }
     for (k in DB.best) { if (Object.prototype.hasOwnProperty.call(DB.best, k) && DB.best[k] === 10) perfect++; }
+    var levels = gradeLevels(), totalQ = levels.length * 10;
 
     $('#starTotal').textContent = totalLearned;
-    $('#homeBar').style.width = (totalLearned / 150 * 100).toFixed(1) + '%';
+    $('#homeBar').style.width = (totalQ ? totalLearned / totalQ * 100 : 0).toFixed(1) + '%';
     $('#perfectCount').textContent = '만점 ' + perfect + '급';
     $('#homeFoot').textContent = totalLearned === 0
       ? '첫 문제를 풀면 별이 하나 생겨요!'
-      : (totalLearned >= 150 ? '150문제를 모두 만났어요! 대단해요 🏆' : (150 - totalLearned) + '문제만 더 만나면 돼요!');
+      : (totalLearned >= totalQ ? totalQ + '문제를 모두 만났어요! 대단해요 🏆' : (totalQ - totalLearned) + '문제만 더 만나면 돼요!');
+    $('#entryStars').textContent = '🌟 ' + totalLearned + ' / ' + totalQ;
+    $('#entryLevels').textContent = '만점 ' + perfect + '급';
 
-    var rv = DB.wrong.length;
+    var rv = currentWrongs().length;
     $('#reviewCnt').textContent = rv;
     $('#btnReview').disabled = rv === 0;
     $('#reviewSub').textContent = rv ? '틀렸던 문제만 모아서 놀아요' : '아직 틀린 문제가 없어요';
 
     var html = '';
-    for (var i = 0; i < LEVELS.length; i++) {
+    for (var i = 0; i < levels.length; i++) {
       var lv = i + 1, best = bestOf(lv), lc = learnedCount(lv);
       var score = best ? best + '/10 🌟' : (lc ? '연습 ' + lc + '/10' : '시작 전');
       var badge = best === 10 ? '🏅' : (best >= 8 ? '🌟' : '');
@@ -788,6 +1019,14 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
     $('#levelGrid').innerHTML = html;
 
     $$('#orderSeg button').forEach(function (b) { b.classList.toggle('on', b.dataset.order === DB.order); });
+    $$('#gradeSeg button').forEach(function (b) {
+      var on = b.dataset.grade === GRADE;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+
+    $('#entrySpellTodo').textContent = '공부할 ' + spTodoCount() + '개';
+    $('#entrySpellDone').textContent = '완료 ' + spDoneCount() + '개';
   }
 
   /* ---------- level screen ---------- */
@@ -796,7 +1035,7 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
     $('#levelTitle').textContent = lv + '급';
     var best = bestOf(lv);
     $('#levelBest').textContent = best ? '최고 ' + best + '/10' : '최고 -';
-    $('#levelItems').innerHTML = LEVELS[lv - 1].map(function (t, i) {
+    $('#levelItems').innerHTML = gradeLevels()[lv - 1].map(function (t, i) {
       return '<li><span class="num">' + (i + 1) + '</span>' +
         '<span class="txt">' + esc(t) + '</span>' +
         '<button type="button" class="mini-listen" data-say="' + esc(t) + '" aria-label="문제 듣기">🔊</button></li>';
@@ -805,12 +1044,12 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
   }
 
   function orderList(lv) {
-    var arr = LEVELS[lv - 1].map(function (text, idx) { return { level: lv, idx: idx, text: text }; });
+    var arr = gradeLevels()[lv - 1].map(function (text, idx) { return { level: lv, idx: idx, text: text }; });
     return DB.order === 'random' ? shuffle(arr) : arr;
   }
   function buildQueue(mode, level) {
     if (mode === 'review') {
-      var items = DB.wrong.slice(0, 20);
+      var items = currentWrongs().slice(0, 20);
       return shuffle(items);
     }
     return orderList(level);
@@ -842,7 +1081,7 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
     if (!PLAY.queue.length) {
       toast('다시 놀 문제가 없어요!');
       renderHome();
-      show('s-home');
+      show('s-year');
       return;
     }
     show('s-play');
@@ -1032,7 +1271,7 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
     else $('#finishBody').insertAdjacentHTML('beforeend', '<div class="perfect-card">틀린 문제가 없어요! 완벽해요 ✨</div>');
 
     $('#btnAgain').onclick = function () { startPlay(PLAY.mode, PLAY.level, buildQueue(PLAY.mode, PLAY.level)); };
-    $('#btnFinishHome').onclick = function () { renderHome(); show('s-home'); };
+    $('#btnFinishHome').onclick = function () { renderHome(); show('s-year'); };
   }
 
   /* ---------- notebook recap (공책에 3번 쓸 3문제) ---------- */
@@ -1223,17 +1462,17 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
     else body.insertAdjacentHTML('beforeend', '<div class="perfect-card">틀린 문제가 없어요! 완벽해요 ✨</div>');
 
     $('#btnRetest').onclick = function () { openTest(TEST.level); };
-    $('#btnTestHome').onclick = function () { renderHome(); show('s-home'); };
+    $('#btnTestHome').onclick = function () { renderHome(); show('s-year'); };
   }
 
   /* ---------- review list ---------- */
   function renderReview() {
-    var items = DB.wrong.slice();
+    var items = currentWrongs().slice();
     var body = $('#reviewBody');
     if (!items.length) {
       body.innerHTML = '<div class="empty-card"><span class="big-emoji">🎉</span>아직 틀린 문제가 없어요!<br>시험을 보면 틀린 문제가 여기에 모여요.</div>' +
         '<button type="button" class="ghost wide" id="btnReviewHome">홈으로</button>';
-      $('#btnReviewHome').onclick = function () { renderHome(); show('s-home'); };
+      $('#btnReviewHome').onclick = function () { renderHome(); show('s-year'); };
       return;
     }
     body.innerHTML = '<p class="lead small">틀렸던 <b>' + items.length + '문제</b>예요. 다시 놀면서 하나씩 지워 봐요!</p>' +
@@ -1247,7 +1486,7 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
       '<button type="button" class="ghost wide" id="btnReviewClear">다 외웠어요, 목록 비우기</button>';
 
     $('#btnReviewPlay').onclick = function () {
-      startPlay('review', 0, shuffle(DB.wrong.slice(0, 20)));
+      startPlay('review', 0, shuffle(currentWrongs().slice(0, 20)));
     };
     $('#btnReviewClear').onclick = function () {
       if (window.confirm('틀린 문제 목록을 모두 지울까요?')) {
@@ -1259,9 +1498,398 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
     };
   }
 
+
+  /* ============================================================
+     평소 틀린 맞춤법 — 내가 적은 단어·문장
+     ============================================================ */
+  var WEEK_KO = ['일', '월', '화', '수', '목', '금', '토'];
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function spToday() {
+    var d = new Date();
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+  }
+  function spItem(x) {
+    var date = String(x && x.date ? x.date : '');
+    return {
+      id: String(x && x.id ? x.id : ''),
+      text: String(x && x.text ? x.text : ''),
+      memo: String(x && x.memo ? x.memo : ''),
+      date: /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : spToday(),
+      done: !!(x && x.done),
+      doneAt: x && typeof x.doneAt === 'number' ? x.doneAt : null,
+      wrong: x && typeof x.wrong === 'number' ? x.wrong : 0,
+      createdAt: x && typeof x.createdAt === 'number' ? x.createdAt : 0
+    };
+  }
+  function spDateLabel(s) {
+    var p = String(s).split('-');
+    if (p.length !== 3) return String(s);
+    var d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+    var base = Number(p[1]) + '월 ' + Number(p[2]) + '일';
+    if (isNaN(d.getTime())) return base;
+    return base + ' (' + WEEK_KO[d.getDay()] + ')' + (s === spToday() ? ' · 오늘' : '');
+  }
+  function spDateShort(s) {
+    var p = String(s).split('-');
+    if (p.length !== 3) return String(s);
+    return (s === spToday() ? '오늘 ' : '') + Number(p[1]) + '/' + Number(p[2]);
+  }
+  function spById(id) {
+    for (var i = 0; i < DB.spell.length; i++) { if (DB.spell[i].id === id) return DB.spell[i]; }
+    return null;
+  }
+  function spTodoCount() { return DB.spell.filter(function (x) { return !x.done; }).length; }
+  function spDoneCount() { return DB.spell.filter(function (x) { return x.done; }).length; }
+  function spUid() { return 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+  function spDates() {
+    var seen = {}, out = [];
+    DB.spell.forEach(function (x) { if (!seen[x.date]) { seen[x.date] = true; out.push(x.date); } });
+    out.sort(function (a, b) { return a < b ? 1 : (a > b ? -1 : 0); });
+    return out;
+  }
+  function spDayItems(date, includeDone) {
+    return DB.spell.filter(function (x) {
+      return x.date === date && (includeDone || !x.done);
+    }).sort(function (a, b) { return a.createdAt - b.createdAt; });
+  }
+  function spAdd(raw, memo) {
+    var texts = String(raw).split(/[\n;]+/).map(function (t) { return norm(t); }).filter(function (t) { return t; });
+    if (!texts.length) return { added: 0, dup: 0 };
+    var m = norm(memo || ''), today = spToday(), now = Date.now(), added = 0, dup = 0;
+    texts.forEach(function (t, i) {
+      if (t.length > 80) t = t.slice(0, 80);
+      if (DB.spell.some(function (x) { return norm(x.text) === t; })) { dup++; return; }
+      DB.spell.push({ id: spUid() + i, text: t, memo: (texts.length === 1 ? m : ''), date: today,
+        done: false, doneAt: null, wrong: 0, createdAt: now + i });
+      added++;
+    });
+    if (added) saveDB();
+    return { added: added, dup: dup };
+  }
+  function spRemove(id) {
+    DB.spell = DB.spell.filter(function (x) { return x.id !== id; });
+    saveDB();
+  }
+  function spSetDone(id, val) {
+    var it = spById(id);
+    if (!it) return;
+    it.done = !!val;
+    it.doneAt = it.done ? Date.now() : null;
+    saveDB();
+  }
+  function blankGridHTML(text) {
+    var chars = Array.from(norm(text));
+    var out = '';
+    for (var i = 0; i < chars.length; i++) {
+      out += chars[i] === ' ' ? '<span class="cell sp blank"></span>' : '<span class="cell blank"></span>';
+    }
+    return '<div class="grid">' + out + '</div>';
+  }
+
+  function renderSpellHome() {
+    var todo = spTodoCount(), done = spDoneCount();
+    $('#spTodoPill').textContent = '공부할 ' + todo;
+    $('#entrySpellTodo').textContent = '공부할 ' + todo + '개';
+    $('#entrySpellDone').textContent = '완료 ' + done + '개';
+
+    var dates = spDates();
+    if (SP_DATE && dates.indexOf(SP_DATE) < 0) SP_DATE = '';
+    if (!SP_DATE && dates.length) SP_DATE = dates[0];
+    if (!dates.length && SP_DATE) SP_DATE = '';
+
+    var dateBox = $('#spDates');
+    if (!dates.length) {
+      dateBox.innerHTML = '<span class="mini">아직 적은 맞춤법이 없어요. 위에 첫 단어를 적어 보세요!</span>';
+    } else {
+      dateBox.innerHTML = dates.map(function (d) {
+        var all = spDayItems(d, true).length, left = spDayItems(d, false).length;
+        return '<button type="button" class="chip' + (d === SP_DATE ? ' on' : '') + '" data-date="' + esc(d) + '">' +
+          spDateShort(d) + '<span class="n">' + left + '/' + all + '</span></button>';
+      }).join('');
+    }
+
+    var sel = SP_DATE ? spDayItems(SP_DATE, false) : [];
+    $('#spStudyDate').disabled = !sel.length;
+    $('#spListenDate').disabled = !sel.length;
+    $('#spStudySub').textContent = sel.length ? sel.length + '문제 · 보고 따라 치기' : '이 날 공부할 게 없어요';
+    $('#spListenSub').textContent = sel.length ? sel.length + '문제 · 듣고 쓰기' : '이 날 받아쓰기가 없어요';
+    $('#spRandom').disabled = !todo;
+    $('#spRandomCnt').textContent = todo ? todo + '문제' : '0문제';
+    $('#spReviewStudy').disabled = !DB.spell.length;
+    $('#spReviewListen').disabled = !DB.spell.length;
+    $('#spReviewSub').textContent = DB.spell.length ? DB.spell.length + '문제 · 보고 따라 치기' : '아직 없어요';
+
+    var list = $('#spList');
+    if (!DB.spell.length) {
+      list.innerHTML = '<div class="sp-empty"><span class="big-emoji">🩹</span>아직 적은 맞춤법이 없어요.<br>' +
+        '위에 오늘 틀린 단어나 문장을 적고 <b>저장</b>을 눌러 보세요!</div>';
+      return;
+    }
+    list.innerHTML = spDates().map(function (d) {
+      var arr = spDayItems(d, true);
+      var left = arr.filter(function (x) { return !x.done; }).length;
+      return '<div class="sp-group"><div class="sp-group-head"><b>' + esc(spDateLabel(d)) + '</b>' +
+        '<span class="n">' + arr.length + '개' + (left < arr.length ? ' · 완료 ' + (arr.length - left) : '') + '</span></div>' +
+        arr.map(spItemHTML).join('') + '</div>';
+    }).join('');
+  }
+
+  function spItemHTML(it) {
+    return '<div class="sp-item' + (it.done ? ' done' : '') + '" data-id="' + esc(it.id) + '">' +
+      '<div class="body"><span class="txt">' + esc(it.text) + '</span>' +
+      (it.memo ? '<span class="memo">💡 ' + esc(it.memo) + '</span>' : '') +
+      (it.done ? '<span class="badge">✓ 알겠어요</span>' : '') + '</div>' +
+      '<div class="tools">' +
+      '<button type="button" class="act" data-act="say" data-id="' + esc(it.id) + '" aria-label="듣기">🔊</button>' +
+      '<button type="button" class="act' + (it.done ? ' ok' : '') + '" data-act="done" data-id="' + esc(it.id) + '" aria-label="알겠어요">' + (it.done ? '↩️' : '☑') + '</button>' +
+      '<button type="button" class="act" data-act="del" data-id="' + esc(it.id) + '" aria-label="지우기">✕</button>' +
+      '</div></div>';
+  }
+
+  /* ---------- 맞춤법 놀이 (공부 · 받아쓰기 · 복습) ---------- */
+  var SP_DATE = '';
+  var SP = { mode: 'study', queue: [], pos: 0, results: [], answered: false, hidden: false,
+    peekTimer: null, nextTimer: null };
+
+  function spModeInfo() {
+    if (SP.mode === 'dictate') return { label: '받아쓰기 ✍️', hide: true };
+    if (SP.mode === 'review-study') return { label: '복습 · 자판 치기 🔁', hide: false };
+    if (SP.mode === 'review-dictate') return { label: '복습 · 랜덤 받아쓰기 🎧', hide: true };
+    return { label: '맞춤법 공부 ✏️', hide: false };
+  }
+
+  function startSpell(mode, items) {
+    var list = (items || []).map(function (x) {
+      return { id: x.id, text: x.text, memo: x.memo || '' };
+    });
+    if (mode === 'dictate' || mode === 'review-dictate') list = shuffle(list).slice(0, 20);
+    if (!list.length) {
+      toast(mode === 'study' || mode === 'dictate' ? '이 날 공부할 맞춤법이 없어요!' : '먼저 틀린 맞춤법을 적어 주세요! ✏️');
+      return;
+    }
+    SP.mode = mode;
+    SP.queue = list;
+    SP.pos = 0;
+    SP.results = [];
+    SP.answered = false;
+    show('s-spell-play');
+    renderSpellQ(true);
+  }
+
+  function clearSpellTimers() {
+    if (SP.peekTimer) { clearTimeout(SP.peekTimer); SP.peekTimer = null; }
+    if (SP.nextTimer) { clearTimeout(SP.nextTimer); SP.nextTimer = null; }
+  }
+
+  function paintSpellDone() {
+    var it = SP.queue[SP.pos];
+    if (!it) return;
+    var src = spById(it.id);
+    var on = !!(src && src.done);
+    var b = $('#spDoneToggle');
+    if (!b) return;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    b.textContent = on ? '☑ 알겠어요 · 완료했어요' : '☐ 알겠어요 (다 외우면 눌러요)';
+  }
+
+  function renderSpellQ(auto) {
+    clearSpellTimers();
+    try { window.scrollTo(0, 0); } catch (e) {}
+    var it = SP.queue[SP.pos];
+    if (!it) return;
+    var info = spModeInfo();
+    SP.hidden = info.hide;
+    SP.answered = false;
+
+    $('#spCount').textContent = (SP.pos + 1) + '/' + SP.queue.length;
+    $('#spBar').style.width = (SP.pos / SP.queue.length * 100) + '%';
+    $('#spModeLabel').textContent = info.label;
+    $('#spFeedback').innerHTML = '';
+
+    var inp = $('#spInputAnswer');
+    inp.value = '';
+    inp.disabled = false;
+    $('#spCheck').disabled = false;
+    $('#spListenBtn').classList.remove('hidden');
+    $('#spListenBtn').textContent = info.hide ? '🔊 다시 듣기' : '🔊 소리 듣기';
+    $('#spPeekBtn').classList.toggle('hidden', !info.hide);
+    $('#spPeekBtn').disabled = false;
+    $('#spPeekTimer').classList.add('hidden');
+    $('#spPeekTimer').classList.remove('run');
+
+    if (info.hide) {
+      $('#spTargetLabel').textContent = '듣고 써 보세요';
+      $('#spTargetHint').textContent = '정답은 채점한 뒤에 보여요';
+      $('#spTargetBody').innerHTML = blankGridHTML(it.text);
+      $('#spMemoBox').classList.add('hidden');
+      $('#spMemoBox').innerHTML = '';
+    } else {
+      $('#spTargetLabel').textContent = '이렇게 써요';
+      $('#spTargetHint').textContent = '네모 칸을 보며 따라 써 보세요';
+      $('#spTargetBody').innerHTML = gridHTML(it.text);
+      $('#spMemoBox').classList.toggle('hidden', !it.memo);
+      $('#spMemoBox').innerHTML = it.memo ? '💡 <b>뜻</b> · ' + esc(it.memo) : '';
+    }
+    paintSpellDone();
+    focusInput(inp);
+    if (auto && info.hide) speak(it.text, 0.82);
+  }
+
+  function spPeek() {
+    var it = SP.queue[SP.pos];
+    if (!it || SP.answered) return;
+    $('#spTargetBody').innerHTML = gridHTML(it.text);
+    $('#spTargetLabel').textContent = '살짝 보기 👀';
+    $('#spPeekBtn').disabled = true;
+    var timer = $('#spPeekTimer');
+    timer.classList.remove('hidden');
+    void timer.offsetWidth;
+    timer.classList.add('run');
+    var pos = SP.pos;
+    SP.peekTimer = setTimeout(function () {
+      SP.peekTimer = null;
+      if (SP.pos !== pos) return;
+      timer.classList.add('hidden');
+      timer.classList.remove('run');
+      $('#spPeekBtn').disabled = false;
+      if (SP.hidden) {
+        $('#spTargetLabel').textContent = '듣고 써 보세요';
+        $('#spTargetBody').innerHTML = blankGridHTML(it.text);
+      }
+    }, 2000);
+  }
+
+  function spSucceed() {
+    if (SP.answered) return;
+    var it = SP.queue[SP.pos];
+    if (!it) return;
+    var inp = $('#spInputAnswer');
+    SP.answered = true;
+    SP.results[SP.pos] = { it: it, ok: true, ans: inp.value };
+    inp.disabled = true;
+    $('#spCheck').disabled = true;
+    $('#spTargetBody').innerHTML = gridHTML(it.text, Array.from(norm(it.text)).map(function () { return 'ok'; }));
+    $('#spTargetLabel').textContent = '정답이에요';
+    $('#spTargetHint').textContent = '';
+    ding(true);
+    confetti(14);
+    $('#spFeedback').innerHTML = '<div class="feedback ok-card"><div class="verdict">🎉 정답! ' + praise() + '</div></div>';
+    SP.nextTimer = setTimeout(function () { SP.nextTimer = null; spNext(); }, 1150);
+  }
+
+  function spCheck() {
+    if (SP.answered) return;
+    var it = SP.queue[SP.pos];
+    if (!it) return;
+    var inp = $('#spInputAnswer');
+    var val = inp.value;
+    var res = grade(it.text, val);
+    if (res.empty) { toast('먼저 써 보세요! ✏️'); shake(inp); focusInput(inp); return; }
+    if (res.ok) { spSucceed(); return; }
+
+    SP.answered = true;
+    SP.results[SP.pos] = { it: it, ok: false, ans: val, tags: res.tags };
+    var src = spById(it.id);
+    if (src) { src.wrong = (src.wrong || 0) + 1; saveDB(); }
+    ding(false);
+    inp.disabled = true;
+    $('#spCheck').disabled = true;
+    $('#spTargetBody').innerHTML = gridHTML(it.text);
+    $('#spTargetLabel').textContent = '정답을 봐요';
+    $('#spTargetHint').textContent = '틀린 곳을 살펴보고 다시 써 봐요';
+    $('#spFeedback').innerHTML =
+      '<div class="feedback"><div class="verdict">🌱 정답과 비교해 봐요</div>' + tagsHTML(res.tags) + compareHTML(it.text, val) + '</div>' +
+      '<div class="fb-actions"><button type="button" class="ghost" id="spRetry">다시 써 보기</button>' +
+      '<button type="button" class="primary" id="spSkip">' + (SP.pos === SP.queue.length - 1 ? '결과 보기 →' : '다음 문제 →') + '</button></div>';
+    $('#spRetry').onclick = function () {
+      SP.answered = false;
+      $('#spFeedback').innerHTML = '';
+      inp.value = '';
+      inp.disabled = false;
+      $('#spCheck').disabled = false;
+      if (SP.hidden) {
+        $('#spTargetLabel').textContent = '듣고 써 보세요';
+        $('#spTargetHint').textContent = '정답은 채점한 뒤에 보여요';
+        $('#spTargetBody').innerHTML = blankGridHTML(it.text);
+      } else {
+        $('#spTargetLabel').textContent = '이렇게 써요';
+        $('#spTargetBody').innerHTML = gridHTML(it.text);
+      }
+      focusInput(inp);
+    };
+    $('#spSkip').onclick = spNext;
+    try { $('#spFeedback').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
+  }
+
+  function spNext() {
+    clearSpellTimers();
+    SP.pos++;
+    if (SP.pos >= SP.queue.length) { spFinish(); return; }
+    renderSpellQ(true);
+  }
+
+  function spFinish() {
+    var total = SP.queue.length;
+    var ok = SP.results.filter(function (r) { return r && r.ok; }).length;
+    var wrong = SP.queue.filter(function (it, i) { return !(SP.results[i] && SP.results[i].ok); });
+    var msg = ok === total ? '전부 맞았어요! 정말 대단해요 🏆'
+      : (ok / total >= 0.7 ? '아주 잘했어요! 조금만 더 하면 만점!'
+        : (ok / total >= 0.4 ? '좋아요! 틀린 것은 ‘알겠어요’를 풀고 한 번 더 놀아 봐요' : '괜찮아요. 하나씩 다시 해 보면 돼요 🌱'));
+    var body = $('#spDoneBody');
+    body.innerHTML =
+      '<div class="finish-hero">' +
+      '<div class="big-emoji">' + (ok === total ? '🏆' : (ok / total >= 0.7 ? '🌟' : '🌱')) + '</div>' +
+      '<div class="stars-row">' + starsFor(ok, total) + '</div>' +
+      '<h2 class="score-big">' + ok + '<span> / ' + total + '</span></h2>' +
+      '<p class="lead small">' + msg + '</p>' +
+      '</div>' +
+      (wrong.length ? '<h3 class="sec-title">한 번 더 볼 맞춤법</h3><div class="review-list">' +
+        wrong.map(function (w) {
+          var r = SP.results[SP.queue.indexOf(w)];
+          return '<div class="rv-row"><div class="rv-head"><span class="mark">•</span><span class="lv">맞춤법</span></div>' +
+            '<div class="txt" style="font-size:.94rem;font-weight:800;color:#5d5179">' + esc(w.text) + '</div>' +
+            (r && r.ans ? '<p class="ans">내가 쓴 답: <b>' + esc(r.ans) + '</b></p>' : '<p class="ans">쓰지 못했어요</p>') +
+            '</div>';
+        }).join('') + '</div>'
+        : '<div class="perfect-card">틀린 것이 없어요! 완벽해요 ✨</div>') +
+      '<div class="fb-actions" style="margin-top:16px"><button type="button" class="primary" id="spAgain">한 번 더</button>' +
+      '<button type="button" class="ghost" id="spToList">목록으로</button></div>';
+    show('s-spell-done');
+    if (total && ok / total >= 0.7) { confetti(30); ding(true); }
+    $('#spAgain').onclick = function () { startSpell(SP.mode, SP.queue.map(function (x) { return { id: x.id, text: x.text, memo: x.memo }; })); };
+    $('#spToList').onclick = function () { renderSpellHome(); show('s-spell'); };
+  }
+
+  function spToggleDone() {
+    var it = SP.queue[SP.pos];
+    if (!it) return;
+    var src = spById(it.id);
+    if (!src) return;
+    spSetDone(src.id, !src.done);
+    paintSpellDone();
+    renderSpellHome();
+    toast(src.done ? '완료! 이제 기본 목록에서 빠져요 ✓' : '다시 공부 목록에 넣었어요');
+  }
+
+  function spAddFromForm() {
+    var raw = $('#spInput').value;
+    var memo = $('#spMemo').value;
+    if (!norm(raw)) { toast('틀린 단어나 문장을 먼저 적어 주세요! ✏️'); focusInput($('#spInput')); return; }
+    var r = spAdd(raw, memo);
+    if (!r.added) { toast(r.dup ? '이미 있는 맞춤법이에요!' : '저장할 내용이 없어요'); return; }
+    $('#spInput').value = '';
+    $('#spMemo').value = '';
+    SP_DATE = spToday();
+    renderSpellHome();
+    renderHome();
+    toast(r.added + '개 저장했어요!' + (r.dup ? ' (중복 ' + r.dup + '개 제외)' : ''));
+  }
+
   /* ---------- wiring ---------- */
   function init() {
     renderHome();
+    renderSpellHome();
 
     /* home */
     $('#levelGrid').addEventListener('click', function (e) {
@@ -1277,7 +1905,7 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
       renderHome();
     });
     $('#btnReview').addEventListener('click', function () {
-      if (!DB.wrong.length) { toast('아직 틀린 문제가 없어요!'); return; }
+      if (!currentWrongs().length) { toast('아직 틀린 문제가 없어요!'); return; }
       renderReview();
       show('s-review');
     });
@@ -1297,14 +1925,14 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
       speak(b.dataset.say, 0.9);
     });
     $$('[data-back="home"]').forEach(function (b) {
-      b.addEventListener('click', function () { renderHome(); show('s-home'); });
+      b.addEventListener('click', function () { renderHome(); show('s-year'); });
     });
 
     /* play */
     $('#playBack').addEventListener('click', function () {
       clearPlayTimers();
       renderHome();
-      show('s-home');
+      show('s-year');
     });
     $('#btnListen').addEventListener('click', function () {
       var item = currentItem();
@@ -1377,6 +2005,81 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
       }
     });
 
+
+    /* 처음 화면 · 학년 */
+    $('#btnEnterYear').addEventListener('click', function () { renderHome(); show('s-year'); });
+    $('#btnYearHome').addEventListener('click', function () { renderHome(); show('s-home'); });
+    $('#gradeSeg').addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('button[data-grade]') : null;
+      if (!b || b.disabled) return;
+      var g = gradeOf(b.dataset.grade);
+      if (!g.ready || !g.levels.length) { toast('2학년 급수표는 준비 중이에요!'); return; }
+      GRADE = g.id;
+      renderHome();
+    });
+
+    /* 평소 틀린 맞춤법 */
+    $('#btnEnterSpell').addEventListener('click', function () { renderSpellHome(); show('s-spell'); });
+    $('#spBackHome').addEventListener('click', function () { renderHome(); show('s-home'); });
+    $('#btnSpAdd').addEventListener('click', spAddFromForm);
+    $('#spDates').addEventListener('click', function (e) {
+      var c = e.target.closest ? e.target.closest('[data-date]') : null;
+      if (!c) return;
+      SP_DATE = c.dataset.date;
+      renderSpellHome();
+    });
+    $('#spStudyDate').addEventListener('click', function () {
+      startSpell('study', spDayItems(SP_DATE, false));
+    });
+    $('#spListenDate').addEventListener('click', function () {
+      startSpell('dictate', spDayItems(SP_DATE, false));
+    });
+    $('#spRandom').addEventListener('click', function () {
+      startSpell('dictate', DB.spell.filter(function (x) { return !x.done; }));
+    });
+    $('#spReviewStudy').addEventListener('click', function () {
+      startSpell('review-study', shuffle(DB.spell.slice()).slice(0, 20));
+    });
+    $('#spReviewListen').addEventListener('click', function () {
+      startSpell('review-dictate', DB.spell.slice());
+    });
+    $('#spList').addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('[data-act]') : null;
+      if (!b) return;
+      var it = spById(b.dataset.id);
+      if (!it) return;
+      if (b.dataset.act === 'say') { speak(it.text, 0.82); return; }
+      if (b.dataset.act === 'done') {
+        spSetDone(it.id, !it.done);
+        renderSpellHome();
+        renderHome();
+        toast(it.done ? '완료! 기본 목록에서 뺐어요 ✓' : '다시 공부 목록에 넣었어요');
+        return;
+      }
+      if (b.dataset.act === 'del') {
+        if (window.confirm('이 맞춤법을 지울까요?')) { spRemove(it.id); renderSpellHome(); renderHome(); }
+      }
+    });
+    $('#spPlayBack').addEventListener('click', function () { clearSpellTimers(); renderSpellHome(); show('s-spell'); });
+    $('#spDoneBack').addEventListener('click', function () { renderSpellHome(); show('s-spell'); });
+    $('#spCheck').addEventListener('click', spCheck);
+    $('#spListenBtn').addEventListener('click', function () {
+      var it = SP.queue[SP.pos];
+      if (it) speak(it.text, 0.82);
+    });
+    $('#spPeekBtn').addEventListener('click', spPeek);
+    $('#spDoneToggle').addEventListener('click', spToggleDone);
+    $('#spInputAnswer').addEventListener('input', function (e) {
+      if (SP.answered) return;
+      var it = SP.queue[SP.pos];
+      if (!it || SP.hidden) return;
+      $('#spTargetBody').innerHTML = liveGridHTML(it.text, e.target.value);
+      if (norm(e.target.value) === norm(it.text)) spSucceed();
+    });
+    $('#spInputAnswer').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); spCheck(); }
+    });
+
     /* test hooks for automated checks */
     window.__APP__ = {
       LEVELS: LEVELS,
@@ -1394,8 +2097,23 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
       renderHome: renderHome,
       show: show,
       speak: speak,
-      ttsAvailable: TTS_OK
+      ttsAvailable: TTS_OK,
+      GRADES: GRADES,
+      getGrade: function () { return GRADE; },
+      SPELL: {
+        list: function () { return DB.spell; },
+        add: spAdd,
+        remove: spRemove,
+        setDone: spSetDone,
+        render: renderSpellHome,
+        start: startSpell,
+        dates: spDates,
+        today: spToday,
+        getState: function () { return SP; },
+        selectDate: function (d) { SP_DATE = d; renderSpellHome(); }
+      }
     };
+    window.__SPELL__ = window.__APP__.SPELL;
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

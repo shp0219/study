@@ -5,8 +5,15 @@
 <script src="../gate.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#fff8ee">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="학습 놀이터">
 <meta name="robots" content="noindex">
-<title>블록스 놀이터</title>
+<title>유니혀니의 학습 놀이터</title>
 <style>
   :root{
     --cream:#fff8ee; --cream2:#ffefdc; --ink:#2f2417; --ink2:#6d5c47; --ink3:#a08c72;
@@ -39,7 +46,7 @@
   .logo .blk i:nth-child(3){background:#3ec1a0;animation-delay:.3s}
   .logo .blk i:nth-child(4){background:#5b8def;animation-delay:.45s}
   @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-  h1{margin:0;font-size:30px;font-weight:900;letter-spacing:-1px}
+  h1{margin:0;font-size:26px;font-weight:900;letter-spacing:-.8px;line-height:1.18}
   .tagline{margin:6px 0 0;color:var(--ink2);font-size:15px;font-weight:700}
   .gemtop{position:fixed;right:14px;top:14px;z-index:30;display:flex;align-items:center;gap:6px;
     background:#fff;border:2px solid #ffe0a6;border-radius:999px;padding:7px 14px 7px 10px;
@@ -213,6 +220,7 @@
   .foot{text-align:center;font-size:12px;color:#b7a68c;padding:10px 0 26px;font-weight:700}
   @media (max-width:359px){ .card{min-height:146px} .card .ic{font-size:40px} .card .nm{font-size:19px} h1{font-size:26px} }
 </style>
+<script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
 </head>
 <body>
 <div id="app"></div>
@@ -344,7 +352,7 @@
         '</button>';
     }).join('');
     return '<div class="wrap">' + gemTop() +
-      '<div class="home-top"><div class="logo"><span class="blk"><i></i><i></i><i></i><i></i></span><h1>블록스 놀이터</h1></div>' +
+      '<div class="home-top"><div class="logo"><span class="blk"><i></i><i></i><i></i><i></i></span><h1>유니혀니의<br>학습 놀이터</h1></div>' +
       '<p class="tagline">보고, 듣고, 놀이로 배우는 수와 글자</p></div>' +
       '<div class="grid">' + cards + '</div>' +
       '<div class="foot">영상은 유튜브에서 재생돼요 · 학습 기록은 이 기기에만 저장돼요</div>' +
