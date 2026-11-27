@@ -164,9 +164,9 @@ body.fs-on .player{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh
 .player:fullscreen{width:100vw;height:100vh;height:100dvh;max-width:none;aspect-ratio:auto;border-radius:0}
 .player:-webkit-full-screen{width:100vw;height:100vh;height:100dvh;max-width:none;aspect-ratio:auto;border-radius:0}
 /* ── 가로 회전 (폰 자동 회전이 꺼져 있어도 CSS로 돌려서 가로로 보기) ── */
-body.fs-rot .player{top:50%;left:50%;right:auto;bottom:auto;width:100vh;width:100dvh;height:100vw;
+body.fs-rot .player>iframe,body.fs-rot .player>.ytposter{position:absolute;top:50%;left:50%;
+  width:100vh;width:100dvh;height:100vw;max-width:none;min-width:0;min-height:0;
   transform:translate(-50%,-50%) rotate(90deg);transform-origin:center center}
-body.fs-rot .fsbtns{transform:rotate(-90deg)}
 .bookhead{margin:14px 2px 8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .bookhead b{font-size:1rem;font-weight:900;letter-spacing:-.35px}
 .bookhead .cnt{font-size:.74rem;font-weight:800;color:#a2947e}

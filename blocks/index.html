@@ -135,9 +135,9 @@
   .video:fullscreen{width:100vw;height:100vh;height:100dvh;aspect-ratio:auto;border-radius:0}
   .video:-webkit-full-screen{width:100vw;height:100vh;height:100dvh;aspect-ratio:auto;border-radius:0}
   /* ── 가로 회전 (폰 자동 회전이 꺼져 있어도 CSS로 돌려서 가로로 보기) ── */
-  body.fs-rot .video{top:50%;left:50%;right:auto;bottom:auto;width:100vh;width:100dvh;height:100vw;
+  body.fs-rot .video>iframe,body.fs-rot .video>.poster{position:absolute;top:50%;left:50%;
+    width:100vh;width:100dvh;height:100vw;max-width:none;min-width:0;min-height:0;
     transform:translate(-50%,-50%) rotate(90deg);transform-origin:center center}
-  body.fs-rot .fsbtns{transform:rotate(-90deg)}
   .ephead{padding:16px 2px 4px}
   .ephead h2{margin:0;font-size:26px;font-weight:900;letter-spacing:-.8px;line-height:1.22}
   .ephead .meta{font-size:13px;font-weight:800;color:var(--ink3);margin-top:4px}
