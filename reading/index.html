@@ -152,6 +152,10 @@ img{-webkit-user-drag:none;user-select:none}
   font-size:.95rem;font-weight:900;letter-spacing:-.3px;color:#1f6f43;background:#e9f9ee;border-radius:15px;
   box-shadow:inset 0 0 0 2px #b9e6c6,0 3px 10px rgba(150,120,80,.12)}
 .fsbtn:active{transform:scale(.985)}
+.fsrow{display:flex;gap:8px;margin:10px 0 4px}
+.fsrow .fsbtn{flex:1 1 0;min-width:0;margin:0;padding:14px 6px;font-size:.86rem;letter-spacing:-.4px;white-space:nowrap}
+.fsrow .fsbtn.land{color:#8a4a05;background:linear-gradient(135deg,#fff1d8,#ffdfae);
+  box-shadow:inset 0 0 0 2px #f3cd94,0 3px 10px rgba(150,120,80,.14)}
 .fsbtns{position:absolute;top:calc(8px + env(safe-area-inset-top));right:8px;z-index:6;display:none;gap:6px}
 .fsbtns .fsclose,.fsbtns .fsrot{position:static;display:flex;
   align-items:center;gap:5px;padding:9px 12px;border-radius:14px;font-size:.85rem;font-weight:900;color:#fff;
@@ -321,7 +325,8 @@ body.fs-rot .player>iframe,body.fs-rot .player>.ytposter{position:absolute;top:5
         <span class="pl">▶</span><span class="cap">영상은 인터넷 주소로 열면 바로 재생돼요</span>
       </div>
       <div class="fsbtns"><button class="fsrot" id="ytFsRot" type="button">🔄 가로 회전</button><button class="fsclose" id="ytFsClose" type="button" aria-label="작게 보기">✕ 작게 보기</button></div></div>
-    <button class="fsbtn" id="ytFs" type="button">⛶ 화면 꽉 채우기</button>
+    <div class="fsrow"><button class="fsbtn" id="ytFs" type="button">⛶ 화면 꽉 채우기</button>
+      <button class="fsbtn land" id="ytFsLand" type="button">🔄 가로로 크게</button></div>
 
     <div class="bookhead" id="sentHead"><b>📖 문장 따라 읽기</b><span class="cnt" id="sentCnt"></span></div>
     <div class="readctrl" id="readCtrl">
@@ -776,23 +781,90 @@ function cropTop(canvas,frac){
   c.getContext('2d').drawImage(canvas,0,0,canvas.width,h,0,0,canvas.width,h);
   return c;
 }
+/* 어두운 배경 위 흰 글씨용: 반전 + 이진화(전역 최적 임계값 또는 주변 밝기 기준) */
+function otsu(gray,n){
+  const h=new Array(256).fill(0);
+  for(let i=0;i<n;i++) h[gray[i]]++;
+  let sum=0; for(let i=0;i<256;i++) sum+=i*h[i];
+  let sumB=0,wB=0,best=-1,thr=128;
+  for(let i=0;i<256;i++){
+    wB+=h[i]; if(!wB) continue;
+    const wF=n-wB; if(!wF) break;
+    sumB+=i*h[i];
+    const mB=sumB/wB, mF=(sum-sumB)/wF, v=wB*wF*(mB-mF)*(mB-mF);
+    if(v>best){best=v;thr=i;}
+  }
+  return thr;
+}
+function binCanvas(src,opt){
+  opt=opt||{};
+  const w=src.width,h=src.height,n=w*h;
+  const c=document.createElement('canvas'); c.width=w; c.height=h;
+  const x=c.getContext('2d'); x.drawImage(src,0,0);
+  let d;
+  try{ d=x.getImageData(0,0,w,h); }catch(e){ return src; }
+  const a=d.data, g=new Uint8Array(n);
+  for(let i=0,j=0;j<n;i+=4,j++){
+    let v=0.299*a[i]+0.587*a[i+1]+0.114*a[i+2];
+    if(opt.invert!==false) v=255-v;
+    g[j]=v;
+  }
+  if(opt.adaptive){
+    const S=new Float64Array((w+1)*(h+1));
+    for(let y=0;y<h;y++){ let row=0;
+      for(let xx=0;xx<w;xx++){ row+=g[y*w+xx]; S[(y+1)*(w+1)+(xx+1)]=S[y*(w+1)+(xx+1)]+row; } }
+    const r=Math.max(8,Math.round(Math.min(w,h)*0.06));
+    for(let y=0;y<h;y++){
+      const y0=Math.max(0,y-r), y1=Math.min(h-1,y+r);
+      for(let xx=0;xx<w;xx++){
+        const x0=Math.max(0,xx-r), x1=Math.min(w-1,xx+r);
+        const area=(x1-x0+1)*(y1-y0+1);
+        const sum=S[(y1+1)*(w+1)+(x1+1)]-S[y0*(w+1)+(x1+1)]-S[(y1+1)*(w+1)+x0]+S[y0*(w+1)+x0];
+        const on=(g[y*w+xx]*area < sum*0.86)?0:255;   // 주변보다 어두운 글자만 검정으로
+        const p=(y*w+xx)*4; a[p]=a[p+1]=a[p+2]=on; a[p+3]=255;
+      }
+    }
+  }else{
+    const t=otsu(g,n);
+    for(let i=0,j=0;j<n;i+=4,j++){ const v=g[j]>t?255:0; a[i]=a[i+1]=a[i+2]=v; a[i+3]=255; }
+  }
+  x.putImageData(d,0,0);
+  return c;
+}
+let ocrLast={words:[],h:1};
 async function ocrCanvas(canvas,onProgress){
   const w=await worker();
   ocrCb=onProgress||null;
   const r=await w.recognize(canvas);
   ocrCb=null;
+  ocrLast={words:(r&&r.data&&r.data.words)||[],h:canvas.height||1};
   return (r&&r.data&&r.data.text)||'';
+}
+/* 표지에서는 제목이 늘 위쪽에 있어요. 사진 아래쪽(벌레·울타리 같은 그림)에서 나온 소음 글자를 걱정할 때 씁니다. */
+function topText(frac){
+  const ws=ocrLast.words||[], h=ocrLast.h||1, lim=h*(frac||0.33), out=[];
+  ws.forEach(w=>{ const b=w.bbox||{}; const big=((b.y1||0)-(b.y0||0))>=h*0.045;
+    if(((b.y0||0)<lim || big) && w.text) out.push(w.text); });
+  return out.join(' ');
 }
 
 /* ---------- 퍼지 매칭 ---------- */
-const STOP=new Set(['read','aloud','book','books','level','stage','series','by','author','illustrated','the','a','an','of','and','for','with','my','very','first','i','can','raz','reading','oxford','tree','national','geographic','kids','set','story','stories','song','songs','songbook','picture','pictures','collection','treasury','library','1','2','3']);
+const STOP=new Set(['read','aloud','book','books','leveled','level','stage','series','by','author','written','illustrated','illustrator','the','a','an','of','and','for','with','from','my','very','first','i','can','raz','reading','oxford','tree','national','geographic','kids','set','story','stories','song','songs','songbook','picture','pictures','collection','treasury','library','1','2','3']);
+const COVER_JUNK=new Set(['jilian','rus','buyok']);   // 표지 스티커·지은이 이름 등
+const BRAND_WORDS=new Set(['reading','tree','oxford','leveled','level','book','books','stage','read','written','illustrated','raz']);  // 표지 로고·브랜드 글자
 const BRAND_HINT=[
-  [/reading\s*a\s*-?\s*z|raz/i,'raz'],
+  [/reading\s*a\s*-?\s*z|raz|leveled\s*book/i,'raz'],
   [/oxford|reading\s*tree|\bort\b|biff|chip|kipper/i,'ort'],
   [/i\s*can\s*read|biscuit|pete\s*the|little\s*critter/i,'icr'],
   [/national\s*geographic|nat\s*geo/i,'ngk']
 ];
 function tokens(s){return norm(s).split(' ').filter(t=>t.length>1);}
+function coreTokens(title){
+  const t=tokens(title);
+  let c=t.filter(w=>w.length>2 && !STOP.has(w) && !COVER_JUNK.has(w));
+  if(!c.length) c=t.filter(w=>!STOP.has(w) && !COVER_JUNK.has(w));
+  return [...new Set(c)];
+}
 function lev(a,b){
   const m=a.length,n=b.length; if(Math.abs(m-n)>2) return 99;
   const dp=new Array(n+1); for(let j=0;j<=n;j++)dp[j]=j;
@@ -808,25 +880,46 @@ function dice(a,b){
   let hit=0; gb.forEach(g=>{const c=m.get(g)||0; if(c){hit++;m.set(g,c-1);}});
   return 2*hit/(ga.length+gb.length);
 }
-function candidates(text,limit){
-  const ot=tokens(text), on=norm(text);
+function wordHit(o,w){
+  if(o===w) return 1;
+  if(BRAND_WORDS.has(o)) return 0;               // 'Oxford Reading Tree' 로고 같은 브랜드 글자는 제목 근거로 안 씀
+  if(w.length<=4) return 0;                       // 짧은 단어는 정확히 읽혀야 인정
+  if(lev(o,w)<=1) return 0.95;
+  if(w.length>=6 && Math.abs(o.length-w.length)<=3 && (o.indexOf(w)===0||w.indexOf(o)===0)) return 0.92;  // shapesiin / shape
+  if(w.length>=6 && o.indexOf(w)>=0) return 0.88;
+  if(w.length>=6 && dice(o,w)>=0.72) return 0.78;
+  return 0;
+}
+function candidates(text,limit,minHits){
+  minHits=minHits||1;
+  const ot=tokens(text), on=norm(text), sq=on.replace(/ /g,'');
   const brandHit=[];
   BRAND_HINT.forEach(([re,k])=>{if(re.test(text)) brandHit.push(k);});
-  const scored=BOOKS.map(b=>{
-    const tt=tokens(b.t), tn=norm(b.t);
-    const core=tt.filter(t=>!STOP.has(t));
-    const need=core.length?core:tt;
-    if(!need.length) return {b,s:0};
-    let hit=0;
-    need.forEach(t=>{ if(ot.some(o=>o===t||(t.length>3&&lev(o,t)<=1))) hit++; });
-    const cover=hit/need.length;
+  const scored=[];
+  BOOKS.forEach(b=>{
+    const core=coreTokens(b.t);
+    if(!core.length) return;
+    const tn=norm(b.t).replace(/ /g,'');
+    /* 'I Go'·'Big'처럼 짧은 낱말로만 된 제목은 글자가 붙어 나온 모양까지 맞아야 인정 (엉뚱한 'go'·'ok' 같은 소음 차단) */
+    if(core.every(w=>w.length<=4) && sq.indexOf(tn)<0) return;
+    let tot=0, got=0, hits=0;
+    core.forEach(w=>{
+      let best=0;
+      for(let i=0;i<ot.length;i++){ const s=wordHit(ot[i],w); if(s>best){best=s; if(best===1) break;} }
+      const wt=Math.min(2,w.length/4);
+      tot+=wt; got+=wt*best;
+      if(best>=0.85) hits++;
+    });
+    if(!hits) return;                               // 제목 핵심 단어가 하나도 안 잡히면 제외
+    if(hits<minHits) return;
+    const cover=got/tot;
+    if(cover<0.45) return;
     let win=0;
-    for(let i=0;i+need.length<=ot.length;i++){
-      win=Math.max(win,dice(ot.slice(i,i+need.length).join(''),tn.replace(/ /g,'')));
-    }
-    const cont=(tn.replace(/ /g,'').length>=5 && on.replace(/ /g,'').indexOf(tn.replace(/ /g,''))>=0)?0.3:0;
-    const bBoost=brandHit.indexOf(b.b)>=0?0.12:0;
-    return {b,s:0.62*cover+0.38*win+cont+bBoost};
+    for(let i=0;i+core.length<=ot.length;i++) win=Math.max(win,dice(ot.slice(i,i+core.length).join(''),tn));
+    const cont=(sq.length>=5 && sq.indexOf(tn)>=0)?0.22:0;
+    const ev=0.14*(hits-1)+(core.length===1?0.05:0);
+    const bBoost=brandHit.indexOf(b.b)>=0?0.06:0;
+    scored.push({b,s:0.5*cover+0.26*win+cont+ev+bBoost});
   });
   scored.sort((x,y)=>y.s-x.s);
   const out=[];
@@ -857,21 +950,36 @@ async function findFromImage(file){
   catch(e){ setStat(stat,'사진을 열지 못했어요. 다른 사진으로 해 보세요.',true,prog,null); return; }
   const big=prepped(img,1500,1.5);
   setStat(stat,'글자를 읽는 중이에요… (처음 한 번은 준비에 조금 걸려요)',false,prog,15);
-  let text='';
+  let text='', top='';
+  const add=t=>{ text+=(text?'\n':'')+t; top=top?top+' '+topText(0.33):topText(0.33); };
+  const pick=()=>candidates(top,3);
   try{
-    text=await ocrCanvas(big,m=>{
+    add(await ocrCanvas(big,m=>{
       if(m&&m.status==='recognizing text') setStat(stat,'글자를 읽는 중이에요… '+Math.round((m.progress||0)*100)+'%',false,prog,25+Math.round((m.progress||0)*60));
       else if(m&&m.status) setStat(stat,ocrLabel(m.status),false,prog,null);
-    });
+    }));
   }catch(e){
     setStat(stat,'사진 인식 도구를 불러오지 못했어요. 인터넷 연결을 확인하거나 아래 제목 검색을 써 주세요.',true,prog,null);
     return;
   }
-  let cands=candidates(text,3);
-  if(!cands.length){
-    setStat(stat,'책 제목을 다시 한 번 찾아보는 중이에요…',false,prog,90);
-    try{ text=text+'\n'+(await ocrCanvas(cropTop(big,0.62),null)); }catch(e){}
-    cands=candidates(text,3);
+  let cands=pick();
+  const bestScore=()=>cands.length?cands[0].s:0;
+  /* 표지가 어둡거나 사진 위에 흰 글씨면 정방향으로는 거의 안 읽혀요.
+     그래서 반전·이진화, 주변 밝기 기준 이진화, 제목 부분 크롭까지 차례로 더 읽어 글자를 합칩니다. */
+  const extraPasses=[
+    {label:'어두운 배경의 흰 글씨도 읽어 보는 중이에요…', mk:()=>binCanvas(big,{invert:true})},
+    {label:'글씨를 더 또렷하게 만들어 보는 중이에요…', mk:()=>binCanvas(big,{invert:true,adaptive:true})},
+    {label:'위쪽 제목 부분을 다시 읽어 보는 중이에요…', mk:()=>cropTop(big,0.62)},
+    {label:'위쪽 제목 부분을 반전해서 다시 읽어 보는 중이에요…', mk:()=>binCanvas(cropTop(big,0.62),{invert:true})}
+  ];
+  for(const step of extraPasses){
+    if(bestScore()>=0.6) break;
+    setStat(stat,step.label,false,prog,88);
+    try{
+      const t=await ocrCanvas(step.mk(),null);
+      if(t) add(t);
+    }catch(e){}
+    cands=pick();
   }
   setStat(stat,'',false,prog,null); stat.classList.add('hidden');
   if(cands.length) renderCands(cands);
@@ -941,6 +1049,7 @@ function pageSentences(t){
 /* ---------- 화면 꽉 채우기 ---------- */
 let fsPseudo=false;
 let fsRot=false;
+let fsWantLand=false;   /* '가로로 크게' 의도 */
 function natFsEl(){return document.fullscreenElement||document.webkitFullscreenElement||null;}
 function fsPseudoOn(){fsPseudo=true;document.body.classList.add('fs-on');}
 function lockLandscape(){try{const so=screen.orientation;if(so&&so.lock){const p=so.lock('landscape');if(p&&p.catch)p.catch(()=>{});}}catch(e){}}
@@ -955,8 +1064,23 @@ function setFsRot(on){
 function toggleFsRot(){
   if(!fsRot&&window.innerWidth>window.innerHeight){toast('이미 가로 화면이에요');return;}
   setFsRot(!fsRot);
+  fsWantLand=fsRot;   /* 직접 누른 회전이 '가로로 크게' 의도보다 우선 */
+}
+function syncFsLand(){
+  if(!fsWantLand) return;
+  if(!(fsPseudo||natFsEl())) return;
+  if(window.innerHeight>=window.innerWidth){ if(!fsRot) setFsRot(true); }
+  else if(fsRot){ setFsRot(false); }
+}
+function enterFsLandscape(){
+  fsWantLand=true;
+  enterFs();
+  setTimeout(syncFsLand,260);
+  setTimeout(syncFsLand,700);
+  setTimeout(syncFsLand,1400);
 }
 function exitFs(){
+  fsWantLand=false;
   setFsRot(false);
   if(fsPseudo){fsPseudo=false;document.body.classList.remove('fs-on');}
   document.body.classList.remove('fs-native');
@@ -979,10 +1103,12 @@ function enterFs(){
   }
 }
 ['fullscreenchange','webkitfullscreenchange'].forEach(ev=>document.addEventListener(ev,()=>{
-  if(natFsEl()){fsRotLabel();return;}
+  if(natFsEl()){fsRotLabel();syncFsLand();return;}
   document.body.classList.remove('fs-native');
   setFsRot(false);
 }));
+window.addEventListener('resize',syncFsLand);
+window.addEventListener('orientationchange',()=>setTimeout(syncFsLand,260));
 
 /* ---------- 이벤트 ---------- */
 $('#btnPhoto').onclick=()=>{show('find');$('#candWrap').innerHTML='';$('#findPreview').classList.add('hidden');$('#findPreview').innerHTML='';$('#findStat').classList.add('hidden');$('#findProg').classList.add('hidden');};
@@ -991,7 +1117,8 @@ $('#brandHome').onclick=()=>{show('home');};
 $('#bookBack').onclick=()=>{stopAll();exitFs();$('#ytPlayer').src='';show(bookFrom||'brand');};
 $('#bookHome').onclick=()=>{stopAll();exitFs();$('#ytPlayer').src='';show('home');};
 $('#ytPoster').onclick=()=>{$('#ytPoster').classList.add('hidden');$('#ytPlayer').classList.remove('hidden');};
-$('#ytFs').onclick=()=>{(fsPseudo||natFsEl())?exitFs():enterFs();};
+$('#ytFs').onclick=()=>{(fsPseudo||natFsEl())?exitFs():(fsWantLand=false,enterFs());};
+$('#ytFsLand').onclick=()=>{(fsPseudo||natFsEl())?(fsWantLand=true,syncFsLand()):enterFsLandscape();};
 $('#ytFsRot').onclick=(e)=>{e.preventDefault();e.stopPropagation();toggleFsRot();};
 $('#ytFsClose').onclick=(e)=>{e.preventDefault();e.stopPropagation();exitFs();};
 window.addEventListener('pagehide',()=>{try{speechSynthesis.cancel();}catch(e){}});

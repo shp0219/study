@@ -123,6 +123,10 @@
     border-radius:20px;font-weight:900;font-size:17px;color:#4a3a22;background:#fff;
     box-shadow:0 4px 0 rgba(47,36,23,.07),inset 0 0 0 2px #f0e2cd}
   .fsbtn:active{transform:translateY(2px)}
+  .fsrow{display:flex;gap:8px;margin-top:12px}
+  .fsrow .fsbtn{flex:1 1 0;min-width:0;margin-top:0;padding:15px 8px;font-size:15.5px;letter-spacing:-.4px;white-space:nowrap}
+  .fsrow .fsbtn.land{color:#7a3d00;background:linear-gradient(135deg,#fff3dc,#ffe0ac);
+    box-shadow:0 4px 0 rgba(217,140,26,.16),inset 0 0 0 2px #f6cf92}
   .fsbtns{position:absolute;top:calc(8px + env(safe-area-inset-top));right:8px;z-index:6;display:none;gap:6px}
   .fsbtns .fsclose,.fsbtns .fsrot{position:static;display:flex;
     align-items:center;gap:5px;padding:10px 13px;border-radius:14px;font-weight:900;font-size:14px;
@@ -521,7 +525,8 @@
       '<div class="ttl"><b>' + esc(s.name) + '</b><span>' + esc(e.se || '') + (e.dur ? ' · ' + e.dur : '') + '</span></div>' +
       '<span class="pill">💎 <span class="gemn">' + gemCount() + '</span></span></div></div></div>' +
       '<div class="wrap player">' + player +
-      '<button class="fsbtn" id="fsbtn">⛶ 화면 꽉 채우기</button>' +
+      '<div class="fsrow"><button class="fsbtn" id="fsbtn">⛶ 화면 꽉 채우기</button>' +
+      '<button class="fsbtn land" id="fsland">🔄 가로로 크게</button></div>' +
       '<div class="ephead"><h2>' + (e.no || (i + 1)) + '번 · ' + esc(e.title) + '</h2>' +
       '<div class="meta">' + esc([e.title2, e.dur].filter(Boolean).join(' · ')) + '</div></div>' +
       learn + desc +
@@ -722,6 +727,7 @@
   /* ── 화면 꽉 채우기 ── */
   var fsPseudo = false;
   var fsRot = false;
+  var fsLand = false;   /* '가로로 크게'로 들어왔는지 */
   function natFsEl(){ return document.fullscreenElement || document.webkitFullscreenElement || null; }
   function fsPseudoOn(){ fsPseudo = true; document.body.classList.add('fs-on'); }
   function lockLandscape(){
@@ -743,8 +749,10 @@
   function toggleFsRot(){
     if (!fsRot && window.innerWidth > window.innerHeight) { toast('이미 가로 화면이에요'); return; }
     setFsRot(!fsRot);
+    fsLand = fsRot;   /* 직접 누른 회전이 '가로로 크게' 의도보다 우선 */
   }
   function exitFs(){
+    fsLand = false;
     setFsRot(false);
     if (fsPseudo) { fsPseudo = false; document.body.classList.remove('fs-on'); }
     document.body.classList.remove('fs-native');
@@ -767,11 +775,29 @@
   }
   ['fullscreenchange','webkitfullscreenchange'].forEach(function(ev){
     document.addEventListener(ev, function(){
-      if (natFsEl()) { fsRotLabel(); return; }
+      if (natFsEl()) { fsRotLabel(); syncFsLand(); return; }
       document.body.classList.remove('fs-native');
       setFsRot(false);
     });
   });
+  /* '가로로 크게': 풀스크린 진입 + 가로. 기기가 실제로 가로로 돌아가면 CSS 회전은 끈다. */
+  function syncFsLand(){
+    if (!fsLand) return;
+    if (!(fsPseudo || natFsEl())) return;
+    if (window.innerHeight >= window.innerWidth) { if (!fsRot) setFsRot(true); }
+    else if (fsRot) { setFsRot(false); }
+  }
+  function enterFsLandscape(){
+    fsLand = true;
+    var pv = document.getElementById('startv');
+    if (pv) startPlayback(pv);
+    enterFs();
+    setTimeout(syncFsLand, 260);
+    setTimeout(syncFsLand, 700);
+    setTimeout(syncFsLand, 1400);
+  }
+  window.addEventListener('resize', syncFsLand);
+  window.addEventListener('orientationchange', function(){ setTimeout(syncFsLand, 260); });
   function startPlayback(sv){
     var e = epAt(cur.key, cur.idx);
     if (!e || !sv) return null;
@@ -810,12 +836,20 @@
 
     var fb = ev.target.closest('#fsbtn, #fsclose');
     if (fb) {
+      fsLand = false;
       if (fb.id === 'fsclose' || fsPseudo || natFsEl()) { exitFs(); }
       else {
         var pv = document.getElementById('startv');
         if (pv) startPlayback(pv);
         enterFs();
       }
+      return;
+    }
+
+    var lb = ev.target.closest('#fsland');
+    if (lb) {
+      if (fsPseudo || natFsEl()) { fsLand = true; syncFsLand(); }
+      else enterFsLandscape();
       return;
     }
 
