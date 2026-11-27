@@ -1223,7 +1223,7 @@ function paintResume(){
   box.innerHTML='<button class="resume-go" id="resumeGo">'
     +'<span class="ri">▶</span>'
     +'<span class="rt"><b>하던 곳 이어서 치기</b>'
-    +'<span>'+head+' · '+(done+1)+' / '+total+'음째</span></span>'
+    +'<span>'+head+' · '+Math.max(1,done)+' / '+total+'음째</span></span>'
     +'<span class="rg">›</span></button>'
     +'<button class="resume-x" id="resumeX" title="이어하기 지우기" aria-label="이어하기 지우기">↺</button>';
   const go=document.getElementById('resumeGo');
