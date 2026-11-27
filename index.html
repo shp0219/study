@@ -9,6 +9,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -330,7 +331,7 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
 .sp-item .memo{display:block;font-size:.76rem;font-weight:700;color:#9b93ad;margin-top:3px;overflow-wrap:anywhere}
 .sp-item .badge{display:inline-block;font-size:.66rem;font-weight:900;color:#1c8c62;background:#e9fbf2;border-radius:999px;padding:2px 8px;margin-top:5px}
 .sp-item .tools{flex:0 0 auto;display:flex;gap:2px}
-.sp-item .act{width:42px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:1rem;color:#a48fb8;background:#f9f4fe}
+.sp-item .act{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:1rem;color:#a48fb8;background:#f9f4fe}
 .sp-item .act.ok{color:#1c8c62;background:#e9fbf2}
 .sp-empty{background:#fff;border:1px dashed #e6daf2;border-radius:18px;padding:22px 16px;text-align:center;color:#9a8fb0;font-size:.85rem;line-height:1.6}
 .sp-memo{margin-top:10px;background:#fff8e8;border:1px solid #ffe7b8;border-radius:14px;padding:9px 12px;font-size:.84rem;font-weight:700;color:#8a6a33;line-height:1.5}
@@ -575,7 +576,7 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
     <div class="sp-add">
       <label class="sp-add-label" for="spInput">오늘 틀린 단어나 문장을 적어 주세요</label>
       <textarea class="sp-textarea" id="spInput" rows="2" placeholder="예) 웬일이야" enterkeyhint="done"></textarea>
-      <input class="sp-memo-input" id="spMemo" type="text" placeholder="뜻·설명 (넣어도 되고 안 넣어도 돼요)">
+      <input class="sp-memo-input" id="spMemo" type="text" placeholder="뜻·설명 (한 개 넣을 때 함께 저장돼요)">
       <div class="sp-add-foot">
         <span class="mini">줄을 바꿔 여러 개도 한 번에 넣을 수 있어요</span>
         <button type="button" class="primary sp-save" id="btnSpAdd">저장 ✏️</button>
@@ -595,7 +596,7 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
     <p class="mini">‘알겠어요’ 체크한 것까지 모두 모아 다시 놀아요.</p>
     <div class="sp-actions">
       <button type="button" class="sp-act review" id="spReviewStudy"><span class="em">🔁</span><b>자판 치기</b><small id="spReviewSub">보고 따라 치기</small></button>
-      <button type="button" class="sp-act review" id="spReviewListen"><span class="em">🎧</span><b>랜덤 받아쓰기</b><small>듣고 쓰기</small></button>
+      <button type="button" class="sp-act review" id="spReviewListen"><span class="em">🎧</span><b>랜덤 받아쓰기</b><small id="spReviewListenSub">듣고 쓰기</small></button>
     </div>
 
     <h3 class="sec-title">내가 적은 맞춤법</h3>
@@ -1618,6 +1619,7 @@ input.answer.bad{border-color:#ffaec6;animation:shake .3s}
     $('#spReviewStudy').disabled = !DB.spell.length;
     $('#spReviewListen').disabled = !DB.spell.length;
     $('#spReviewSub').textContent = DB.spell.length ? DB.spell.length + '문제 · 보고 따라 치기' : '아직 없어요';
+    $('#spReviewListenSub').textContent = DB.spell.length ? DB.spell.length + '문제 · 듣고 쓰기' : '아직 없어요';
 
     var list = $('#spList');
     if (!DB.spell.length) {
