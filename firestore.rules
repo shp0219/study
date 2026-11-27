@@ -1,0 +1,46 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 보호자 계정만 기기 상태를 바꿀 수 있다
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email == 'shp0219@gmail.com';
+    }
+
+    match /devices/{deviceId} {
+      // 기기 자신은 자기 문서 하나만 읽을 수 있다 (id를 모르면 찾을 수 없음)
+      allow get: if true;
+
+      // 목록 보기는 보호자만
+      allow list: if isAdmin();
+
+      // 새 기기는 '대기(pending)' 상태로만 스스로 등록할 수 있고, 승인 상태로는 만들 수 없다
+      allow create: if request.resource.data.deviceId == deviceId
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.keys().hasOnly(['deviceId', 'name', 'status', 'code', 'createdAt', 'updatedAt', 'userAgent'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 20
+        && request.resource.data.code is string
+        && request.resource.data.code.size() == 6;
+
+      // 승인/차단/삭제는 보호자만. 기기는 대기 중일 때 자기 이름만 바꿀 수 있다
+      allow update: if isAdmin()
+        || (resource.data.status == 'pending'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'updatedAt'])
+            && request.resource.data.name is string
+            && request.resource.data.name.size() > 0
+            && request.resource.data.name.size() <= 20);
+
+      allow delete: if isAdmin();
+    }
+
+    // 그 밖의 모든 경로는 막는다
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
