@@ -1,0 +1,35 @@
+{
+  "name": "유니의 리딩 놀이터",
+  "short_name": "유니 리딩",
+  "description": "표지를 찍으면 책을 찾아 주고, Read Aloud 영상과 문장·해석으로 함께 읽는 영어 원서 놀이터",
+  "lang": "ko",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "id": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFF7E6",
+  "theme_color": "#FFC169",
+  "categories": ["education", "kids", "books"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

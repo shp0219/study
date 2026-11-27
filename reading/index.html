@@ -3,10 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#fff8ec">
+<meta name="theme-color" content="#FFC169">
 <meta name="format-detection" content="telephone=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="유니의 리딩 놀이터">
+<meta name="application-name" content="유니의 리딩 놀이터">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
 <title>유니의 리딩 놀이터</title>
 <style>
 *,*::before,*::after{box-sizing:border-box}
@@ -71,7 +78,9 @@ img{-webkit-user-drag:none;user-select:none}
 .brand .sb{display:block;font-size:.74rem;font-weight:800;color:#6b5c45;opacity:.85;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .brand .go{font-size:1.35rem;font-weight:900;color:#8a7a63;opacity:.55;flex:none}
 .foot{margin:18px 2px 0;text-align:center;font-size:.72rem;font-weight:700;color:#b0a28c;line-height:1.6}
-
+.installhint{margin:14px 2px 0;text-align:center;font-size:.74rem;font-weight:800;color:#9a7a44;
+  background:#fff3dc;border-radius:14px;padding:10px 12px;line-height:1.55;box-shadow:inset 0 0 0 2px #ffe4b8}
+.installhint b{color:#c07311}
 /* ---------- 브랜드 화면 ---------- */
 .tabs{display:flex;gap:8px;margin-bottom:10px}
 .tab{flex:1;border-radius:15px;padding:11px 4px;font-size:.92rem;font-weight:900;background:#fff;
@@ -239,6 +248,7 @@ img{-webkit-user-drag:none;user-select:none}
     <div class="seclabel"><b>브랜드에서 골라 보기</b><span id="totalCnt"></span></div>
     <div id="brandCards"></div>
     <p class="foot">Read Aloud 영상 <b id="footVid"></b>편 · 문장·해석 <b id="footSent"></b>권<br>영상은 유튜브에서 재생돼요</p>
+    <p class="installhint">📲 휴대폰 브라우저 메뉴에서 <b>홈 화면에 추가</b>를 누르면<br>앱처럼 아이콘으로 열려요</p>
   </section>
 
   <!-- ══════════ 브랜드 화면 ══════════ -->
@@ -891,6 +901,11 @@ $('#browseHome').onclick=()=>show('home');
 
 /* ---------- 시작 ---------- */
 renderHome();
+
+/* 홈 화면에 추가(standalone) 실행용 서비스 워커 */
+if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
+  window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{});});
+}
 </script>
 </body>
 </html>
