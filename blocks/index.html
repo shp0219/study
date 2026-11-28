@@ -730,26 +730,34 @@
   var fsLand = false;   /* '가로로 크게'로 들어왔는지 */
   function natFsEl(){ return document.fullscreenElement || document.webkitFullscreenElement || null; }
   function fsPseudoOn(){ fsPseudo = true; document.body.classList.add('fs-on'); }
-  function lockLandscape(){
-    try{ var so = screen.orientation; if (so && so.lock) { var p = so.lock('landscape'); if (p && p.catch) p.catch(function(){}); } }catch(e){}
-  }
-  function unlockOrient(){
-    try{ var so = screen.orientation; if (so && so.unlock) so.unlock(); }catch(e){}
-  }
+  /* 기기 OS 회전(screen.orientation.lock)은 쓰지 않는다. OS 회전 + CSS 90도 회전이 겹치면
+     resize → 회전 토글 → OS 회전 → resize … 로 가로/세로를 무한히 오가기 때문. 회전은 CSS 한 가지 방식만. */
+  var fsRotGuard = 0;
   function fsRotLabel(){
     var b = document.getElementById('fsrot');
     if (b) b.textContent = fsRot ? '🔄 세로 복귀' : '🔄 가로 회전';
   }
+  function isPortraitView(){ return window.innerHeight >= window.innerWidth; }
   function setFsRot(on){
     fsRot = !!on;
     if (fsRot) document.body.classList.add('fs-rot'); else document.body.classList.remove('fs-rot');
     fsRotLabel();
-    if (fsRot) lockLandscape(); else unlockOrient();
+    fsRotGuard = Date.now() + 800;   /* 이 변경으로 생기는 resize 이벤트는 무시 */
+  }
+  function applyFsLand(){
+    /* 누른 순간의 화면 비율로 한 번만 결정: 세로면 CSS 90도 회전, 이미 가로면 회전 없이 전체화면만 */
+    setFsRot(isPortraitView());
   }
   function toggleFsRot(){
-    if (!fsRot && window.innerWidth > window.innerHeight) { toast('이미 가로 화면이에요'); return; }
+    if (!fsRot && !isPortraitView()) { toast('이미 가로 화면이에요'); return; }
     setFsRot(!fsRot);
     fsLand = fsRot;   /* 직접 누른 회전이 '가로로 크게' 의도보다 우선 */
+  }
+  function onViewportChange(){
+    if (Date.now() < fsRotGuard) return;               /* 방금 우리가 바꾼 결과로 생긴 이벤트는 무시 */
+    if (!(fsPseudo || natFsEl())) return;
+    /* 기기를 실제로 가로로 돌렸을 때만 CSS 회전을 끈다. 다시 켜지 않으므로 무한 회전 없음 */
+    if (fsRot && !isPortraitView()) setFsRot(false);
   }
   function exitFs(){
     fsLand = false;
@@ -767,37 +775,30 @@
     var p = null;
     try{ p = fn.call(el); }catch(err){ return fsPseudoOn(); }
     if (p && p.then) {
-      p.then(function(){ document.body.classList.add('fs-native'); lockLandscape(); })
+      p.then(function(){ document.body.classList.add('fs-native'); })
        .catch(function(){ fsPseudoOn(); });   /* 기기·브라우저가 거절하면 오버레이로 */
     } else {
-      setTimeout(function(){ if (natFsEl()) { document.body.classList.add('fs-native'); lockLandscape(); } else fsPseudoOn(); }, 160);
+      setTimeout(function(){ if (natFsEl()) { document.body.classList.add('fs-native'); } else fsPseudoOn(); }, 160);
     }
   }
   ['fullscreenchange','webkitfullscreenchange'].forEach(function(ev){
     document.addEventListener(ev, function(){
-      if (natFsEl()) { fsRotLabel(); syncFsLand(); return; }
+      if (natFsEl()) { fsRotLabel(); return; }   /* 들어갈 때는 회전 상태를 건드리지 않는다 */
       document.body.classList.remove('fs-native');
+      fsLand = false;
       setFsRot(false);
     });
   });
-  /* '가로로 크게': 풀스크린 진입 + 가로. 기기가 실제로 가로로 돌아가면 CSS 회전은 끈다. */
-  function syncFsLand(){
-    if (!fsLand) return;
-    if (!(fsPseudo || natFsEl())) return;
-    if (window.innerHeight >= window.innerWidth) { if (!fsRot) setFsRot(true); }
-    else if (fsRot) { setFsRot(false); }
-  }
+  /* '가로로 크게': 전체화면 + 누른 순간의 비율로 가로 결정(한 번만) */
   function enterFsLandscape(){
     fsLand = true;
     var pv = document.getElementById('startv');
     if (pv) startPlayback(pv);
     enterFs();
-    setTimeout(syncFsLand, 260);
-    setTimeout(syncFsLand, 700);
-    setTimeout(syncFsLand, 1400);
+    applyFsLand();
   }
-  window.addEventListener('resize', syncFsLand);
-  window.addEventListener('orientationchange', function(){ setTimeout(syncFsLand, 260); });
+  window.addEventListener('resize', onViewportChange);
+  window.addEventListener('orientationchange', function(){ setTimeout(onViewportChange, 300); });
   function startPlayback(sv){
     var e = epAt(cur.key, cur.idx);
     if (!e || !sv) return null;
@@ -848,7 +849,7 @@
 
     var lb = ev.target.closest('#fsland');
     if (lb) {
-      if (fsPseudo || natFsEl()) { fsLand = true; syncFsLand(); }
+      if (fsPseudo || natFsEl()) { fsLand = true; applyFsLand(); }
       else enterFsLandscape();
       return;
     }

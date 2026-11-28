@@ -1081,32 +1081,36 @@ let fsRot=false;
 let fsWantLand=false;   /* '가로로 크게' 의도 */
 function natFsEl(){return document.fullscreenElement||document.webkitFullscreenElement||null;}
 function fsPseudoOn(){fsPseudo=true;document.body.classList.add('fs-on');}
-function lockLandscape(){try{const so=screen.orientation;if(so&&so.lock){const p=so.lock('landscape');if(p&&p.catch)p.catch(()=>{});}}catch(e){}}
-function unlockOrient(){try{const so=screen.orientation;if(so&&so.unlock)so.unlock();}catch(e){}}
+/* 기기 OS 회전(screen.orientation.lock)은 쓰지 않는다. OS 회전 + CSS 90도 회전이 겹치면
+   resize → 회전 토글 → OS 회전 → resize … 로 가로/세로를 무한히 오가기 때문. 회전은 CSS 한 가지 방식만. */
+let fsRotGuard=0;   /* 방향·화면 크기 변화 직후 재판단을 잠깐 막는 시각 */
 function fsRotLabel(){const b=document.getElementById('ytFsRot');if(b)b.textContent=fsRot?'🔄 세로 복귀':'🔄 가로 회전';}
+function isPortraitView(){return window.innerHeight>=window.innerWidth;}
 function setFsRot(on){
   fsRot=!!on;
   document.body.classList.toggle('fs-rot',fsRot);
   fsRotLabel();
-  if(fsRot)lockLandscape();else unlockOrient();
+  fsRotGuard=Date.now()+800;   /* 이 변경으로 생기는 resize 이벤트는 무시 */
+}
+function applyFsLand(){
+  /* 누른 순간의 화면 비율로 한 번만 결정: 세로면 CSS 90도 회전, 이미 가로면 회전 없이 전체화면만 */
+  setFsRot(isPortraitView());
 }
 function toggleFsRot(){
-  if(!fsRot&&window.innerWidth>window.innerHeight){toast('이미 가로 화면이에요');return;}
+  if(!fsRot&&!isPortraitView()){toast('이미 가로 화면이에요');return;}
   setFsRot(!fsRot);
   fsWantLand=fsRot;   /* 직접 누른 회전이 '가로로 크게' 의도보다 우선 */
 }
-function syncFsLand(){
-  if(!fsWantLand) return;
+function onViewportChange(){
+  if(Date.now()<fsRotGuard) return;                 /* 방금 우리가 바꾼 결과로 생긴 이벤트는 무시 */
   if(!(fsPseudo||natFsEl())) return;
-  if(window.innerHeight>=window.innerWidth){ if(!fsRot) setFsRot(true); }
-  else if(fsRot){ setFsRot(false); }
+  /* 기기를 실제로 가로로 돌렸을 때만 CSS 회전을 끈다. 다시 켜지 않으므로 무한 회전 없음 */
+  if(fsRot&&!isPortraitView()) setFsRot(false);
 }
 function enterFsLandscape(){
   fsWantLand=true;
   enterFs();
-  setTimeout(syncFsLand,260);
-  setTimeout(syncFsLand,700);
-  setTimeout(syncFsLand,1400);
+  applyFsLand();
 }
 function exitFs(){
   fsWantLand=false;
@@ -1125,19 +1129,20 @@ function enterFs(){
   let p=null;
   try{p=fn.call(el);}catch(e){fsPseudoOn();return;}
   if(p&&p.then){
-    p.then(()=>{document.body.classList.add('fs-native');lockLandscape();})
+    p.then(()=>{document.body.classList.add('fs-native');})
      .catch(()=>{fsPseudoOn();});   // 기기·브라우저가 거절하면 오버레이로
   }else{
-    setTimeout(()=>{if(natFsEl()){document.body.classList.add('fs-native');lockLandscape();}else fsPseudoOn();},160);
+    setTimeout(()=>{if(natFsEl()){document.body.classList.add('fs-native');}else fsPseudoOn();},160);
   }
 }
 ['fullscreenchange','webkitfullscreenchange'].forEach(ev=>document.addEventListener(ev,()=>{
-  if(natFsEl()){fsRotLabel();syncFsLand();return;}
+  if(natFsEl()){fsRotLabel();return;}   /* 들어갈 때는 회전 상태를 건드리지 않는다 */
   document.body.classList.remove('fs-native');
+  fsWantLand=false;
   setFsRot(false);
 }));
-window.addEventListener('resize',syncFsLand);
-window.addEventListener('orientationchange',()=>setTimeout(syncFsLand,260));
+window.addEventListener('resize',onViewportChange);
+window.addEventListener('orientationchange',()=>setTimeout(onViewportChange,300));
 
 /* ---------- 이벤트 ---------- */
 $('#btnPhoto').onclick=()=>{show('find');$('#candWrap').innerHTML='';$('#findPreview').classList.add('hidden');$('#findPreview').innerHTML='';$('#findStat').classList.add('hidden');$('#findProg').classList.add('hidden');};
@@ -1147,7 +1152,7 @@ $('#bookBack').onclick=()=>{stopAll();exitFs();$('#ytPlayer').src='';show(bookFr
 $('#bookHome').onclick=()=>{stopAll();exitFs();$('#ytPlayer').src='';show('home');};
 $('#ytPoster').onclick=()=>{$('#ytPoster').classList.add('hidden');$('#ytPlayer').classList.remove('hidden');};
 $('#ytFs').onclick=()=>{(fsPseudo||natFsEl())?exitFs():(fsWantLand=false,enterFs());};
-$('#ytFsLand').onclick=()=>{(fsPseudo||natFsEl())?(fsWantLand=true,syncFsLand()):enterFsLandscape();};
+$('#ytFsLand').onclick=()=>{(fsPseudo||natFsEl())?(fsWantLand=true,applyFsLand()):enterFsLandscape();};
 $('#ytFsRot').onclick=(e)=>{e.preventDefault();e.stopPropagation();toggleFsRot();};
 $('#ytFsClose').onclick=(e)=>{e.preventDefault();e.stopPropagation();exitFs();};
 window.addEventListener('pagehide',()=>{try{speechSynthesis.cancel();}catch(e){}});
