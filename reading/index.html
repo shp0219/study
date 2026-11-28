@@ -167,10 +167,17 @@ body.fs-on .player{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh
   aspect-ratio:auto;border-radius:0;box-shadow:none;z-index:2147483002}
 .player:fullscreen{width:100vw;height:100vh;height:100dvh;max-width:none;aspect-ratio:auto;border-radius:0}
 .player:-webkit-full-screen{width:100vw;height:100vh;height:100dvh;max-width:none;aspect-ratio:auto;border-radius:0}
-/* ── 가로 회전 (폰 자동 회전이 꺼져 있어도 CSS로 돌려서 가로로 보기) ── */
-body.fs-rot .player>iframe,body.fs-rot .player>.ytposter{position:absolute;top:50%;left:50%;
-  width:100vh;width:100dvh;height:100vw;max-width:none;min-width:0;min-height:0;
-  transform:translate(-50%,-50%) rotate(90deg);transform-origin:center center}
+/* ── 가로로 크게 (v3): 전체화면 요청·OS 회전 없이 CSS 고정 오버레이만 90도 회전 ── */
+body.fs-land{overflow:hidden;overscroll-behavior:none}
+body.fs-land .fsbtns{display:flex}
+body.fs-land .player{position:fixed;inset:auto;top:50%;left:50%;
+  width:100vh;width:100dvh;height:100vw;height:100dvw;
+  max-width:none;max-height:none;aspect-ratio:auto;border-radius:0;box-shadow:none;background:#000;
+  transform:translate(-50%,-50%) rotate(90deg);transform-origin:center center;
+  z-index:2147483647;overflow:hidden}
+body.fs-land .player>iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+body.fs-land .player>.ytposter{position:absolute;inset:0}
+.verline{margin:6px 2px 0;text-align:right;font-size:.68rem;font-weight:800;color:#b0a28c;letter-spacing:.2px}
 .bookhead{margin:14px 2px 8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .bookhead b{font-size:1rem;font-weight:900;letter-spacing:-.35px}
 .bookhead .cnt{font-size:.74rem;font-weight:800;color:#a2947e}
@@ -296,7 +303,7 @@ body.fs-rot .player>iframe,body.fs-rot .player>.ytposter{position:absolute;top:5
     </button>
     <div class="seclabel"><b>브랜드에서 골라 보기</b><span id="totalCnt"></span></div>
     <div id="brandCards"></div>
-    <p class="foot">Read Aloud 영상 <b id="footVid"></b>편 · 문장·해석 <b id="footSent"></b>권<br>영상은 유튜브에서 재생돼요</p>
+    <p class="foot">Read Aloud 영상 <b id="footVid"></b>편 · 문장·해석 <b id="footSent"></b>권<br>영상은 유튜브에서 재생돼요 · <span id="appVer">v3</span></p>
     <p class="installhint">📲 휴대폰 브라우저 메뉴에서 <b>홈 화면에 추가</b>를 누르면<br>앱처럼 아이콘으로 열려요</p>
   </section>
 
@@ -335,6 +342,7 @@ body.fs-rot .player>iframe,body.fs-rot .player>.ytposter{position:absolute;top:5
       <div class="fsbtns"><button class="fsrot" id="ytFsRot" type="button">🔄 가로 회전</button><button class="fsclose" id="ytFsClose" type="button" aria-label="작게 보기">✕ 작게 보기</button></div></div>
     <div class="fsrow"><button class="fsbtn" id="ytFs" type="button">⛶ 화면 꽉 채우기</button>
       <button class="fsbtn land" id="ytFsLand" type="button">🔄 가로로 크게</button></div>
+    <p class="verline">가로 고정 오버레이 v3</p>
 
     <div class="bookhead" id="sentHead"><b>📖 문장 따라 읽기</b><span class="cnt" id="sentCnt"></span></div>
     <div class="readctrl" id="readCtrl">
@@ -1075,74 +1083,75 @@ function pageSentences(t){
     .slice(0,14);
 }
 
-/* ---------- 화면 꽉 채우기 ---------- */
-let fsPseudo=false;
-let fsRot=false;
-let fsWantLand=false;   /* '가로로 크게' 의도 */
+/* ---------- 화면 꽉 채우기 / 가로로 크게 (v3) ----------
+   · '가로로 크게'는 requestFullscreen()도 screen.orientation.lock()도 쓰지 않는다.
+     CSS position:fixed 90도 회전 오버레이 하나만 띄운다(100dvh × 100dvw, z-index 최상단).
+   · resize / orientationchange / fullscreenchange 에서 회전 상태를 자동으로 켜거나 끄는
+     로직은 두지 않는다. 회전은 오직 사용자가 '가로로 크게'·'가로 회전/세로 복귀'·'작게 보기'를
+     눌렀을 때만 바뀐다 → 가로↔세로 반복이 구조적으로 일어날 수 없다. */
+let fsPseudo=false;   /* CSS 오버레이 사용 중 */
+let fsLandOn=false;   /* CSS 90도 회전 오버레이 사용 중 */
 function natFsEl(){return document.fullscreenElement||document.webkitFullscreenElement||null;}
-function fsPseudoOn(){fsPseudo=true;document.body.classList.add('fs-on');}
-/* 기기 OS 회전(screen.orientation.lock)은 쓰지 않는다. OS 회전 + CSS 90도 회전이 겹치면
-   resize → 회전 토글 → OS 회전 → resize … 로 가로/세로를 무한히 오가기 때문. 회전은 CSS 한 가지 방식만. */
-let fsRotGuard=0;   /* 방향·화면 크기 변화 직후 재판단을 잠깐 막는 시각 */
-function fsRotLabel(){const b=document.getElementById('ytFsRot');if(b)b.textContent=fsRot?'🔄 세로 복귀':'🔄 가로 회전';}
 function isPortraitView(){return window.innerHeight>=window.innerWidth;}
-function setFsRot(on){
-  fsRot=!!on;
-  document.body.classList.toggle('fs-rot',fsRot);
-  fsRotLabel();
-  fsRotGuard=Date.now()+800;   /* 이 변경으로 생기는 resize 이벤트는 무시 */
+function fsBtnLabel(){
+  const r=document.getElementById('ytFsRot');
+  if(r) r.textContent=fsLandOn?'🔄 세로 복귀':'🔄 가로 회전';
+  const l=document.getElementById('ytFsLand');
+  if(l) l.textContent=fsLandOn?'🔄 세로로 보기':'🔄 가로로 크게';
 }
-function applyFsLand(){
-  /* 누른 순간의 화면 비율로 한 번만 결정: 세로면 CSS 90도 회전, 이미 가로면 회전 없이 전체화면만 */
-  setFsRot(isPortraitView());
+function setFsLand(on){
+  fsLandOn=!!on;
+  document.body.classList.toggle('fs-land',fsLandOn);
+  fsBtnLabel();
+}
+function enterFsLand(){
+  /* 전체화면 요청도 OS 회전 잠금도 없이 CSS 고정 오버레이 + 90도 회전만 */
+  const n=natFsEl();
+  if(n){try{(document.exitFullscreen||document.webkitExitFullscreen).call(document);}catch(e){}}
+  document.body.classList.remove('fs-native');
+  fsPseudo=true;
+  document.body.classList.add('fs-on');
+  setFsLand(true);
 }
 function toggleFsRot(){
-  if(!fsRot&&!isPortraitView()){toast('이미 가로 화면이에요');return;}
-  setFsRot(!fsRot);
-  fsWantLand=fsRot;   /* 직접 누른 회전이 '가로로 크게' 의도보다 우선 */
-}
-function onViewportChange(){
-  if(Date.now()<fsRotGuard) return;                 /* 방금 우리가 바꾼 결과로 생긴 이벤트는 무시 */
-  if(!(fsPseudo||natFsEl())) return;
-  /* 기기를 실제로 가로로 돌렸을 때만 CSS 회전을 끈다. 다시 켜지 않으므로 무한 회전 없음 */
-  if(fsRot&&!isPortraitView()) setFsRot(false);
-}
-function enterFsLandscape(){
-  fsWantLand=true;
-  enterFs();
-  applyFsLand();
+  if(fsLandOn){setFsLand(false);return;}     /* 세로 복귀: 오버레이는 그대로 두고 회전만 해제 */
+  if(!isPortraitView()){toast('이미 가로 화면이에요');return;}
+  const n=natFsEl();
+  if(n){try{(document.exitFullscreen||document.webkitExitFullscreen).call(document);}catch(e){}}
+  document.body.classList.remove('fs-native');
+  fsPseudo=true;
+  document.body.classList.add('fs-on');
+  setFsLand(true);
 }
 function exitFs(){
-  fsWantLand=false;
-  setFsRot(false);
-  if(fsPseudo){fsPseudo=false;document.body.classList.remove('fs-on');}
-  document.body.classList.remove('fs-native');
-  const n=natFsEl();
-  if(n){try{(document.exitFullscreen||document.webkitExitFullscreen||function(){}).call(document);}catch(e){}}
+  fsPseudo=false;
+  setFsLand(false);
+  document.body.classList.remove('fs-on','fs-native');
 }
 function enterFs(){
+  /* ⛶ 화면 꽉 채우기: 회전 없이 현재 방향 그대로 전체화면만 */
   if(fsPseudo||natFsEl()) return;
   const el=$('#book .player');
   if(!el) return;
   const fn=el.requestFullscreen||el.webkitRequestFullscreen;
-  if(!fn){fsPseudoOn();return;}
+  if(!fn){fsPseudo=true;document.body.classList.add('fs-on');return;}
   let p=null;
-  try{p=fn.call(el);}catch(e){fsPseudoOn();return;}
+  try{p=fn.call(el);}catch(e){fsPseudo=true;document.body.classList.add('fs-on');return;}
   if(p&&p.then){
     p.then(()=>{document.body.classList.add('fs-native');})
-     .catch(()=>{fsPseudoOn();});   // 기기·브라우저가 거절하면 오버레이로
+     .catch(()=>{fsPseudo=true;document.body.classList.add('fs-on');});   // 기기·브라우저가 거절하면 오버레이로
   }else{
-    setTimeout(()=>{if(natFsEl()){document.body.classList.add('fs-native');}else fsPseudoOn();},160);
+    setTimeout(()=>{
+      if(natFsEl()){document.body.classList.add('fs-native');}
+      else{fsPseudo=true;document.body.classList.add('fs-on');}
+    },160);
   }
 }
 ['fullscreenchange','webkitfullscreenchange'].forEach(ev=>document.addEventListener(ev,()=>{
-  if(natFsEl()){fsRotLabel();return;}   /* 들어갈 때는 회전 상태를 건드리지 않는다 */
+  /* 들어가고 나가는 것만 반영한다. 회전(fs-land)·오버레이(fs-on) 상태는 여기서 건드리지 않는다. */
+  if(natFsEl()){document.body.classList.add('fs-native');return;}
   document.body.classList.remove('fs-native');
-  fsWantLand=false;
-  setFsRot(false);
 }));
-window.addEventListener('resize',onViewportChange);
-window.addEventListener('orientationchange',()=>setTimeout(onViewportChange,300));
 
 /* ---------- 이벤트 ---------- */
 $('#btnPhoto').onclick=()=>{show('find');$('#candWrap').innerHTML='';$('#findPreview').classList.add('hidden');$('#findPreview').innerHTML='';$('#findStat').classList.add('hidden');$('#findProg').classList.add('hidden');};
@@ -1151,8 +1160,8 @@ $('#brandHome').onclick=()=>{show('home');};
 $('#bookBack').onclick=()=>{stopAll();exitFs();$('#ytPlayer').src='';show(bookFrom||'brand');};
 $('#bookHome').onclick=()=>{stopAll();exitFs();$('#ytPlayer').src='';show('home');};
 $('#ytPoster').onclick=()=>{$('#ytPoster').classList.add('hidden');$('#ytPlayer').classList.remove('hidden');};
-$('#ytFs').onclick=()=>{(fsPseudo||natFsEl())?exitFs():(fsWantLand=false,enterFs());};
-$('#ytFsLand').onclick=()=>{(fsPseudo||natFsEl())?(fsWantLand=true,applyFsLand()):enterFsLandscape();};
+$('#ytFs').onclick=()=>{(fsPseudo||natFsEl())?exitFs():enterFs();};
+$('#ytFsLand').onclick=()=>enterFsLand();
 $('#ytFsRot').onclick=(e)=>{e.preventDefault();e.stopPropagation();toggleFsRot();};
 $('#ytFsClose').onclick=(e)=>{e.preventDefault();e.stopPropagation();exitFs();};
 window.addEventListener('pagehide',()=>{try{speechSynthesis.cancel();}catch(e){}});
