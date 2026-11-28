@@ -1203,7 +1203,7 @@ function renderOmni(){
   box.innerHTML=list.map(b=>{
     const B=BRANDS[b.b];
     return '<button class="res" data-v="'+b.v+'"><span class="thumb" style="background-image:url('+thumb(b.v)+')"></span>'
-      +'<span class="tx"><span class="t">'+esc(b.t)+'</span><span class="m">'+esc(B.n)+' · '+esc(b.l)+'</span></span></button>';
+      +'<span class="tx"><span class="t">'+esc(b.t)+'</span><span class="m">'+esc(B.n)+' · '+esc(b.l)+(b.n?' · 📖 문장·해석':'')+'</span></span></button>';
   }).join('');
   $$('#omniResults .res').forEach(el=>el.onclick=()=>{
     const b=BOOKS.find(x=>x.v===el.dataset.v); if(b) openBook(b,{from:'find'});
