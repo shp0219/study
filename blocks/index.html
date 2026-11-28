@@ -776,6 +776,8 @@
     fsPseudo = false;
     setFsLand(false);
     document.body.classList.remove('fs-on', 'fs-native');
+    var n = natFsEl();
+    if (n) { try{ (document.exitFullscreen || document.webkitExitFullscreen).call(document); }catch(e){} }
   }
   function enterFs(){
     /* ⛶ 화면 꽉 채우기: 회전 없이 현재 방향 그대로 전체화면만 */

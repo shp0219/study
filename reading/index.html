@@ -168,6 +168,9 @@ body.fs-on .player{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh
 .player:fullscreen{width:100vw;height:100vh;height:100dvh;max-width:none;aspect-ratio:auto;border-radius:0}
 .player:-webkit-full-screen{width:100vw;height:100vh;height:100dvh;max-width:none;aspect-ratio:auto;border-radius:0}
 /* ── 가로로 크게 (v3): 전체화면 요청·OS 회전 없이 CSS 고정 오버레이만 90도 회전 ── */
+/* .screen.active 의 등장 애니메이션(transform)이 fixed 자식의 기준 상자를 만들어
+   오버레이가 화면 밖에 놓이지 않도록, 오버레이 중에는 그 애니메이션을 끈다. */
+body.fs-on .screen.active,body.fs-land .screen.active{animation:none}
 body.fs-land{overflow:hidden;overscroll-behavior:none}
 body.fs-land .fsbtns{display:flex}
 body.fs-land .player{position:fixed;inset:auto;top:50%;left:50%;
@@ -1127,6 +1130,8 @@ function exitFs(){
   fsPseudo=false;
   setFsLand(false);
   document.body.classList.remove('fs-on','fs-native');
+  const n=natFsEl();
+  if(n){try{(document.exitFullscreen||document.webkitExitFullscreen||function(){}).call(document);}catch(e){}}
 }
 function enterFs(){
   /* ⛶ 화면 꽉 채우기: 회전 없이 현재 방향 그대로 전체화면만 */
