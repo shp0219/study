@@ -572,7 +572,7 @@ function renderBrandList(){
   }
   html+=restList.map(item).join('');
   $('#bookList').innerHTML=html;
-  $$('#bookList .bitem').forEach(el=>{
+  $$('#bookList .bitem').forEach(el=>el.onclick=()=>{
     const b=BOOKS.find(x=>x.v===el.dataset.v); if(b) openBook(b,{from:'brand'});
   });
 }
